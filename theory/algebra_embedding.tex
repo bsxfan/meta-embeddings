@@ -286,8 +286,8 @@ In~\cite{Vilnis}, Gaussian embeddings are proposed to represent uncertainty. To 
 \noindent Mention uncertainty propagation in i-vectors\cite{Uncertainty-Sandro, Uncertainty-Patrick, Uncertainty-Themos, Uncertainty-Bilbao}, \ldots 
 
 \chapter{Distillation of meta-embeddings from independence assumptions}
-\label{sec:fp}
-In this chapter we use probability theory and some basic independence assumptions to justify and derive the concept of meta-embeddings.  
+\label{chap:fp}
+In this chapter we use probability theory and some basic independence assumptions to motivate and derive the concept of meta-embeddings.  
 
 We use speaker recognition terminology, but everything is applicable more widely (images, etc. \ldots). Our inputs are \emph{voice recordings}, each assumed to contain a single speaker. Recordings can have various representations, i-vectors, sequences of feature vectors, the raw speech samples, etc. \ldots. At the writing of this document, recordings represented as feature vector sequences are of primary interest.  
 
@@ -357,11 +357,9 @@ Given a pair of recordings, $\Rset=\{r,r'\}$, we can answer the question of whet
 \end{align}
 where we have defined the \emph{speaker identity likelihood functions}: 
 \begin{align}
-f_r(\zvec)&=kP(r\mid\zvec), & f_{r'}(\zvec)&=k'P(r'\mid\zvec)
+f_r(\zvec)&=kP(r\mid\zvec)& \text{and} && f_{r'}(\zvec)&=k'P(r'\mid\zvec),
 \end{align}
-and where $k,k'>0$ are arbitrary constants that may depend on $r,r'$, but not on $\zvec$. 
-
-Notice that the LR depends on the data ($r,r'$) only via $f_r$ and $f_{r'}$. The speaker information in $r$ is represented by the \emph{whole function} 
+where $k,k'>0$ are arbitrary constants that may depend on $r,r'$, but not on $\zvec$. Notice that the LR depends on the data ($r,r'$) only via $f_r$ and $f_{r'}$. The speaker information in $r$ is represented by the \emph{whole function} 
 $$f_r:\Zset\to\R$$ 
 rather than by the function value $f_r(\zvec)$ at some particular value of $\zvec$ (remember $\zvec$ is hidden and we are never given a fixed value for it).
 
@@ -379,7 +377,7 @@ P(\zvec\mid r,r',H_1,\pi) &= \frac{\pi(\zvec)f_r(\zvec)f_{r'}(\zvec)}{\expv{f_r(
 
 \section{The general case}
 \label{sec:general}
-Our speaker identity likelihood functions are applicable more generally than just to pairs of recordings. Under the independence assumptions of section~\ref{sec:IS}, speaker identity likelihood functions can be used to answer \emph{any} question that can be formulated in terms of partitioning a set of recordings according to speaker~\cite{SPP}. Let $\Rset=\{r_1,\ldots,r_n\}$ be a set of recordings and let $A: \Sset_1,\Sset_2,\ldots,\Sset_m\subseteq\{1,2,\ldots,n\}$ be a hypothesized partition of $\Rset$ into subsets belonging to $m\ge1$ different hypothesized speakers.\footnote{The subsets are non-empty, non-overlapping and their union equals $\{1,2,\ldots,n\}$. We allow $m=1$, in which case $\Sset_1=\Rset$.} Similarly, let $B: \Sset'_1,\ldots,\Sset'_{m'}$ be a different hypothesized partition, having $m'$ hypothesized speakers. $A$ and $B$ are labels to refer to the two alternate partitioning hypotheses. Using within-speaker exchangeability and between-speaker independence, the LR comparing $A$ to $B$ is:
+Our speaker identity likelihood functions are applicable more generally than just to pairs of recordings. Under the independence assumptions of section~\ref{sec:IS}, speaker identity likelihood functions can be used to answer \emph{any} question that can be formulated in terms of partitioning a set of recordings according to speaker~\cite{SPP}. Let $\Rset=\{r_1,\ldots,r_n\}$ be a set of recordings and let $A: \Sset_1,\Sset_2,\ldots,\Sset_m\subseteq\{1,2,\ldots,n\}$ be a hypothesized partition of $\Rset$ into subsets belonging to $m\ge1$ different hypothesized speakers.\footnote{The subsets are non-empty, non-overlapping and their union equals $\{1,2,\ldots,n\}$. We allow $m=1$, in which case $\Sset_1=\Rset$.} Similarly, let $B: \Sset'_1,\ldots,\Sset'_{m'}$ be a different hypothesized partition, having $m'$ hypothesized speakers. $A$ and $B$ are labels that refer to the two alternate partitioning hypotheses. Using within-speaker exchangeability and between-speaker independence, the LR comparing $A$ to $B$ is:
 \begin{align}
 \label{eq:generalLR}
 \begin{split}
@@ -396,17 +394,17 @@ f_j(\zvec)=k_jP(r_j\mid\zvec)
 \end{align}
 The last equality in~\eqref{eq:generalLR} follows because the arbitrary scaling constants, $\{k_j\}_{j=1}^n$, are the same in the numerator and denominator and cancel. This LR form is convenient because of this cancellation.
 
-Any kind of speaker recognition problem that can be expressed in terms of partitioning recordings according to speaker, can be scored at runtime via likelihood-ratios of the form~\eqref{eq:generalLR}. We shall show some examples below.  Moreover, any discriminative training criteria that are expressed as functions of the scores can then also be expressed in terms of~\eqref{eq:generalLR}. In summary: 
+Any kind of speaker recognition problem that can be expressed in terms of partitioning recordings according to speaker, can be scored at runtime via likelihood-ratios of the form~\eqref{eq:generalLR}. We shall show some examples below.  Moreover, any discriminative training criteria that are expressed as functions of the LR scores can then also be expressed in terms of~\eqref{eq:generalLR}. In summary: 
 \begin{quote}
 \emph{For discriminative speaker recognition, all scoring and training calculations can be expressed in terms of the speaker identity likelihood functions.} 
 \end{quote}
 To better appreciate this generality, we shall present some examples in the next section.
 
-Again---for readers that are comfortable with the idea that probability distributions convey information~\cite{PTLOS}---the speaker identity likelihood functions are closely associated with posteriors for $\zvec$. Any such posterior, conditioned on a number of recordings of a speaker indexed by $\Sset$, can be computed as:
+Again, for readers that are comfortable with the idea that probability distributions convey information~\cite{PTLOS}, the speaker identity likelihood functions are closely associated with posteriors for $\zvec$. Any such posterior, conditioned on a number of recordings of a speaker indexed by $\Sset$, can be computed as:
 \begin{align}
 P(\zvec\mid \Rset,\Sset,H_1,\pi) &=\frac{\pi(\zvec)\prod_{j\in\Sset}f_j(\zvec)}{\expvb{\prod_{j\in\Sset}f_j(\zvec')}{\zvec'\sim\pi}}
 \end{align}
-The likelihood function, $f_j$, or indeed a product of any number of them, can be regarded as a raw form of posterior distribution for $\zvec$. The raw form is independent of the choice of prior, $\pi$, and is un-normalized. Nevertheless, $f_j$ contains all the speaker information that a given probabilistic model could extract from $r_j$.
+The likelihood function, $f_j$, or indeed a product of any number of them, can be regarded as a \emph{raw} form of posterior distribution for $\zvec$. We use the term raw, because the likelihood function is independent of the choice of prior, $\pi$, and is also un-normalized. Nevertheless, $f_j$ contains all the speaker information that a given probabilistic model could extract from $r_j$.
 
 
 
@@ -445,7 +443,7 @@ It remains to be shown in the next chapter that these meta-embeddings live in a 
 	
 	
 \chapter{The structure of meta-embedding space}
-Classical embeddings in machine learning live in finite-dimensional, Euclidean space, $\R^d$. When equipped with the standard scalar product, vector addition, dot-product and Euclidean distance, $\R^d$ is a vector space, inner-product space, metric space, Hilbert space etc.\ Our meta-embeddings, the functions $f_j$, live in a slightly generalized space, which is still a vector space, inner product space, metric space and (subject to regularity conditions) a Hilbert space. 
+Classical embeddings in machine learning live in finite-dimensional, Euclidean space, $\R^d$. When equipped with the standard scalar product, vector addition, dot-product and Euclidean distance, $\R^d$ is a vector space, inner-product space, metric space, Hilbert space, etc.\ Our meta-embeddings, the functions $f_j$, live in a slightly generalized space, which is still a vector space, inner product space, metric space and (subject to regularity conditions) a Hilbert space. 
 
 Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in the next chapter---we will consider various finite, tractable representations of our meta-embeddings.
 
@@ -456,7 +454,7 @@ The chapter concludes with a simple graphical example to aid understanding.
 \section{Geometric properties}
 
 
-Let $\R^\Zset$ denote the space of all possible functions from $\Zset$ to $\R$ and let our meta-embeddings live in $\Fset$, where $\Fset\subset\R^{\Zset}$. We need to confine meta-embeddings to some subset of $\R^\Zset$ in order to exclude all kinds of pathological functions and to ensure that the operations defined on meta-embeddings are well behaved. Since our meta-embeddings are likelihoods, the function values are always non-negative, so we might consider restricting ourselves to $\R_+^{\Zset}$, where $\R_+ = [0,\infty)$. But this does not give a vector space, because it will not be closed w.r.t.\ scalar multiplication. It will therefore be more convenient to work in a space that includes functions with negative values.
+Let $\R^\Zset$ denote the space of all possible functions from $\Zset$ to $\R$ and let our meta-embeddings live in $\Fset$, where $\Fset\subset\R^{\Zset}$. We need to confine meta-embeddings to some subset of $\R^\Zset$ in order to exclude all kinds of pathological functions and to ensure that the operations defined on meta-embeddings are well behaved. Since our meta-embeddings are likelihoods, the function values are always non-negative, so we might consider restricting ourselves to $\R_+^{\Zset}$, where $\R_+ = [0,\infty)$. But this does not give a vector space, because it will not be closed w.r.t.\ scalar multiplication. It will therefore be more convenient to work in a more general space, $\Fset$, that includes functions with negative values.
 
 
 
@@ -465,7 +463,7 @@ Consider the Euclidean vector, $\xvec\in\R^d$ and notice that $\xvec$ can be vie
 
 Now let the hidden speaker identity variable be a $d$-dimensional Bernoulli vector, $\zvec\in\Zset=\{0,1\}^d$. That is, $\zvec$ is a vector with $d$ components, each of which can be either 0 or 1. A function, $f:\{0,1\}^d\to\R$, can be represented as a vector having $2^d$ real components. More generally, whenever $\Zset$ has finite cardinality, $f:\Zset\to\R$ can be represented as a vector in Euclidean space.
 
-However, for the continuous case, when $\zvec\in\R^d$, the function $f(\zvec)$ is like a vector with an infinite number of components. For the vector-space operations of scalar multiplication and addition, the infinite dimensionality poses no difficulty. These operations are defined as follows. Let $f,g,h\in\Fset$ and $\alpha,\beta\in\R$, then:
+However, for the continuous case, when $\zvec\in\R^d$, the function $f(\zvec)$ is like a vector with an infinite number of components. For the vector-space operations of \emph{scalar multiplication} and \emph{addition}, the infinite dimensionality poses no difficulty. These operations are defined as follows. Let $f,g,h\in\Fset$ and $\alpha,\beta\in\R$, then:
 \begin{align}
 \label{eq:vsops}
 h &= \alpha f + \beta g & \Leftrightarrow && h(\zvec) &= \alpha f(\zvec) + \beta g(\zvec)
@@ -481,9 +479,9 @@ We already have that $\Fset$ is a vector space. To further make it an \emph{inne
 \end{align}
 which is the expectation of the product of $f$ and $g$, w.r.t\ $\pi$, a probability distribution over $\Zset$. If we choose $\pi$ to be our hidden variable prior, then the inner product coincides with the numerator in the likelihood-ratio of~\eqref{eq:SLR}. Notice that we use the same triangular bracket notation for both inner product and expectation---this ambiguous notation will be convenient later. 
 
-For~\eqref{eq:innerp} to be a valid inner product, it needs to satisfy symmetry, linearity, and positive definiteness. The symmetry, $\dot{f}{g}=\dot{g}{f}$ and linearity, $\dot{\alpha f+\beta g}{h}=\alpha\dot{f}{h}+\beta\dot{g}{h}$, follow directly from the definition. It also follows that $\dot{f}{f}\ge0$, which is necessary for positive definiteness. However, we also need that $\dot{f}{f}=0$ if and only if $f(\zvec)=0$ everywhere. For this we need $\pi(\zvec)$ to be non-zero everywhere on $\Zset$ and we need $\Fset$ to impose certain smoothness constraints---e.g.\ we need to exclude from $\Fset$ functions that differ from $f(\zvec)=0$ only on subsets of $\Zset$ of measure zero. In what follows, we shall assume that $\Fset$ is chosen such that it forms a valid inner-product space together with the operations defined here.\footnote{An alternative construction of the inner product space could be to define equivalence classes of functions, where two functions, $f(\zvec)$ and $g(\zvec)$ are equivalent if $P(f(\zvec)=g(\zvec)\mid \zvec\sim\pi)=1$. In this case the elements of the vector space would be the equivalence classes, rather than individual functions. See: \url{www.math.uah.edu/stat/expect/Spaces.html}.}
+For~\eqref{eq:innerp} to be a valid inner product, it needs to satisfy symmetry, linearity, and positive definiteness. The symmetry, $\dot{f}{g}=\dot{g}{f}$ and linearity, $\dot{\alpha f+\beta g}{h}=\alpha\dot{f}{h}+\beta\dot{g}{h}$, follow directly from the definition. It also follows that $\dot{f}{f}\ge0$, which is necessary for positive definiteness. However, we also need that $\dot{f}{f}=0$ if and only if $f(\zvec)=0$ everywhere. For this we need $\pi(\zvec)$ to be non-zero everywhere on $\Zset$ and we need $\Fset$ to impose certain smoothness constraints---e.g.\ we need to exclude from $\Fset$ functions that differ from each other only on subsets of $\Zset$ of measure zero. In what follows, we shall assume that $\Fset$ is chosen such that it forms a valid inner-product space together with the operations defined here.\footnote{An alternative construction of the inner product space could be to use the quotient space, populated by equivalence classes of functions, where two functions, $f(\zvec)$ and $g(\zvec)$ are equivalent if $P(f(\zvec)=g(\zvec)\mid \zvec\sim\pi)=1$. See~\cite{random}.}
 
-Notice that~\eqref{eq:innerp} is a generalization of the usual dot product in Euclidean space. It generalizes the simple summation in the dot product. For discrete $\Zset$, the generalization is just in terms of relative weighting of the components by $\pi(\zvec)$, while for continuous $\Zset$, summation is further generalized to integration.
+Notice that~\eqref{eq:innerp} is a generalization of the usual dot product in Euclidean space. It generalizes the simple summation in the dot product by introducing the weighting by $\pi(\zvec)$. For continuous $\Zset$, summation is further generalized to integration.
  
 Is $\Fset$ a Hilbert space? A Hilbert space is an inner product space with the additional requirement of \emph{completeness}. If $\Fset$ is chosen to have this property, then yes, we have a Hilbert space. In what follows, we will not make use of completeness and we will therefore refer to our space with (slightly) greater generality as an inner product space.
 
@@ -523,7 +521,7 @@ The interested reader is encouraged to read both~\cite{random} and~\cite{ouwehan
 \section{Algebraic properties}
 Having described the inner-product space, we now enrich our meta-embedding space with the elementwise multiplicative operation. This operation combines in useful ways with the other operations to enable us to do the calculations we need for our ultimate goal of computing the likelihood ratios of the form~\eqref{eq:generalLR}.
 
-Alert readers may notice that our addition operator does not seem to play any useful, practical role in all of this. First, the fact that addition between meta-embeddings is possible helps to establish that we have a vector space. Once this is established, all of the well-known properties of vector spaces become available to us. Moreover, in the next chapter, we do find a practical application for addition, in the form of mixture distributions.  
+Alert readers may notice that our addition operator does not seem to play any useful, practical role in all of this. First, the fact that addition between meta-embeddings is possible helps to establish that we have a vector space. Once this is established, all of the well-known properties of vector spaces become available to us. (For example, to derive the basic property of distance, we need subtraction, which in turn is defined by scalar multiplication and addition.) Moreover, in the next chapter, we do find a practical application for addition, in the form of mixture distributions.  
 
 
 \subsection{Elementwise product}
@@ -567,7 +565,7 @@ We shall also find the L1 norm useful. Notice that when $f$ is non-negative, we 
 \begin{align}
 \norm{f}_1 &= \expv{\abs{f(\zvec)}}{\zvec\sim\pi}
 \end{align}
-It is easy to show using Cauchy-Schwartz~\eqref{eq:CSI} and also~\eqref{eq:one1} that:
+It is easy to show using~\eqref{eq:one1} and Cauchy-Schwartz~\eqref{eq:CSI} that:
 \begin{align}
 \label{eq:L1vsL2}
 \norm{f}_1\le\norm{f}_2
@@ -609,7 +607,7 @@ and more generally,
 In what follows, we shall interchangeably use the notations with or without comma, to respectively emphasize the dot-product or expectation interpretations.
 
 \section{Likelihood-ratios}
-Finally, we can close the loop by expressing the LR formulas of section~\ref{sec:fp} by using the scalar, elementwise and inner product operations of our meta-embedding space.\\ 
+Finally, we can close the loop by expressing the LR formulas of chapter~\ref{chap:fp} by using the scalar, elementwise and inner product operations of our meta-embedding space.\\ 
 
 \noindent The \emph{simple verification} likelihood ratio~\eqref{eq:SLR}, rewritten in a variety of notations, is:
 \begin{align}
@@ -626,7 +624,7 @@ where $f$ and $f'$ are the meta-embeddings extracted from $r$ and $r'$. \\
 = \dot{\normal{f_1f_2}}{\normal{f_3}}
 \end{align} \\
 
-\noindent For \emph{openset classification}, with enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$ for $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$ and a new test recording, $r'$, we use the meta-embeddings: $\{r_\ell\mapsto f_\ell\}_{\ell=1}^n$ and $r'\mapsto f'$ and we calculate the LR that $r'$ is of speaker $i$, vs that $r'$ is a new speaker as:
+\noindent For \emph{openset classification}, with enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$ for $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$ and a new test recording, $r'$, we use the meta-embeddings: $\{r_\ell\mapsto f_\ell\}_{\ell=1}^n$ and $r'\mapsto f'$ and we calculate the LR that $r'$ is of speaker $i$, vs that $r'$ is a new speaker, as:
 \begin{align}
 \begin{split}
 L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_{\ell\in\Sset_j} f_\ell}{}}
@@ -637,10 +635,13 @@ L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_
 \end{split}
 \end{align} \\
 
-\noindent Finally, for \emph{agglomerative clustering} we can similarly write the LR~\eqref{eq:LR_AHC} in terms of normalized embeddings as:
+\noindent For \emph{agglomerative clustering} we can similarly write the LR~\eqref{eq:LR_AHC} in terms of normalized embeddings as:
 \begin{align}
 L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\ell\in\Sset_i}f_\ell}{}\expv{\prod_{\ell\in\Sset_i}f_\ell}{}} = \dot{\normal{\prod_{\ell\in\Sset_i}f_\ell}}{\normal{\prod_{\ell\in\Sset_j}f_\ell}}
 \end{align}\\
+
+
+\noindent Finally, for the most general case of~\eqref{eq:generalLR}, we can rewrite\\  
 
 \noindent \textbf{In summary:} In all these cases, the likelihood-ratios are most compactly represented as \emph{inner products between normalized meta-embeddings}. 
 
