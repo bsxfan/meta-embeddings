@@ -251,11 +251,15 @@
 
 \chapter{Introduction}
 
-\emph{Embeddings} are familiar in modern machine learning and more specifically in speech and speaker recognition. Word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} extracted by neural nets were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}. In Interspeech 2017, eighteen papers have the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, e.g. in~\cite{Voxceleb} and in David Snyder's work~\cite{end2end,DSIS17} and also in language recognition, e.g.~\cite{LIMSI_Language_embedding}.  
+\emph{Embeddings} are familiar in modern machine learning. Word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} extracted by neural nets were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
+
+Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers have the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, e.g. in~\cite{Voxceleb} and in David Snyder's work~\cite{end2end,DSIS17} and also in language recognition, e.g.~\cite{LIMSI_Language_embedding}. 
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. Embeddings extracted from the input patterns live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
-This document aims to be widely applicable to a variety of machine learning or pattern recognition problems, but we shall make our discussion concrete by using the language of automatic speaker verification/recognition. To interpret everything (say) as face recognition, just do \emph{recording}$\,\mapsto\,$\emph{image} and \emph{speaker}$\,\mapsto\,$\emph{face}, and so on \ldots.
+At the Johns Hopkins HLTCOE SCALE 2017 Workshop\footnote{\url{http://hltcoe.jhu.edu/research/scale/scale-2017}} one of the topics of interest was embeddings for speaker recognition. During the workshop, the idea to generalize to \emph{meta-embeddings} was conceived. At the time of the writing of this document, we are still developing the theory and no code has been written, nor have any experiments been performed. This document describes the theory.    
+
+We envisage that meta-embeddings could be widely applicable to a variety of machine learning or pattern recognition problems, but we shall make our discussion concrete by using the language of automatic speaker verification/recognition. To interpret everything (say) as face recognition, just do \emph{recording}$\,\mapsto\,$\emph{image} and \emph{speaker}$\,\mapsto\,$\emph{face}, and so on \ldots.
 
 \section{Meta-embeddings}
 An important concept used throughout this document is that of the \emph{hidden identity variable}---a hypothetical, multidimensional variable that ideally contains all of the information that distinguishes one speaker/face/individual from others. In speaker recognition, the hidden \emph{speaker identity variable} is well known from the work of Patrick Kenny in JFA~\cite{JFA} and PLDA~\cite{HTPLDA}. Similar identity variables appeared in earlier face recognition applications of PLDA~\cite{PLDA-IOFFE, PLDA-Prince, PLDA-Li}.
@@ -283,13 +287,15 @@ In~\cite{Vilnis}, Gaussian embeddings are proposed to represent uncertainty. To 
 
 \chapter{Distillation of meta-embeddings from independence assumptions}
 \label{sec:fp}
+In this chapter we use probability theory and some basic independence assumptions to justify and derive the concept of meta-embeddings.  
+
 We use speaker recognition terminology, but everything is applicable more widely (images, etc. \ldots). Our inputs are \emph{voice recordings}, each assumed to contain a single speaker. Recordings can have various representations, i-vectors, sequences of feature vectors, the raw speech samples, etc. \ldots. At the writing of this document, recordings represented as feature vector sequences are of primary interest.  
 
 In general, we will be interested in \emph{sets} of recordings, ranging from the set of all the recordings in a training database, down to just a pair of recordings in a verification trial. We represent a set of $n$ recordings as:
 \begin{align*}
 \Rset &=\{r_1,r_2,\ldots,r_n\}
 \end{align*}
-
+We shall work with hypotheses of how such sets of recordings are partitioned w.r.t.\ speaker and we shall make use of independence assumptions conditioned on these hypotheses. 
 
 \section{Independence assumptions}
 \label{sec:IS}
@@ -431,22 +437,30 @@ be the (conveniently normalized) likelihood for hypothesis $B_{ij}$,  while the 
 
 
 \noindent
-All of these examples are scored using likelihood ratios of the form~\eqref{eq:generalLR} and are therefore dependent on the data only via the speaker identity likelihood functions. 
+\textbf{Summary.} All of these examples are scored using likelihood ratios of the form~\eqref{eq:generalLR} and are therefore dependent on the data only via the speaker identity likelihood functions. 
 
 We have so far demonstrated that $f_j$ qualifies as an embedding in the sense that it contains all of the relevant information in $r_j$. In what follows we shall refer to $\zvec$ as the (hidden, ideal) \emph{embedding}, while the $f_j$ are our \emph{meta-embeddings}. 
 
-It remains to be shown that these meta-embeddings live in a space with useful algebraic and geometric structure.
+It remains to be shown in the next chapter that these meta-embeddings live in a space with useful algebraic and geometric structure.
 	
 	
 \chapter{The structure of meta-embedding space}
-Classical embeddings in machine learning live in finite-dimensional, Euclidean space, $\R^d$. Equipped with the standard versions of scalar product, vector addition, dot-product and Euclidean distance, $\R^d$ qualifies as vector space, inner-product space, metric space, Hilbert space etc.\ Our meta-embeddings, the functions $f_j$, live in a slightly generalized space, which is still a vector space, inner product space, metric space and (subject to regularity conditions) a Hilbert space. 
+Classical embeddings in machine learning live in finite-dimensional, Euclidean space, $\R^d$. When equipped with the standard scalar product, vector addition, dot-product and Euclidean distance, $\R^d$ is a vector space, inner-product space, metric space, Hilbert space etc.\ Our meta-embeddings, the functions $f_j$, live in a slightly generalized space, which is still a vector space, inner product space, metric space and (subject to regularity conditions) a Hilbert space. 
 
-Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed later---we will consider various finite, tractable representations of our meta-embeddings.
+Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in the next chapter---we will consider various finite, tractable representations of our meta-embeddings.
+
+In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. Next we enrich the vector space by introducing another (elementwise) multiplicative operator, which then forms an algebra. We explain some of the properties of this algebra and finally show how these algebraic manipulations can be used to compute likelihood-ratios of the form~\eqref{eq:generalLR}.
+
+The chapter concludes with a simple graphical example to aid understanding.
+
+\section{Geometric properties}
+
 
 Let $\R^\Zset$ denote the space of all possible functions from $\Zset$ to $\R$ and let our meta-embeddings live in $\Fset$, where $\Fset\subset\R^{\Zset}$. We need to confine meta-embeddings to some subset of $\R^\Zset$ in order to exclude all kinds of pathological functions and to ensure that the operations defined on meta-embeddings are well behaved. Since our meta-embeddings are likelihoods, the function values are always non-negative, so we might consider restricting ourselves to $\R_+^{\Zset}$, where $\R_+ = [0,\infty)$. But this does not give a vector space, because it will not be closed w.r.t.\ scalar multiplication. It will therefore be more convenient to work in a space that includes functions with negative values.
 
 
-\section{Functions as vectors}
+
+\subsection{Functions as vectors}
 Consider the Euclidean vector, $\xvec\in\R^d$ and notice that $\xvec$ can be viewed as a \emph{function} that maps the component index to the real line: $\{1,\ldots,d\}\to\R$. 
 
 Now let the hidden speaker identity variable be a $d$-dimensional Bernoulli vector, $\zvec\in\Zset=\{0,1\}^d$. That is, $\zvec$ is a vector with $d$ components, each of which can be either 0 or 1. A function, $f:\{0,1\}^d\to\R$, can be represented as a vector having $2^d$ real components. More generally, whenever $\Zset$ has finite cardinality, $f:\Zset\to\R$ can be represented as a vector in Euclidean space.
@@ -458,7 +472,7 @@ h &= \alpha f + \beta g & \Leftrightarrow && h(\zvec) &= \alpha f(\zvec) + \beta
 \end{align} 
 As long as we choose $\Fset$ such that it is closed under these operations and to include the constant function with value $0$, then $\Fset$ is a vector space, even though the vectors are infinite-dimensional. To quality as a vector space, the properties required of the addition and scalar multiplication operators ---commutativity, associativity and distributivity---follow directly from~\eqref{eq:vsops}.
 
-\section{Inner product}
+\subsection{Inner product}
 \def\dot#1#2{\expv{#1,#2}{}}
 We already have that $\Fset$ is a vector space. To further make it an \emph{inner product space}, we need to define the inner product, which is a function, $\Fset\times\Fset\to\R$. For $f,g,h\in\Fset$, and $\alpha,\beta\in\R$, we define our inner product as:
 \begin{align}
@@ -473,7 +487,7 @@ Notice that~\eqref{eq:innerp} is a generalization of the usual dot product in Eu
  
 Is $\Fset$ a Hilbert space? A Hilbert space is an inner product space with the additional requirement of \emph{completeness}. If $\Fset$ is chosen to have this property, then yes, we have a Hilbert space. In what follows, we will not make use of completeness and we will therefore refer to our space with (slightly) greater generality as an inner product space.
 
-\section{Norm, distance, angle}
+\subsection{Norm, distance, angle}
 \def\norm#1{\left\lVert#1\right\rVert}
 \def\abs#1{\left\lvert#1\right\rvert}
 The inner product naturally supplies the notions of length, distance and angle, making our space a metric space and a normed space. The norm (length) is defined as:
@@ -497,9 +511,24 @@ so that the angle, $\theta$, between $f$ and $g$ can be defined as:
 because then $\abs{\cos\theta}\le1$, as it should.
 
 
-\section{Elementwise product}
+\subsection{Note on meta-embeddings as random variables}
+\def\Aset{\mathcal{A}}
+This note is of theoretical interest and is not essential to understanding the rest of the document. 
+
+Let $(\Zset,\Aset,\pi)$ be a probability space, where $z\in\Zset$ is the identity variable as defined above. $\Aset$ is a suitable sigma-algebra, consisting of subsets of $\Zset$. The probability measure of this space, $\pi:\Aset\to[0,1]$ is the prior on $z$. Under the regularity condition that our meta-embeddings are measurable functions from $\Zset$ to $\R$, the meta-embeddings can be viewed as \emph{random variables}~\cite{Billingsley}. Informally, when $f_j$ is a meta-embedding and if we sample $z\sim\pi$, then the likelihood $f_j(z)$ is a sample from the random variable $f_j$. 
+
+The interested reader is encouraged to read both~\cite{random} and~\cite{ouwehand} where it is explained how the expectation of the product of two random variables, i.e.\ our~\eqref{eq:innerp}, forms a well-defined inner product. Further reading may include appendix B of~\cite{Bigoni} and references therein.
+
+
+\section{Algebraic properties}
+Having described the inner-product space, we now enrich our meta-embedding space with the elementwise multiplicative operation. This operation combines in useful ways with the other operations to enable us to do the calculations we need for our ultimate goal of computing the likelihood ratios of the form~\eqref{eq:generalLR}.
+
+Alert readers may notice that our addition operator does not seem to play any useful, practical role in all of this. First, the fact that addition between meta-embeddings is possible helps to establish that we have a vector space. Once this is established, all of the well-known properties of vector spaces become available to us. Moreover, in the next chapter, we do find a practical application for addition, in the form of mixture distributions.  
+
+
+\subsection{Elementwise product}
 \def\onevec{\boldsymbol{1}}
-Finally, we equip	our space with another operator, the \emph{elementwise product} (Hadamard product). Since this product is associative, we write this product using juxtaposition and define it as:
+We now equip our space with the \emph{elementwise product} (Hadamard product). Since this product is associative, we can write it using juxtaposition, defining it as:
 \begin{align}
 h &= fg & \Leftrightarrow && h(\zvec) &= f(\zvec)g(\zvec) 
 \end{align}
@@ -517,8 +546,8 @@ P(\zvec\mid\Rset,H_1,\pi) &= \frac{\pi(\zvec)f_\Rset(\zvec)}{\expv{f_\Rset(\zvec
 
 
 
-\section{Multiplicative identity}
-We define the \emph{multiplicative identity} as the constant function with value $1$ everywhere: $\onevec(\zvec)=1$. This turns out to be a (conveniently normalized) meta-embedding extracted from any  \emph{empty recording}. An empty recording is any recording that contains no speech---it could have zero duration, or otherwise contain silence, noise, or any other non-speech sounds. Since empty recordings have no speaker information, speaker identity variable posteriors conditioned on them just equal the prior. Letting $r_\phi$ be an empty recording, we have:
+\subsection{Multiplicative identity}
+We define the \emph{multiplicative identity} as the constant function with value $1$ everywhere: $\onevec(\zvec)=1$. This turns out to be a (conveniently normalized) meta-embedding extracted from any  \emph{empty recording}. An empty recording is any recording that contains no speech---it could have zero duration, or otherwise contain silence, noise, or any other non-speech sounds. Since empty recordings have no speaker information, speaker identity variable posteriors conditioned on them are just equal to the prior. Letting $r_\phi$ be an empty recording, we have:
 \begin{align}
 P(\zvec\mid r_\phi,\pi) &= \frac{\onevec(\zvec)\pi(\zvec)}{\expv{\onevec(\zvec)}{\zvec\sim\pi}} =  \pi(\zvec) 
 \end{align}
@@ -529,7 +558,7 @@ Notice that:
 \end{align} 
 so that $\onevec$ represents the \emph{diagonal axis} of length $1$, with all `components' equal to $1$. The inner product, $\dot{f}{\onevec}$, will be of special interest below. It is the length of the orthogonal projection of $f$ onto this diagonal axis---see section~\ref{sec:exem} for a graphical example. 
 
-\section{L1 and L2 norms}
+\subsection{L1 and L2 norms}
 We have already introduced the norm, $\norm{f}=\sqrt{\dot{f}{f}}$. Observe that this is an L2 norm:
 \begin{align}
 \norm{f} &= \sqrt{\dot{f}{f}} = \sqrt{\expv{f^2(\zvec)}{\zvec\sim\pi}} = \norm{f}_2
@@ -550,7 +579,7 @@ If $f$ is non-negative, then $\dot{f}{1}=\norm{f}_1\le\norm{f}_2$. More generall
 \end{align} 
 Below we restrict attention to meta-embeddings for which $\abs{\dot{f}{\onevec}}<\infty$ and it is useful to know that this condition is automatically satisfied if $\norm{f}=\norm{f}_2<\infty$.  
 
-\section{Normalized meta-embedding}
+\subsection{Normalized meta-embedding}
 \def\normal#1{\overline{#1}}
 Let $f\in\Fset$ be a meta-embedding. We define the corresponding \emph{normalized meta-embedding} as:
 \begin{align}
@@ -568,7 +597,7 @@ P(\zvec\mid\Rset,H_1,\pi) &= \pi(\zvec)\normal{f_\Rset}(\zvec)
 \end{align}
 We shall require that all meta-embeddings are \emph{normalizable} in the sense that $\abs{\dot{f}{1}}<\infty$. By~\eqref{eq:norm_ineq}, $\norm{f}<\infty$ is a sufficient condition. Alternatively, any bounded function, $f(\zvec)$ also satisfies this requirement. 
 	
-\section{Notations for inner product and expectation}
+\subsection{Notations for inner product and expectation}
 Using the defnitions of inner product and elementwise multiplication, notice that $\dot{f}{g}=\dot{fg}{\onevec}$ and indeed that $\dot{fgh}{\onevec}=\dot{fg}{h}=\dot{f}{gh}=\dot{\onevec}{fgh}$, and so on. The comma in the inner product notation has no real function and it can be omitted. We shall write:
 \begin{align}
 \dot{f}{g} &= \expv{fg}{} = \expv{f(\zvec)g(\zvec)}{\zvec\sim\pi}
@@ -625,7 +654,7 @@ In the literature, there are many examples where embeddings are L2-normalized be
 
 Notice that by~\eqref{eq:sqdist}, if embeddings have unit L2 norm, then there is no essential difference (other than the sign) between cosine similarity (inner product) and squared distance. By the Cauchy-Schwartz inequality~\eqref{eq:CSI}, inner products between L2-normalized embeddings are limited to the range $[-1,1]$, where $-1$ corresponds to embeddings on opposite sides of the unit hypersphere (maximum distance) and $1$ to embeddings that coincide (zero distance). 
 
-In speaker recognition, cosine similarity between embeddings in Euclidean space is regarded as an uncalibrated form of \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratios magnitudes are not limited to be at most unity.   
+In speaker recognition, cosine similarity between embeddings in Euclidean space is regarded as an uncalibrated form of \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratio magnitudes are not limited to be at most unity.   
 
 
 
@@ -771,13 +800,6 @@ Figure~\ref{fig:pool} shows what happens when we know that $r_1$ and $r_2$ are o
 \end{figure}
 
 
-\section{Note on meta-embeddings as random variables}
-\def\Aset{\mathcal{A}}
-This note is of theoretical interest and is not essential to understanding the rest of the document. 
-
-Let $(\Zset,\Aset,\pi)$ be a probability space, with $\Zset$ as defined above, the space where the identity variables live; and where $\Aset$ is a suitable sigma-algebra, consisting of subsets of $\Zset$. Let $\pi$, the prior on the identity variable, $z\in\Zset$, be in the form of a probability measure, $\pi:\Aset\to[0,1]$. Let our meta-embeddings be measurable functions from $\Zset$ to $\R$. Under these regularity conditions, our meta-embeddings can be viewed as \emph{random variables}~\cite{Billingsley}. Informally, when $f_j$ is a meta-embedding and if we sample $z\sim\pi$, then the likelihood $f_j(z)$ is a real-valued random variable. 
-
-The interested reader is encouraged to read both~\cite{random} and~\cite{ouwehand} where it is explained how expectations of products of random variables form well-defined inner products. Further reading may include appendix B of~\cite{Bigoni} and references therein.
 
 
 \chapter{Practical meta-embeddings}
