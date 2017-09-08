@@ -126,7 +126,7 @@
 
 \def\expvb#1#2{\left\langle#1\right\rangle_{#2}}
 \def\expv#1#2{\bigl\langle#1\bigr\rangle_{#2}}
-%\def\expv#1#2{E_{#2}\left\{#1\right\}}
+\def\expp#1{\bigl\langle#1\bigr\rangle}
 
 
 
@@ -607,7 +607,11 @@ and more generally,
 In what follows, we shall interchangeably use the notations with or without comma, to respectively emphasize the dot-product or expectation interpretations.
 
 \section{Likelihood-ratios}
-Finally, we can close the loop by expressing the LR formulas of chapter~\ref{chap:fp} by using the scalar, elementwise and inner product operations of our meta-embedding space.\\ 
+Finally, we demonstrate the utility of our operations on meta-embeddings by expressing the LR formulas of chapter~\ref{chap:fp} in terms of these operations.\\ 
+
+\subsection{Simple LRs}
+\label{sec:simpleLR}
+Here we show how to write the LR of each of the examples of section~\ref{sec:examples} as an inner product between normalized meta-embeddings.\\
 
 \noindent The \emph{simple verification} likelihood ratio~\eqref{eq:SLR}, rewritten in a variety of notations, is:
 \begin{align}
@@ -628,7 +632,7 @@ where $f$ and $f'$ are the meta-embeddings extracted from $r$ and $r'$. \\
 \begin{align}
 \begin{split}
 L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_{\ell\in\Sset_j} f_\ell}{}}
-{\expv{f'}{}\prod_{j=1}^k \expv{\prod_{\ell\in\Sset_j} f_\ell}{}} \\
+{\expv{f'}{}\prod_{j=1}^m \expv{\prod_{\ell\in\Sset_j} f_\ell}{}} \\
 &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}}
 {\expv{f'}{}\expv{\prod_{\ell\in\Sset_i} f_\ell}{}} \\
 &= \dot{\normal{f'}}{\normal{\prod_{\ell\in\Sset_i} f_\ell}}
@@ -640,10 +644,30 @@ L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_
 L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\ell\in\Sset_i}f_\ell}{}\expv{\prod_{\ell\in\Sset_i}f_\ell}{}} = \dot{\normal{\prod_{\ell\in\Sset_i}f_\ell}}{\normal{\prod_{\ell\in\Sset_j}f_\ell}}
 \end{align}\\
 
+\noindent \textbf{In summary:} In all these simple cases, the likelihood-ratios are most compactly represented as \emph{inner products between normalized meta-embeddings}. 
 
-\noindent Finally, for the most general case of~\eqref{eq:generalLR}, we can rewrite\\  
+\subsection{The general case}
+%$$\includegraphics[width=15cm]{lattice_of_partitions}$$
+If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single inner product between normalized meta-embeddings. But we show that they \emph{can} however be written as products and ratios of such inner products. 
 
-\noindent \textbf{In summary:} In all these cases, the likelihood-ratios are most compactly represented as \emph{inner products between normalized meta-embeddings}. 
+We start with an example. Consider a set of four recordings, $\Rset=\{r_1,r_2,r_3,r_4\}$ with associated meta-embeddings, $\{f_1,f_2,f_3,f_4\}$ and consider the two hypotheses: $A:\{1\},\{2,4\},\{3\}$ and $B:\{1,3\},\{2\},\{4\}$. The LR is:
+\begin{align}
+\begin{split}
+\frac{P(\Rset\mid A)}{P(\Rset\mid B)} &= \frac{\expp{f_1}\expp{f_2f_4}\expp{f_3}}{\expp{f_1f_3}\expp{f_2}\expp{f_4}}\\
+&= \frac{\expp{f_1}\expp{f_2f_4}\expp{f_3}}{\expp{f_1f_3}\expp{f_2f_4}}\,
+\frac{\expp{f_1f_3}\expp{f_2f_4}}{\expp{f_1f_3}\expp{f_2}\expp{f_4}} \\
+&= \frac{\expp{f_1}\expp{f_3}}{\expp{f_1f_3}}\,
+\frac{\expp{f_2f_4}}{\expp{f_2}\expp{f_4}} \\
+&= \frac{\dot{\normal{f_2}}{\normal{f_4}}}{\dot{\normal{f_1}}{\normal{f_3}}}
+\end{split}
+\end{align} 
+We have achieved this re-arrangement by observing that we can get from $A$ to $B$ via the auxiliary hypothesis $C:\{1,3\},\{2,4\}$, where $C$ is reached from $A$ by joining $\{1\}\{3\}$ and $B$ is reached from $C$ by splitting $\{2,4\}$. The join contributes an inner product factor below the line and the split contributes another above the line.
+
+In general, the partitions of a set form a \emph{partial order}, where $C\ge A$ is defined by $C$ \emph{is coarser than} $A$. In our example, we have both $C\ge A$ and $C\ge B$, but $A$ and $B$ are \emph{not directly comparable}. (If two hypotheses are directly comparable---they differ by a single split or join, then their LR can be expressed as a single inner product between normalized meta-embeddings, as we have seen in section~\ref{sec:simpleLR}.) 
+
+More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a supremum (least upper bound) and an infimum (greatest lower bound). To form the LR between any pair of embeddings, we can choose to traverse the lattice between them either via the supremum, or the infimum, while every step (split or join) contributes a factor to assemble the required LR. In our example we chose the former, $C=\sup(A,B)$. It is left as an exercise to the reader to verify that traversing via $\inf(A,B)$ gives the same result.
+
+
 
 \subsection{Note on cosine similarity}
 \def\evec{\mathbf{e}}
