@@ -251,9 +251,9 @@
 
 \chapter{Introduction}
 
-\emph{Embeddings} are familiar in modern machine learning. Word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} extracted by neural nets were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
+\emph{Embeddings} are familiar in modern machine learning. Neural nets to extract word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
 
-Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers have the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, e.g. in~\cite{Voxceleb} and in David Snyder's work~\cite{end2end,DSIS17} and also in language recognition, e.g.~\cite{LIMSI_Language_embedding}. 
+Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}. A new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. Embeddings extracted from the input patterns live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
@@ -644,28 +644,116 @@ L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_
 L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\ell\in\Sset_i}f_\ell}{}\expv{\prod_{\ell\in\Sset_i}f_\ell}{}} = \dot{\normal{\prod_{\ell\in\Sset_i}f_\ell}}{\normal{\prod_{\ell\in\Sset_j}f_\ell}}
 \end{align}\\
 
-\noindent \textbf{In summary:} In each of these simple cases, the likelihood-ratio is most compactly represented as an \emph{inner product between normalized meta-embeddings}. 
+\noindent \textbf{In summary:} In each of these simple cases, the likelihood-ratio is most compactly represented as an \emph{inner product between normalized meta-embeddings}. In what follows, we refer to suchs inner products more concisely as \emph{normalized inner products}. 
 
 \subsection{The general case}
-%$$\includegraphics[width=15cm]{lattice_of_partitions}$$
-If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single inner product between normalized meta-embeddings. But we show that they \emph{can} however be written as products and ratios of such inner products. 
+\def\dotn#1#2{\dot{\normal{#1}}{\normal{#2}}}
+\begin{figure}[htb!]
+\begin{tikzpicture}[xscale=1,yscale=1]
+\node[ctext,red] (n1_23_4) {$1|23|4$};
+\node[ctext,right=1em of n1_23_4] (n14_2_3) {$14|2|3$};
+\node[ctext,right=1em of n14_2_3,blue] (n1_24_3) {$1|24|3$};
+\node[ctext,right=1em of n1_24_3,blue] (n13_2_4) {$13|2|4$};
+\node[ctext,right=1em of n13_2_4,green] (n12_3_4) {$12|3|4$};
+\node[ctext,right=1em of n12_3_4] (n1_2_34) {$1|2|34$};
+%
+\node[ctext,below=of n1_24_3,xshift=2em,green] (bottom) {$1|2|3|4$};
+\draw[green] (bottom) to (n1_23_4);
+\draw (bottom) to (n14_2_3);
+\draw (bottom) to (n13_2_4);
+\draw[green] (bottom) to (n12_3_4);
+\draw (bottom) to (n1_2_34);
+\draw (bottom) to (n1_24_3);
+%
+\node[ctext,above=4em of n1_23_4, xshift=-2em,red] (n14_23) {$14|23$};
+\draw[red] (n14_23) to (n1_23_4);
+\draw (n14_23) to (n14_2_3);
+\node[ctext,right=1em of n14_23] (n1_234) {$1|234$};
+\draw (n1_234) to (n1_2_34);
+\draw (n1_234) to (n1_23_4);
+\draw (n1_234) to (n1_24_3);
+\node[ctext,right=1.3em of n1_234,red] (n124_3) {$124|3$};
+\draw (n124_3) to (n14_2_3);
+\draw (n124_3) to (n1_24_3);
+\draw[green] (n124_3) to (n12_3_4);
+\node[ctext,right=1.2em of n124_3,blue] (n13_24) {$13|24$};
+\draw[blue] (n13_24) to (n1_24_3);
+\draw[blue] (n13_24) to (n13_2_4);
+\node[ctext,right=1.3em of n13_24] (n123_4) {$123|4$};
+\draw (n123_4) to (n12_3_4);
+\draw (n123_4) to (n13_2_4);
+\draw (n123_4) to (n1_23_4);
+\node[ctext,right=1.3em of n123_4] (n134_2) {$134|2$};
+\draw (n134_2) to (n14_2_3);
+\draw (n134_2) to (n1_2_34);
+\draw (n134_2) to (n13_2_4);
+\node[ctext,right=1.3em of n123_4] (n134_2) {$134|2$};
+\draw (n134_2) to (n14_2_3);
+\draw (n134_2) to (n1_2_34);
+\draw (n134_2) to (n13_2_4);
+\node[ctext,right=1.3em of n134_2] (n12_34) {$12|34$};
+\draw (n12_34) to (n1_2_34);
+\draw (n12_34) to (n12_3_4);
+%
+\node[ctext,above=of n13_24,red] (top) {$1234$};
+\draw[red] (top) to (n14_23);
+\draw (top) to (n1_234);
+\draw[red] (top) to (n124_3);
+\draw (top) to (n13_24);
+\draw (top) to (n123_4);
+\draw (top) to (n134_2);
+\draw (top) to (n12_34);
+\end{tikzpicture}
+\caption{Lattice of partitions of a set of 4 recordings. Arcs indicate coarser/finer than relationships. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
+\label{fig:lattice}
+\end{figure}
+If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single normalized inner product. But we show that they \emph{can} however be written as products and ratios of such inner products. We start with an example. \\
 
-We start with an example. Consider a set of four recordings, $\Rset=\{r_1,r_2,r_3,r_4\}$ with associated meta-embeddings, $\{f_1,f_2,f_3,f_4\}$ and consider the two hypotheses: $A:\{1\},\{2,4\},\{3\}$ and $B:\{1,3\},\{2\},\{4\}$. The LR is:
+\noindent\textbf{Example 1.} Consider a set of four recordings, $\Rset=\{r_1,r_2,r_3,r_4\}$ with associated meta-embeddings, $\{f_1,f_2,f_3,f_4\}$ and consider the two hypotheses: $A:1|24|3$ and $B:13|2|4$, written in a convenient short-hand. The LR is:
 \begin{align}
 \begin{split}
 \frac{P(\Rset\mid A)}{P(\Rset\mid B)} &= \frac{\expp{f_1}\expp{f_2f_4}\expp{f_3}}{\expp{f_1f_3}\expp{f_2}\expp{f_4}}\\
-&= \frac{\expp{f_1}\expp{f_2f_4}\expp{f_3}}{\expp{f_1f_3}\expp{f_2f_4}}\,
+&= \frac{\expp{f_1}\expp{f_2f_4}\expp{f_3}}{\expp{f_1f_3}\expp{f_2f_4}}\times
 \frac{\expp{f_1f_3}\expp{f_2f_4}}{\expp{f_1f_3}\expp{f_2}\expp{f_4}} \\
-&= \frac{\expp{f_1}\expp{f_3}}{\expp{f_1f_3}}\,
+&= \frac{\expp{f_1}\expp{f_3}}{\expp{f_1f_3}}\times
 \frac{\expp{f_2f_4}}{\expp{f_2}\expp{f_4}} \\
-&= \frac{\dot{\normal{f_2}}{\normal{f_4}}}{\dot{\normal{f_1}}{\normal{f_3}}}
+&= \frac{\dotn{f_2}{f_4}}{\dotn{f_1}{f_3}}
 \end{split}
 \end{align} 
-We have achieved this re-arrangement by observing that we can get from $A$ to $B$ via the auxiliary hypothesis $C:\{1,3\},\{2,4\}$, where $C$ is reached from $A$ by joining $\{1\}\{3\}$ and $B$ is reached from $C$ by splitting $\{2,4\}$. The join contributes an inner product factor below the line and the split contributes another above the line.
+We have achieved this re-arrangement by observing that we can get from $A$ to $B$ via the auxiliary hypothesis $C:13|24$, where $C$ is reached from $A$ by joining $\{1\}\{3\}$ and $B$ is reached from $C$ by splitting $\{2,4\}$. The join contributes a normalized inner product factor below the line and the split contributes another above the line.
 
-In general, the partitions of a set form a \emph{partial order}, where $C\ge A$ is defined by $C$ \emph{is coarser than} $A$. In our example, we have both $C\ge A$ and $C\ge B$, but $A$ and $B$ are \emph{not directly comparable}. (If two hypotheses are directly comparable---they differ by a single split or join, then their LR can be expressed as a single inner product between normalized meta-embeddings, as we have seen in section~\ref{sec:simpleLR}.) 
+In general, the partitions of a set form a \emph{partial order}, where $C\ge A$ is defined as: $C$ \emph{is coarser than} $A$. In our example, we have both $C\ge A$ and $C\ge B$, but $A$ and $B$ are \emph{not directly comparable}. (If two hypotheses are directly comparable---they differ by a single split or join, then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}.) 
 
-More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a supremum (least upper bound) and an infimum (greatest lower bound). To form the LR between any pair of embeddings, we can choose to traverse the lattice between them either via the supremum, or the infimum, while every step (split or join) contributes a factor to assemble the required LR. In our example we chose the former, $C=\sup(A,B)$. It is left as an exercise to the reader to verify that traversing via $\inf(A,B)$ gives the same result.
+More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows the lattice with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them either via the supremum, or the infimum, while every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} answer. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
+
+\noindent\textbf{Example 2a.} Let's try a more complex path, highlighted in red in figure~\ref{fig:lattice}. Let $A:1|23|4$ and $B:124|3$. We have $\sup(A,B)=1234$ and $\inf(A,B)=1|2|3|4$. Whether we go up or down, we need at least three steps to traverse between $A$ and $B$. There are three such paths via the supremum and three more via the infimum. Following the red highlighted path, the LR can be re-arranged as:
+\begin{align}
+\begin{split}
+\frac{P(\Rset\mid A)}{P(\Rset\mid B)} &= \frac{\expp{f_1}\expp{f_2f_3}\expp{f_4}}{\expp{f_1f_2f_4}\expp{f_3}}\\
+&= \frac{\expp{f_1}\expp{f_2f_3}\expp{f_4}}{\expp{f_1f_4}\expp{f_2f_3}}\times
+\frac{\expp{f_1f_4}\expp{f_2f_3}}{\expp{f_1f_2f_3f_4}}\times
+\frac{\expp{f_1f_2f_3f_4}}{\expp{f_1f_2f_4}\expp{f_3}}\\
+&= \frac1{\dotn{f_1}{f_4}}\times\frac1{\dotn{f_1f_4}{f_2f_3}}\times\dotn{f_1f_2f_4}{f_3}
+\end{split}
+\end{align}
+Each upward step (join) contributes a normalized inner product below the line, while the downward step (split) contributes another above.\\
+
+\noindent\textbf{Example 2b.} Let's also try a path via the infimum, highlighted in green, to traverse between the same two nodes as before. Now the LR can be re-arranged as:
+\begin{align}
+\begin{split}
+\frac{P(\Rset\mid A)}{P(\Rset\mid B)} &= \frac{\expp{f_1}\expp{f_2f_3}\expp{f_4}}{\expp{f_1f_2f_4}\expp{f_3}}\\
+&= \frac{\expp{f_1}\expp{f_2f_3}\expp{f_4}}{\expp{f_1}\expp{f_2}\expp{f_3}\expp{f_4}}\times
+\frac{\expp{f_1}\expp{f_2}\expp{f_3}\expp{f_4}}{\expp{f_1f_2}\expp{f_3}\expp{f_4}}\times
+\frac{\expp{f_1f_2}\expp{f_3}\expp{f_4}}{\expp{f_1f_2f_4}\expp{f_3}}\\
+&= \dotn{f_2}{f_3}\times\frac{1}{\dotn{f_1}{f_2}}\times\frac1{\dotn{f_1f_2}{f_4}}
+\end{split}
+\end{align}
+Again, each upward step (join) contributes a normalized inner product below the line, while the downward step (split) contributes another above. This rule applies in general. If we follow a path from the numerator (hypothesis $A$), to the denominator (hypothesis $B$), joins contribute below the line, while splits contribute above. (If we go from denominator to numerator, this rule is reversed.)  
+
+\subsubsection{Equivalence of paths}
+As the two paths that we examined in example 2 demonstrate, there may be many different paths and therefore many different decompositions of a given LR in terms of normalized inner products. Nevertheless, as long as our calculations are exact, all such decompositions must give the same numerical result. This may serve as a useful regularization constraint if we are training neural nets to approximate inner products between meta-embeddings. (As we shall see in the next chapter, there may be various practical reasons to prefer approximate calculations.) 
+
+The equivalence of paths is not limited to shortest paths. The products and ratios of the normalized inner products of any path between two nodes must give the same numerical result, irrespective of the path. This is also true in particular of \emph{cycles}. If we start and end at the same node, the LR we calculate thus is \emph{unity}. The interesting thing about this is that if we are given a set of unlabelled recordings, we can use this fact to manufacture a (very) large set of constraints on the values of normalized inner products. If we work with logarithms, this becomes a homogeneous system of linear equations. Since there are more paths than arcs, there will be infinitely many solutions to this system, which makes intuitive sense---we cannot expect an unlabelled data set to exactly define the values that LRs should have. Still, these constraints may help to regularize neural nets in both labelled and unlabelled training regimes.      
 
 
 
@@ -706,7 +794,7 @@ $$
 \draw[->,blue] (0,0) -- (2,1) node[right]{$f_1$};
 \draw[->,blue] (0,0) -- (1.2,0.3) node[right]{$f_2$};
 \draw[->,blue] (0,0) -- (0.5,1.5) node[right]{$f_3$};
-\end{tikzpicture}\\
+\end{tikzpicture}
 $$
 The first thing to notice is the difference between embedding and meta-embedding: The ideal embedding here is binary, $\zvec\in\{\male,\female\}$, while the meta-embedding is continuous: $f_i\in\R^2$. Here, and in general, the meta-embedding lives in a more complex space than $\zvec$. 
 
