@@ -248,6 +248,7 @@
 
 \hypersetup{pageanchor=true}
 
+\tableofcontents
 
 \chapter{Introduction}
 
@@ -753,7 +754,7 @@ Again, each upward step (join) contributes a normalized inner product below the 
 \subsubsection{Equivalence of paths}
 As the two paths that we examined in example 2 demonstrate, there may be many different paths and therefore many different decompositions of a given LR in terms of normalized inner products. Nevertheless, as long as our calculations are exact, all such decompositions must give the same numerical result. This may serve as a useful regularization constraint if we are training neural nets to approximate inner products between meta-embeddings. (As we shall see in the next chapter, there may be various practical reasons to prefer approximate calculations.) 
 
-The equivalence of paths is not limited to shortest paths. The products and ratios of the normalized inner products of any path between two nodes must give the same numerical result, irrespective of the path. This is also true in particular of \emph{cycles}. If we start and end at the same node, the LR we calculate thus is \emph{unity}. The interesting thing about this is that if we are given a set of unlabelled recordings, we can use this fact to manufacture a (very) large set of constraints on the values of normalized inner products. If we work with logarithms, this becomes a homogeneous system of linear equations. Since there are more paths than arcs, there will be infinitely many solutions to this system, which makes intuitive sense---we cannot expect an unlabelled data set to exactly define the values that LRs should have. Still, these constraints may help to regularize neural nets in both labelled and unlabelled training regimes.      
+The equivalence of paths is not limited to shortest paths. The products and ratios of the normalized inner products of any path between two nodes must give the same numerical result, irrespective of the path. This is also true in particular of \emph{cycles}. If we start and end at the same node, the LR we calculate thus is \emph{unity}. The interesting thing about this is that if we are given a set of unlabelled recordings, we can use this fact to manufacture a (very) large set of constraints on the values of normalized inner products. (If we work with logarithms, this becomes a homogeneous system of linear equations.) These constraints may perhaps help to regularize neural nets in both labelled and unlabelled training regimes.      
 
 
 
