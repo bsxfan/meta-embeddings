@@ -975,7 +975,7 @@ where $\Bmat_j$ is a $d$-by-$d$, positive semi-definite precision matrix, compos
 \end{align}
 where $\{\Emat_i\}_{i=1}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with the parameters of the neural net that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
 
-Since $\zvec\in\R^d$ is hidden, we are free to choose the dimensionality, $d$. Experience with PLDA suggests $100\le d\le200$ is a good choice. This can also be compared to the Facenet embeddings that are 120-dimensional. The size, $D$, of the precision parametrization can be used to trade off computational complexity vs capacity. To keep the complexity significantly less than that which would be needed for fully specified precision matrices, we probably want to constrain $D\ll\frac{d(d+1)}{2}$. 
+Since $\zvec\in\R^d$ is hidden, we are free to choose the dimensionality, $d$. Experience with PLDA suggests $100\le d\le200$ is a good choice. This can also be compared to the Facenet embeddings, which are 120-dimensional. The size, $D$, of the precision parametrization can be used to trade off computational complexity vs capacity. To keep the complexity significantly less than that which would be needed for fully specified precision matrices, we probably want to constrain $D\ll\frac{d(d+1)}{2}$. 
 
 Scalar multiplication could be easily done in this framework but in practice, we probably won't need it. Addition of the meta-embeddings would give mixtures of Gaussians, with more complex representations, but for this representation we don't need addition.
 
@@ -983,7 +983,7 @@ Scalar multiplication could be easily done in this framework but in practice, we
 The important elementwise product is done by simply adding the representation vectors. For $\Rset=\{r_1,\ldots,r_n\}$, we can extract the individual representations, $\{\evec_j\}_{j=1}^n$, which respectively represent the $\{f_j\}_{j=1}^n$. The representation for $f_\Rset=\prod_{j=1}^n f_j$ is then $\evec_\Rset=\sum_{j=1}^n \evec_j$. The representation $\evec_j$ is essentially logarithmic, which gives us the benefit of automatic positivity, as well as easy elementwise multiplication. The disadvantage is somewhat complex expectation computation.
 
 
-\subsection{Note on group structure}
+\subsubsection{Note on group structure}
 For future reference, it might be useful to note that since Gaussians are closed under (associative) multiplication, our space of Gaussian meta-embeddings is a \emph{monoid} (a semigroup, with identity). Since we exclude precision matrices with negative eigenvalues, our monoid lacks inverse elements, which would have made it a full group. The identity element is a Gaussian with zero mean and zero precision, which is just our previously defined identity, $\onevec(\zvec)=1$. 
 
 
@@ -1074,7 +1074,7 @@ where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constra
 
 
 \section{Zero-mean Gaussians}
-Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for faster stochastic expectation solutions. By restricting to zero-mean Gaussians, the Fourier transforms of these Gaussians are also multivariate Gaussians, from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by adding samples drawn from individual embeddings. A detailed explanation follows.
+Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for faster stochastic expectation solutions. By restricting to zero-mean Gaussians, the Fourier transforms of these Gaussians are also multivariate Gaussians, from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual embeddings. A detailed explanation follows.
 
 We need to place a further restriction on our meta-embeddings: we now require them to have \emph{strictly} positive definite precisions (equivalently covariances). This is necessary for their Fourier transforms to exist. Since there is a bijection between the $f_i$ and their Fourier transforms, denoted $\tilde f_i$, we may as well directly extract representations of their Fourier transforms. We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval's and convolution theorems as:
 \begin{align}
