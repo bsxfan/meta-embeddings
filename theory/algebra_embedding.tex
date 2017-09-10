@@ -249,6 +249,7 @@
 \hypersetup{pageanchor=true}
 
 \tableofcontents
+\listoffigures
 
 \chapter{Introduction}
 
@@ -650,6 +651,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 \subsection{The general case}
 \def\dotn#1#2{\dot{\normal{#1}}{\normal{#2}}}
 \begin{figure}[htb!]
+\centering
 \begin{tikzpicture}[xscale=1,yscale=1]
 \node[ctext,red] (n1_23_4) {$1|23|4$};
 \node[ctext,right=1em of n1_23_4] (n14_2_3) {$14|2|3$};
@@ -705,7 +707,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 \draw (top) to (n134_2);
 \draw (top) to (n12_34);
 \end{tikzpicture}
-\caption{Lattice of partitions of a set of 4 recordings. Arcs indicate coarser/finer than relationships. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
+\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc indicates an atomic refinement step, which splits a single subset. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
 \label{fig:lattice}
 \end{figure}
 If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single normalized inner product. But we show that they \emph{can} however be written as products and ratios of such inner products. We start with an example. \\
@@ -723,9 +725,11 @@ If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we
 \end{align} 
 We have achieved this re-arrangement by observing that we can get from $A$ to $B$ via the auxiliary hypothesis $C:13|24$, where $C$ is reached from $A$ by joining $\{1\}\{3\}$ and $B$ is reached from $C$ by splitting $\{2,4\}$. The join contributes a normalized inner product factor below the line and the split contributes another above the line.
 
-In general, the partitions of a set form a \emph{partial order}, where $C\ge A$ is defined as: $C$ \emph{is coarser than} $A$. In our example, we have both $C\ge A$ and $C\ge B$, but $A$ and $B$ are \emph{not directly comparable}. (If two hypotheses are directly comparable---they differ by a single split or join, then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}.) 
+In general, the partitions of a set form a \emph{partial order}, where $A<C$ is defined as: $C$ \emph{is finer than} $A$. In our example, we have both $A<C$ and $B<C$, but $A$ and $B$ are \emph{not directly comparable}. If two hypotheses \emph{are} directly comparable (if they differ by joining or splitting a single subset), then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}. 
 
-More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows the lattice with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them either via the supremum, or the infimum, while every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} answer. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
+More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows an example of such a lattice, with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them via any path connected by arcs, but the shortest paths will go via the supremum or the infimum. Since the infimum and supremum always exist, there will always be a path. Every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. 
+
+In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} answer. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
 
 \noindent\textbf{Example 2a.} Let's try a more complex path, highlighted in red in figure~\ref{fig:lattice}. Let $A:1|23|4$ and $B:124|3$. We have $\sup(A,B)=1234$ and $\inf(A,B)=1|2|3|4$. Whether we go up or down, we need at least three steps to traverse between $A$ and $B$. There are three such paths via the supremum and three more via the infimum. Following the red highlighted path, the LR can be re-arranged as:
 \begin{align}
@@ -756,7 +760,26 @@ As the two paths that we examined in example 2 demonstrate, there may be many di
 
 The equivalence of paths is not limited to shortest paths. The products and ratios of the normalized inner products of any path between two nodes must give the same numerical result, irrespective of the path. This is also true in particular of \emph{cycles}. If we start and end at the same node, the LR we calculate thus is \emph{unity}. The interesting thing about this is that if we are given a set of unlabelled recordings, we can use this fact to manufacture a (very) large set of constraints on the values of normalized inner products. (If we work with logarithms, this becomes a homogeneous system of linear equations.) These constraints may perhaps help to regularize neural nets in both labelled and unlabelled training regimes.      
 
+\subsubsection{Primitive operations}
+Which primitive building blocks do we need to compute general LRs of the form~\eqref{eq:generalLR}? Let's assume we can always extract raw (unnormalized) meta-embeddings from any recording. Then, as~\eqref{eq:generalLR} shows, we can compute any LR if we can:
+\begin{itemize}
+	\item arbitrarily pool meta-embeddings (do elementwise multiplication) and
+	\item compute arbitrary expectations of single or pooled meta-embeddings.
+\end{itemize}
+Alternatively, as we have shown in this section, we can compute arbitrary LRs if we can
+\begin{itemize}
+	\item pool and
+	\item compute arbitrary normalized inner products.
+\end{itemize}
+We can however somewhat restrict the requirement on normalized inner products. We can get away with inner products where \emph{one of the arguments is always a single (unpooled) meta-embedding}. To do normalization, we need $\dot{f}{\onevec}$, which respects this restriction. To further enforce this restriction, look again at the lattice in figure~\ref{fig:lattice} and convince yourself that you can traverse between any two nodes by always adding or removing but a single element of some subset in the partition. For example, the red path does not respect this restriction, but the blue and green ones do. For such paths, all the inner product factors will have at least one unpooled argument.
 
+When we discuss practical representations of meta-embeddings in the next chapter, we will see that for some of the representations, pooling may change the form of the representation. The form may have implications on how easy it is to do inner products. If one of the arguments is always unpooled, this may facilitate calculations.
+
+Finally, we mention another interesting building block. It is not difficult to show that we can form arbitrary LRs from factors of the form:
+\begin{align}
+\frac{\expp{\prod_{i=1}^m f_i}}{\prod_{i=1}^m\expp{f_i}} &= \expvb{\prod_{i=1}^m \normal{f_i}}{}
+\end{align}  
+for $m=1,2,\ldots$. This factor is just the LR comparing the coarsest to the finest partition of a set of $m$ recordings. It can be argued that this building block is not primitive, because it can be assembled via pooling and expectation (or pooling and inner products).
 
 \subsection{Note on cosine similarity}
 \def\evec{\mathbf{e}}
@@ -777,11 +800,11 @@ In speaker recognition, cosine similarity between embeddings in Euclidean space 
 \label{sec:exem}
 \def\male{\texttt{m}}
 \def\female{\texttt{f}}
-Let us now construct a graphical example to reinforce our geometric understanding of our meta-embeddings. In order to be able to plot the meta-embeddings as vectors in two dimensions, we oversimplify, so that the embeddings can indeed be represented in $\R^2$. 
+Let us now construct a graphical example to reinforce our geometric understanding of our meta-embeddings. In order to be able to plot the meta-embeddings, we choose perhaps the simplest possible meta-embeddings, which live in $\R^2$. 
 
 We do this by imagining a very weak speaker recognizer (meta-embedding extractor) that can only distinguish voices by whether they sound male or female. That is, we choose the simplest possible hidden speaker identity variable by making it discrete and binary: $\zvec\in\{\male,\female\}$. We choose the prior to have males and females equally likely:  
 $$\pi(\male)=\pi(\female)=\frac12$$ 
-Seen as a function, the meta-embedding for recording $r_i$ is $f_i(\zvec) = k_i P(r_i\mid\zvec)$. Since $\zvec$ has only two possible values, we can represent the meta-embedding as a \emph{two-dimensional vector}: $f_i = \bigl[k_iP(r_i\mid\male),k_iP(r_i\mid\female)\bigr]$. Because of the prior weighting, $\pi(\male)=\pi(\female)=\frac12$, the inner product and dot product differ with a factor $2$: if $f_i=[f_{i1},f_{i2}]$, then:
+Seen as a function, the meta-embedding for recording $r_i$ is $f_i(\zvec) = k_i P(r_i\mid\zvec)$. Since $\zvec$ has only two possible values, we can represent the meta-embedding as a \emph{two-dimensional vector}: $f_i = \bigl[k_iP(r_i\mid\male),k_iP(r_i\mid\female)\bigr]$. Because of the prior weighting, $\pi(\male)=\pi(\female)=\frac12$, the inner product and dot product differ by a factor $2$: if $f_i=[f_{i1},f_{i2}]$, then:
 \begin{align}
 \dot{f_i}{f_j} = \frac12(f_{i1}f_{j1} + f_{i2}f_{j2})
 \end{align}
@@ -818,6 +841,7 @@ Since the discrimination given by the binary hidden variable is weak, the likeli
 
 %Normalized Meta-Embeddings
 \begin{figure}[p]
+\centering
 \begin{tikzpicture}[xscale=3,yscale=3,thick]
 
 \draw[->] (0,0) -- (0,2.5) node[left]{$\female$};
@@ -858,7 +882,7 @@ Since the discrimination given by the binary hidden variable is weak, the likeli
 \node[align=left] at(1,2.5){$\pi(\male)=\pi(\female)=\frac12$};
 
 \end{tikzpicture}  
-\caption{Normalized meta-embeddings (red) and their inner products. Raw meta-embeddings (blue) are normalized by scaling them so that their projections on $\onevec$ are unity.}
+\caption[Normalized meta-embeddings]{Normalized meta-embeddings (red) and their inner products. Raw meta-embeddings (blue) are normalized by scaling them so that their projections on $\onevec$ are unity.}
 \label{fig:norm}
 \end{figure}
 
@@ -869,6 +893,7 @@ Figure~\ref{fig:pool} shows what happens when we know that $r_1$ and $r_2$ are o
 
 %Pooling
 \begin{figure}[p]
+\centering
 \begin{tikzpicture}[xscale=3,yscale=3,thick]
 
 \draw[->] (0,0) -- (0,2.5) node[left]{$\female$};
@@ -909,7 +934,7 @@ Figure~\ref{fig:pool} shows what happens when we know that $r_1$ and $r_2$ are o
 \node[align=left] at(1,2.5){$\pi(\male)=\pi(\female)=\frac12$};
 
 \end{tikzpicture}
-\caption{Pooling: If we know that $f_1$ and $f_2$ are from the same speaker, we can pool them, using the elementwise product $f_1f_2$. This increases the certainty that this is a male speaker. Correspondingly, the strength (difference from $1$) of $\dot{\normal{f_1f_2}}{\normal{f_3}}$ is more than either of $\dot{\normal{f_1}}{\normal{f_3}}$ and $\dot{\normal{f_2}}{\normal{f_3}}$. Pooling has increased the certainty that the speaker represented by $f_1f_2$ is not the same speaker as the probably female $f_3$.}
+\caption[Meta-embedding pooling]{Pooling: If we know that $f_1$ and $f_2$ are from the same speaker, we can pool them, using the elementwise product $f_1f_2$. This increases the certainty that this is a male speaker. Correspondingly, the strength (difference from $1$) of $\dot{\normal{f_1f_2}}{\normal{f_3}}$ is more than either of $\dot{\normal{f_1}}{\normal{f_3}}$ and $\dot{\normal{f_2}}{\normal{f_3}}$. Pooling has increased the certainty that the speaker represented by $f_1f_2$ is not the same speaker as the probably female $f_3$.}
 \label{fig:pool}
 \end{figure}
 
