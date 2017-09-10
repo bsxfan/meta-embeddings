@@ -707,7 +707,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 \draw (top) to (n134_2);
 \draw (top) to (n12_34);
 \end{tikzpicture}
-\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc indicates an atomic refinement step, which splits a single subset. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
+\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc is an an atomic refinement, which splits a single subset. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
 \label{fig:lattice}
 \end{figure}
 If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single normalized inner product. But we show that they \emph{can} however be written as products and ratios of such inner products. We start with an example. \\
@@ -729,7 +729,7 @@ In general, the partitions of a set form a \emph{partial order}, where $A<C$ is 
 
 More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows an example of such a lattice, with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them via any path connected by arcs, but the shortest paths will go via the supremum or the infimum. Since the infimum and supremum always exist, there will always be a path. Every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. 
 
-In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} answer. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
+In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} decomposition. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
 
 \noindent\textbf{Example 2a.} Let's try a more complex path, highlighted in red in figure~\ref{fig:lattice}. Let $A:1|23|4$ and $B:124|3$. We have $\sup(A,B)=1234$ and $\inf(A,B)=1|2|3|4$. Whether we go up or down, we need at least three steps to traverse between $A$ and $B$. There are three such paths via the supremum and three more via the infimum. Following the red highlighted path, the LR can be re-arranged as:
 \begin{align}
