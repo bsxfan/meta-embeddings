@@ -7,6 +7,18 @@
 \documentclass[a4paper,oneside,12pt,english]{report}
 \usepackage{url}
 \usepackage[pdftex]{color,graphicx}
+
+
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+
+
+\usepackage{tikz}
+
+
+
 \usepackage[backref=false]{hyperref}
 \hypersetup{plainpages = false,
               breaklinks=true,
@@ -54,13 +66,6 @@
 % ensures that the paper size is a4, fonts are typeset at the size 12p
 % and the equation numbers are on the right side
 %
-\usepackage{amsmath}%
-\usepackage{amsfonts}%
-\usepackage{amssymb}%
-\usepackage{graphicx}
-
-
-\usepackage{tikz}
 
 
 %\usetikzlibrary{external}
@@ -90,7 +95,8 @@
 }
 
 \usetikzlibrary{arrows,shapes,backgrounds,positioning,fit}
-
+\usetikzlibrary{external}
+\tikzexternalize
 
 
 
@@ -310,6 +316,7 @@
 
 \hypersetup{pageanchor=true}
 
+
 \tableofcontents
 \listoffigures
 
@@ -359,7 +366,7 @@ In general, we will be interested in \emph{sets} of recordings, ranging from the
 \begin{align*}
 \Rset &=\{r_1,r_2,\ldots,r_n\}
 \end{align*}
-We shall work with hypotheses of how such sets of recordings are partitioned w.r.t.\ speaker and we shall make use of independence assumptions conditioned on these hypotheses. 
+We shall work with hypotheses about how such sets of recordings are partitioned w.r.t.\ speaker and we shall make use of independence assumptions conditioned on these hypotheses. 
 
 \section{Independence assumptions}
 \label{sec:IS}
@@ -1126,7 +1133,9 @@ If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i
 \end{align}
 This might be more accurate than prior sampling, because when $f_i$ and $f_j$ represent the same speaker, their peaks should overlap. If they are of different speakers, their peaks might be far apart, but then we do want a value close to zero for the expectation. With this variant, we may be able to use smaller values for $m$. 
 
-A disadvantage is that we have now reintroduced the need for Cholesky decomposition. If $f_i$ is still represented as above by its natural parameters, $\avec_i$ and $\Bmat_i$, we need the Cholesky decomposition of $\Imat+\Bmat_i$ in order to sample from $\pi\normal{f_i}$. For this side of the trial we do not need to separately compute $\expv{f_j}{}$, because the samples already come from the normalized distribution. Fortunately, we need this only for one side of the trial and we are still avoiding per-trial Cholesky decompositions.
+This method is asymmetric. Which version is best---should we sample from $f_i$, or from $f_j$? If $f_i$ is much sharper than $f_j$, so that $f_j$ is almost constant compared to $f_j$, then one sample would suffice, while if we sampled the other way round, we would need many samples to properly explore the volume of $f_i$. Pooling generally sharpens peaks, so it would be more accurate to sample from the side that consists of the most pooled factors. Unfortunately, fast pooling and sampling are conflicting requirements---after adding natural parameters to compute the pooling, we need a Cholesky factorization before we can sample.
+
+Whether we pool or not, a disadvantage of posterior sampling vs prior sampling is that we have reintroduced the need for Cholesky factorization. Fortunately, we need this only for one side of the trial and we are still avoiding per-trial Cholesky decompositions. Also note that for the sampled side of the trial we do not need to separately compute the normalization constant, because the samples already come from the normalized distribution. 
 
 Another option would be to change the representation. We could let:
 \begin{align}
@@ -1136,9 +1145,11 @@ where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constra
 
 
 \section{Zero-mean Gaussians}
-Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for faster stochastic expectation solutions. By restricting to zero-mean Gaussians, the Fourier transforms of these Gaussians are also multivariate Gaussians, from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual embeddings. A detailed explanation follows.
+Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. A more detailed explanation follows.
 
-We need to place a further restriction on our meta-embeddings: we now require them to have \emph{strictly} positive definite precisions (equivalently covariances). This is necessary for their Fourier transforms to exist. Since there is a bijection between the $f_i$ and their Fourier transforms, denoted $\tilde f_i$, we may as well directly extract representations of their Fourier transforms. We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval's and convolution theorems as:
+Let the Fourier transform of meta-embedding $f_i$ be denoted by $\tilde f_i$. If $f_i$ is a zero-mean Gaussian with strictly positive definite precision, then $\tilde f_j$ is also a zero-mean Gaussian, having covariance equal to the precision of $f_i$. Since there is a bijection between the $f_i$ and $\tilde f_i$, we may as well directly extract representations for the $\tilde f_i$. 
+
+We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval's and convolution theorems as:
 \begin{align}
 \int_{\R^n} \pi(\zvec) \prod_{i=1}^m f_i(\zvec)  \,d\zvec  
 &= \int_{\R^n} \pi(\xvec) \tilde f_1(\xvec)\ast\tilde f_2(\xvec)\ast\cdots\ast\tilde f_m(\xvec)  \,d\xvec  
