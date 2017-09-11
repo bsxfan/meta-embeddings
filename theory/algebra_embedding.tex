@@ -95,6 +95,7 @@
 
 
 \usepackage{enumerate}
+\usepackage{titlepic}
 
 %------------------------------------------------------------
 %\numberwithin{equation}{section}
@@ -235,7 +236,7 @@
 \tikzstyle{ccircle} = [circle,draw=blue!100,thick,align=center,inner sep = 0]
 \tikzstyle{ctext} = [rectangle,align=center,inner sep = 4pt]
 \tikzstyle{ltext} = [rectangle,align=left,inner sep = 4pt]
-\tikzstyle{solder} = [circle,draw,fill,inner sep = 0, minimum size = 3pt]
+\tikzstyle{solder} = [circle,draw,fill,inner sep = 0, minimum size = 6pt]
 
 
 \hypersetup{pageanchor=false}
@@ -243,8 +244,69 @@
 
 \title{Meta-embeddings: a probabilistic generalization of embeddings in machine learning}
 \author{Niko Br\"ummer\footnote{Corresponding author: \url{niko.brummer@gmail.com}. The other authors are in alphabetical order.}~, Luk\'{a}\v{s} Burget, Paola Garcia, \\ Old\v{r}ich Plchot, Johan Rohdin, Daniel Romero,\\ David Snyder, Themos Stafylakis, Jes\'us Villalba}
-\date{JHU HLTCOE SCALE Workshop, June-July 2017}
+\date{JHU HLTCOE 2017 SCALE Workshop}
+
+\titlepic{
+\begin{tikzpicture}[xscale=1.5,yscale=1.5,thick]
+\node[solder,green] at(0,0) (bottom) {};
+%
+\node[solder,red] at(-2.5,1) (n1_23_4) {};
+\node[solder] at(-1.5,1) (n14_2_3) {};
+\node[solder,blue] at(-0.5,1) (n1_24_3) {};
+\node[solder,blue] at(0.5,1) (n13_2_4) {};
+\node[solder,green] at(1.5,1) (n12_3_4) {};
+\node[solder] at(2.5,1) (n1_2_34) {};
+\draw[green] (bottom) to (n1_23_4);
+\draw (bottom) to (n14_2_3);
+\draw (bottom) to (n13_2_4);
+\draw[green] (bottom) to (n12_3_4);
+\draw (bottom) to (n1_2_34);
+\draw (bottom) to (n1_24_3);
+%
+\node[solder,red] at(-3,3) (n14_23) {};
+\node[solder] at(-2,3) (n1_234) {};
+\node[solder,red] at(-1,3) (n124_3) {};
+\node[solder,blue] at(0,3) (n13_24) {};
+\node[solder] at(1,3) (n123_4) {};
+\node[solder] at(2,3) (n134_2) {};
+\node[solder] at(3,3) (n12_34) {};
+\draw[red] (n14_23) to (n1_23_4);
+\draw (n14_23) to (n14_2_3);
+\draw (n1_234) to (n1_2_34);
+\draw (n1_234) to (n1_23_4);
+\draw (n1_234) to (n1_24_3);
+\draw (n124_3) to (n14_2_3);
+\draw (n124_3) to (n1_24_3);
+\draw[green] (n124_3) to (n12_3_4);
+\draw[blue] (n13_24) to (n1_24_3);
+\draw[blue] (n13_24) to (n13_2_4);
+\draw (n123_4) to (n12_3_4);
+\draw (n123_4) to (n13_2_4);
+\draw (n123_4) to (n1_23_4);
+\draw (n134_2) to (n14_2_3);
+\draw (n134_2) to (n1_2_34);
+\draw (n134_2) to (n13_2_4);
+\draw (n134_2) to (n14_2_3);
+\draw (n134_2) to (n1_2_34);
+\draw (n134_2) to (n13_2_4);
+\draw (n12_34) to (n1_2_34);
+\draw (n12_34) to (n12_3_4);
+%
+\node[solder,red] at(0,4) (top) {};
+\draw[red] (top) to (n14_23);
+\draw (top) to (n1_234);
+\draw[red] (top) to (n124_3);
+\draw (top) to (n13_24);
+\draw (top) to (n123_4);
+\draw (top) to (n134_2);
+\draw (top) to (n12_34);
+\end{tikzpicture}
+}
+
+
 \maketitle
+
+
 
 \hypersetup{pageanchor=true}
 
