@@ -95,6 +95,9 @@
 }
 
 \usetikzlibrary{arrows,shapes,backgrounds,positioning,fit}
+
+% Caches tikz figures as PDF on disk. 
+% Needs --shell-escape on pdflatex commandline, or for TexicCenter, see here: https://tex.stackexchange.com/questions/222632/how-to-do-shell-escape-in-texniccenter
 \usetikzlibrary{external}
 \tikzexternalize
 
@@ -1147,14 +1150,20 @@ where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constra
 \section{Zero-mean Gaussians}
 Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. A more detailed explanation follows.
 
-Let the Fourier transform of meta-embedding $f_i$ be denoted by $\tilde f_i$. If $f_i$ is a zero-mean Gaussian with strictly positive definite precision, then $\tilde f_j$ is also a zero-mean Gaussian, having covariance equal to the precision of $f_i$. Since there is a bijection between the $f_i$ and $\tilde f_i$, we may as well directly extract representations for the $\tilde f_i$. 
+\subsection{Representation}
+Let the Fourier transform of meta-embedding $f_i$ be denoted by $\tilde f_i$. If $f_i$ is a zero-mean Gaussian with strictly positive definite precision, then $\tilde f_j$ is also a zero-mean Gaussian, having covariance equal to the precision of $f_i$. Since there is a bijection between $f_i$ and $\tilde f_i$, we may as well directly extract representations for the $\tilde f_i$. Moreover, these representations can be conveniently chosen to facilitate sampling. That is, every $\tilde f_i$ is represented by a $d$-by-$d$ square (possibly triangular) matrix. Sampling is done by forming matrix vector products, where the $d$-dimensional vectors are sampled from the standard Gaussian. This is just the \emph{reparametrization trick}, familiar from the VAE literature, which plays well with gradient backpropagation through the stochastic part of the calculation~\cite{VAE}. 
 
+More parsimonious representations are possible. We can represent each meta-embedding via \emph{samples}, rather than via a matrix of parameters. The net that extracts the embeddings is simply required to produce Gaussian samples, using any convenient method. One way to implement this is to generate samples from a factor analysis model---where samples drawn from a full rank diagonal Gaussian are added to $D$-dimensional samples multiplied by a $D$-by-$d$ factor loading matrix, where typically $D\ll d$. The parameter count of the factor-analysis representation  is $d(D+1)$, rather than $d^2$ for full, or $\frac{d(d+1)}{2}$ for triangular covariance square roots.
+
+\subsection{Frequency domain pooling and expectation}
 We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval's and convolution theorems as:
 \begin{align}
 \int_{\R^n} \pi(\zvec) \prod_{i=1}^m f_i(\zvec)  \,d\zvec  
 &= \int_{\R^n} \pi(\xvec) \tilde f_1(\xvec)\ast\tilde f_2(\xvec)\ast\cdots\ast\tilde f_m(\xvec)  \,d\xvec  
 \end{align}
-where $\ast$ denotes convolution and where we do not need complex conjugation, because everything is real-valued. Since $\pi$ is standard Gaussian, its Fourier transform is also standard Gaussian. The RHS is the expected value of $\pi$, w.r.t.\ a Gaussian, formed by the convolution of $m$ zero-mean Gaussians, $\{\tilde f_i\}$. The idea is that we extract the meta-embedding representations parametrized in such a way that we can easily sample from the individual $\tilde f_i$. The sum of independent samples of all the $\tilde f_i$ will give a sample from the convolution. These sums can then be inserted into $\pi$ and averaged to approximate the required expectation.
+where $\ast$ denotes convolution and where we do not need complex conjugation, because everything is real-valued. Since $\pi$ is standard Gaussian, its Fourier transform is also standard Gaussian. The RHS is the expected value of $\pi$, w.r.t.\ a Gaussian, formed by the convolution of $m$ zero-mean Gaussians, $\{\tilde f_i\}$. The sum of independent samples of all the $\tilde f_i$ will give a sample from the convolution. These sums can then be inserted into $\pi$ and averaged to approximate the required expectation.
+
+\subsection{Could it work?}
 
 
 \section{Exponential family Gaussian mixture}
