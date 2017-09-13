@@ -1259,6 +1259,198 @@ First pubished in~\cite{Facenet}.\\
 %\subsection{Agglomerative clustering}
 
 
+\appendix
+
+\chapter{Multidimensional Fourier transform}
+\def\zetavec{\mathbf{\zeta}}
+In a mathematically rigorous treatment of Fourier transforms, one has to carefully define the function spaces in which the transforms can be applied~\cite{SteinWeiss}. In this document, we shall mostly just tacitly assume that wherever we employ definite integrals, that those integrals exist and are finite.
+
+The \emph{Fourier transform} (FT) is an \emph{operator}---it maps one function to another function. We are interested in the $n$-dimensional FT, which maps some function, $\funcdef{f}{\R^d}{\C}$ to its transform, $\funcdef{\tilde f}{\R^d}{\C}$, where $\R^d$ is $n$-dimensional real Euclidean space and $\C$ is the field of complex numbers. Denoting the transform by $\tilde f = \FT{f}$ and letting $\zvec,\zetavec\in\R^d$, we have:
+\begin{align}
+\label{eq:FT}
+\FT{f}(\zetavec) &= \tilde f(\zetavec) = \int_{\R^d} f(\zvec)e^{-2\pi i\zvec'\zetavec}\,d\zvec
+\end{align}
+where $\zvec'\zetavec$ denotes dot product. The inverse transform (IFT) is:
+\begin{align}
+\IFT{\tilde f}(\zvec) &= f(\zvec) = \int_{\R^d} \tilde f(\zetavec)e^{2\pi i\zvec'\zetavec}\,d\zetavec
+\end{align}
+Below we shall sometimes use the notation $\FT[\zvec]{f(\zvec,\yvec)}$ to denote that the transform is done w.r.t. $\zvec$.
+
+\section{Symmetry}
+A real-valued function, $\funcdef{k}{\R^d}{R}$, which is also symmetric, $k(\zvec)=k(-\zvec)$, has a real-valued FT: $\tilde k(\zetavec) = \conj{\tilde k(\zetavec)}$, where the overline indicates complex conjugation. This follows readily from the definition~\eqref{eq:FT}.
+
+\section{The convolution theorem}
+Given functions $f$ and $g$, their \emph{convolution} is defined as:
+\begin{align}
+(f\ast g)(\zvec) &= \int_{\R^d} f(\zvec-\yvec)g(\yvec)\,d\yvec
+= \int_{\R^d} f(\yvec)g(\zvec-\yvec)\,d\yvec
+\end{align}
+which simplifies to multiplication in the transform domain:
+\begin{align}
+\FT{f\ast g}(\zetavec) &= \tilde f(\zetavec)\tilde g(\zetavec)
+\end{align}
+where $\tilde f=\FT{f}$ and $\tilde g=\FT{g}$.
+
+
+\section{Dirac delta}
+The \emph{dirac Delta}, $\delta$, has the property that:
+\begin{align}
+\label{eq:delta}
+\int_{\R^d} \delta(\zvec-\yvec) f(\zvec) \,d\zvec = f(\yvec) 
+\end{align}
+which can be used to compute its FT as:
+\begin{align}
+\label{eq:ftdelta}
+\FT[\zvec]{\delta(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} \delta(\zvec-\yvec)e^{-2\pi\zvec'\zetavec}\,d\zvec
+= e^{-2\pi i\yvec'\zetavec}
+\end{align}
+where we have introduced a subscript for the operator, $\Fset_\zvec$, to make clear that it operates on $\delta(\zvec-\yvec)$ as a function of $\zvec$. Applying the IFT, $\Fset_{\zetavec}^{-1}$, on both sides of~\eqref{eq:ftdelta} gives:
+\begin{align}
+\label{eq:iftdelta}
+\delta(\zvec-\yvec) &= \int_{\R^d} e^{-2\pi i\yvec'\zetavec} e^{2\pi i \zvec'\zetavec} \,d\zetavec
+= \int_{\R^d} e^{2\pi i(\zvec-\yvec)'\zetavec} \,d\zetavec
+\end{align}
+
+
+\section{Shifting property}
+If $\FT[\zvec]{f(\zvec)}(\zetavec)=\tilde f(\zetavec)$, we want to express the FT of a shifted version of $f$, namely $f(\zvec-\yvec)$ in terms of $\tilde f$. Letting $\rvec=\zvec-\yvec$, and noting that $d\rvec=d\zvec$, we have: 
+\begin{align}
+\begin{split}
+\FT[\zvec]{f(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} f(\zvec-\yvec)e^{-2\pi i\zvec'\zetavec}\,d\zvec\\
+&= \int_{\R^d} f(\rvec)e^{-2\pi i(\rvec+\yvec)'\zetavec}\,d\rvec \\
+&= e^{-2\pi i\yvec'\zetavec}\int_{\R^d} f(\rvec)e^{-2\pi i\rvec'\zetavec}\,d\rvec \\
+&= e^{-2\pi i\yvec'\zetavec}\tilde f(\zetavec) \\
+\end{split}
+\end{align}
+Shifting in the primary domain causes amplitude modulation in the transformed domain.
+
+ 
+\section{Definite integral}
+It follows directly from the definition~\eqref{eq:FT} that:
+\begin{align}
+\label{eq:di}
+\int_{\R^d} f(\zvec)\,d\zvec &= \int_{\R^d} f(\zvec)e^0\,d\zvec = \FT{f}(0)
+\end{align}
+
+
+
+\section{Parseval / Plancherel}
+\def\dotp#1#2{\langle#1,#2\rangle}
+\def\norm#1{\lVert#1\rVert_2}
+\def\abs#1{\lvert#1\rvert}
+Here we need to assume that $f,g$ and their transforms, $\tilde f,\tilde g$ live in a Hilbert function space, with inner product defined as:
+\begin{align}
+\dotp{f}{g} &= \int_{\R^d} f(\zvec)\conj{g(\zvec)} \,d\zvec
+= \conj{\int_{\R^d} g(\zvec)\conj{f(\zvec)} \,d\zvec} = \conj{\dotp{g}{f}}
+\end{align}
+where the overline denotes complex conjugate. This Hilbert space is also the Lp function space, $L^2(\R^d)$, for which $\norm{f},\norm{g}\le\infty$, where we use the Hilbert space norm $\norm{f}=\sqrt{\dotp{f}{f}}$.
+
+Note the distinction between norm, $\norm{f}$, which is a scalar and absolute value, $\abs{f(\zvec)}$ which is a function of $\zvec$. For a complex-valued function, the absolute value can be defined as as:
+\begin{align}
+\abs{f(\zvec)}=\sqrt{f(\zvec)\conj{f(\zvec)}}
+\end{align}
+Of course, we have: $\norm{f}=\int_{\R^d}\abs{f(\zvec)}^2\,d\zvec$.\\
+
+\noindent The Parseval / Plancherel\footnote{One theorem says $\langle f,f\rangle=\langle\tilde f,\tilde f\rangle$ and the other, more generally, $\langle f,g\rangle=\langle\tilde f,\tilde g\rangle$ , but I cannot figure out from the literature which one is Plancherel and which Parseval.} theorem equates the original inner-product to one between their Fourier transforms: $\dotp{f}{g}=\dotp{\tilde f}{\tilde g}$, where the RHS may sometimes be more convenient to evaluate. More specifically, we also have $\norm{f}=\norm{\tilde f}$. To show this, we expand the inner-product in terms of the inverse transforms of $\tilde f$ and $\tilde g$, rearrange, employ~\eqref{eq:iftdelta} and then~\eqref{eq:delta}:
+\begin{align}
+\begin{split}
+\langle f, g \rangle &= \int_{\R^d} f(\zvec)\conj{g(\zvec)}\,d\zvec \\
+&= \int_{\R^d} \IFT{\tilde f}(\zvec) \conj{\IFT{\tilde g}(\zvec)}\,d\zvec \\
+&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\pi i \zetavec'\zvec} \,d\zetavec\right) \conj{\left(\int_{\R^d}\tilde g(\yvec)e^{2\pi i \yvec'\zvec} \,d\yvec\right)}\,d\zvec \\
+&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\pi i \zetavec'\zvec} \,d\zetavec\right) \left(\int_{\R^d}\conj{\tilde g(\yvec)}e^{-2\pi i \yvec'\zvec} \,d\yvec\right)\,d\zvec \\
+&= \int_{\R^d}\int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\yvec)} \left(\int_{\R^d} e^{2\pi i(\zetavec-\yvec)'\zvec}\,d\zvec \right) \,d\zetavec\,d\yvec \\
+&= \int_{\R^d}\int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\yvec)} \delta(\zetavec-\yvec) \,d\zetavec\,d\yvec \\
+&= \int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\zetavec)} \,d\zetavec \\
+&= \langle\tilde f, \tilde g\rangle 
+\end{split}
+\end{align}
+This means we can form the dot product either in the original domain, or in the transformed domain.
+
+
+\section{Characteristic function}
+\def\tvec{\mathbf{t}}
+The characteristic function of a probability distribution, $P$, over $\zvec\in\R^d$ is usually defined as, $\funcdef{\phi_P}{\R^d}{\C}$, where:
+\begin{align}
+\phi_P(\tvec) &= \expv{e^{i\tvec'\zvec}}{\zvec\sim P}
+\end{align}
+Notice that since $\abs{e^{i\tvec'\zvec}}\le1$, we also have $\abs{\phi_p(\tvec)}\le1$. Indeed, the characteristic function always exists. If $P$ has density function, $p(\zvec)$, then density and characteristic function essentially form a Fourier transform pair:
+\begin{align}
+\phi_P(\tvec) &= \int_{\R^d} e^{i\tvec'\zvec} p(\zvec)\,d\zvec
+\end{align}
+For convenience in this document, observe that if we let $\tvec=-2\pi\zetavec$, then: 
+\begin{align}
+\tilde p(\zetavec) = \phi_P(-2\pi\zetavec) &= \int_{\R^d} e^{-2\pi i\zetavec'\zvec} p(\zvec)\,d\zvec = \FT{p}(\zetavec)
+\end{align}
+We shall work with $\tilde p$, rather than $\phi_P$, while keeping in mind that the one is just a reparametrized version of the other. Indeed, where the distinction is unimportant, we shall also refer to $\tilde p$ as characteristic function. 
+
+The characteristics functions for most standard probability distributions are known~\cite{Oberhettinger}. 
+
+\subsection{Parseval}
+How does Parseval's theorem translate in terms of characteristic functions? Let $f,g$ be probability density functions with characteristic functions, $\phi_f$ and $\phi_g$. Then, letting $\tvec=-2\pi\zetavec$ and $d\tvec=(2\pi)^d d\zetavec$
+\begin{align}
+\begin{split}
+\int_{\R^d} f(\zvec)g(\zvec)\,d\zvec &= \int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\zetavec)}\,d\zetavec \\
+&= \int_{\R^d} \phi_f(-2\pi\zetavec)\conj{\phi_g(-2\pi\zetavec)}\,d\zetavec\\
+&= \frac1{(2\pi)^d}\int_{\R^d} \phi_f(\tvec)\conj{\phi_g(\tvec)}\,d\tvec\\
+\end{split}
+\end{align}
+
+
+\subsection{Gaussian characteristic function}
+\def\Sigmamat{\boldsymbol{\Sigma}}
+The characteristic function for a multivariate Gaussian is~\cite{Oberhettinger}:
+\begin{align}
+\begin{split}
+\phi_{\ND}(\tvec;\muvec,\Sigmamat) &= \int_{\R^d} \ND(\zvec\mid \muvec,\Sigmamat) \exp(i\tvec'\zvec) \,d\zvec \\
+&= \exp(i\muvec'\tvec-\frac12\tvec'\Sigmamat\tvec)
+\end{split}
+\end{align}
+Notice that for zero mean, $\muvec=\nulvec$, the characteristic function is also an unnormalized zero mean Gaussian, with the roles of covariance and precision interchanged: 
+\begin{align}
+\begin{split}
+\phi_{\ND}(\tvec;\nulvec,\Sigmamat) &= \sqrt{\detm{2\pi\Sigmamat^{-1}}}\ND(\tvec\mid\nulvec,\Sigmamat^{-1}) \\
+&= \frac{(2\pi)^{d/2}}{\sqrt{\detm{\Sigmamat}}}\ND(\tvec\mid\nulvec,\Sigmamat^{-1})
+\end{split}
+\end{align}
+As the PDF gets more concentrated, its transform gets more spread out---this inverse scaling is a general property of the Fourier transform. 
+
+Finally, if $\muvec$ is non-zero, then the characteristic function is not real-valued and is therefore not a probability density.
+
+
+\subsection{Empirical characteristic function}
+The empirical distribution of $m$ observed data points, $\zvec_1,\zvec_2,\ldots,\zvec_m\in\R^d$, does not have a density function in the strict sense, but the following mixture of Dirac delta's can be used for most purposes as a drop-in replacement for the density:
+\begin{align}
+p(\zvec) &= \frac1m\sum_{\ell=1}^m \delta(\zvec-\zvec_\ell)
+\end{align}
+The characteristic function, using~\eqref{eq:ftdelta}, is:
+\begin{align}
+\label{eq:empc}
+\tilde p(\zetavec) &= \frac1m\sum_{\ell=1}^m e^{-2\pi i\zetavec'\zvec_\ell}
+\end{align}
+
+
+
+\subsection{Positive definite function}
+We term a function $\funcdef{k}{\R^d}{\C}$ \emph{positive definite}, if for every $m\ge1$ and every $\zvec_1,\zvec_2,\ldots,\zvec_m\in\R^d$ and every $\alpha_1,\alpha_2,\ldots,\alpha_m\in\C$, we have:
+\begin{align}
+\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} k(\zvec_\ell-\zvec_j) &\ge 0 
+\end{align}
+This is the same as requiring that any $m$-by-$m$ Gram matrix formed with elements $k(\zvec_i-\zvec_j)$ must be Hermitian and positive (semi) definite.
+
+Notice that for positive definite $k$, we can define a shift-invariant \emph{kernel function}, $\funcdef{K}{\R^d\times\R^d}{\C}$, as $K(\zvec,\yvec)=k(\zvec-\yvec)$, so that $K$ is positive definite in the sense required for the theory of reproducing kernel Hilbert spaces (RKHS) and kernel methods in machine learning (SVM, Gaussian processes, etc.\ ). 
+
+\subsection{Bochner's theorem}
+Let $r(\zvec)$, be a \emph{probability density function} on $\zvec\in\R^d$. We show that its characteristic function, $\tilde r$, is positive definite:
+\begin{align}
+\begin{split}
+&\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} \tilde r(\zetavec_\ell-\zetavec_j)  \\
+=&\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} \int_{\R^d}r(\zvec)e^{-2\pi i(\zetavec_\ell-\zetavec_j)'\zvec}\,d\zvec \\
+=&\int_{\R^d}r(\zvec)\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell e^{-2\pi i\zetavec_\ell'\zvec}\conj{\alpha_j e^{-2\pi i\zetavec_j'\zvec}}\,d\zvec \\
+=&\int_{\R^d}r(\zvec)\left\lvert\sum_{\ell=1}^m \alpha_\ell e^{-2\pi i\zetavec_\ell'\zvec}\right\rvert^2\,d\zvec \ge 0\\
+\end{split}
+\end{align}
+Since $r(\zvec)$ is normalized, we also have by~\eqref{eq:di}, that $\tilde r(\nulvec)=1$. Bochner's theorem says that the converse (although harder to prove) is also true---the FT (or IFT) of a positive definite function (which evaluates to 1 at $\nulvec$), is a probability density~\cite{SteinWeiss}.  
+
 
 
 
