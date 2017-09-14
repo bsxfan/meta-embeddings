@@ -94,6 +94,8 @@
   } ;
 }
 
+
+
 \usetikzlibrary{arrows,shapes,backgrounds,positioning,fit}
 
 % Caches tikz figures as PDF on disk. 
@@ -101,7 +103,7 @@
 \usetikzlibrary{external}
 \tikzexternalize
 
-
+\usepackage{upgreek}
 
 \usepackage{enumerate}
 \usepackage{titlepic}
@@ -226,10 +228,12 @@
 \def\funcdef#1#2#3{#1:#2\to#3}
 \def\Fset{\mathcal{F}}
 \def\C{\mathbb{C}}
+\def\Cset{\mathcal{C}}
 
 %\def\FT#1{\Fset\{#1\}}
 %\def\IFT#1{\Fset^{-1}\{#1\}}
 \newcommand\FT[2][]{\Fset_{#1}\{#2\}}
+\newcommand\CT[2][]{\Cset_{#1}\{#2\}}
 \def\IFT#1{\Fset^{-1}\{#1\}}
 
 \def\conj#1{\overline{#1}}
@@ -1060,19 +1064,20 @@ For future reference, it might be useful to note that since Gaussians are closed
 
 
 \subsection{Prior}
-To do expectations we need to define the prior. The simplest choice is the standard Gaussian:
+To do expectations we need to define the prior. The simplest choice is the standard Gaussian:\footnote{Note here and elsewhere, we use two different fonts to differentiate $\pi(\zvec)$, from the trigonometric constant $\uppi$.}
 \begin{align}
-\pi(\zvec) &= \ND(\zvec\mid\nulvec,\Imat) = \frac{e^{-\frac12\zvec'\zvec}}{\sqrt{(2\pi)^d}}
+\pi(\zvec) &= \ND(\zvec\mid\nulvec,\Imat) = \frac{e^{-\frac12\zvec'\zvec}}{\sqrt{(2\uppi)^d}}
 \end{align}
 
 \subsection{Expectation}
 Since our logarithmic representation is closed under elementwise multiplication, our expectations can always be performed on representations of the form~\eqref{eq:gaussembed}. Dropping the subscript $j$ to avoid clutter, we derive an expression for $E(\avec,\Bmat)=\expv{f}{}$, where $f(\zvec)=\exp[\avec'\zvec-\frac12\zvec'\Bmat\zvec]$:
 \begin{align}
+\label{eq:MVGproblem}
 \begin{split}
 E(\avec,\Bmat) &= \expv{f}{} \\
 &= \int_{\R^d} f(\zvec)\pi(\zvec) \,d\zvec \\
 &= \int_{\R^d} f(\zvec)\ND(\zvec\mid\nulvec,\Imat) \,d\zvec \\
-&= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\pi)^d}} \,d\zvec 
+&= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec 
 \end{split}
 \end{align}
 If we define $\muvec=(\Imat+\Bmat)^{-1}\avec$, we can rewrite this as:
@@ -1080,9 +1085,9 @@ If we define $\muvec=(\Imat+\Bmat)^{-1}\avec$, we can rewrite this as:
 \label{eq:exactMVG}
 \begin{split}
 E(\avec,\Bmat) &= \expv{f}{} \\
-&= \int_{\R^d} \frac{\exp\bigl[\muvec'(\Imat+\Bmat)\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\pi)^d}} \,d\zvec \\
+&= \int_{\R^d} \frac{\exp\bigl[\muvec'(\Imat+\Bmat)\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec \\
 &= \frac{\exp\bigl[\frac12\muvec'(\Imat+\Bmat)\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}}
-\int_{\R^d} \frac{\abs{\Imat+\Bmat}^\frac12}{\sqrt{(2\pi)^d}} \exp\bigl[-\frac12(\zvec-\muvec)'(\Imat+\Bmat)(\zvec-\muvec)\bigr]\,d\zvec \\
+\int_{\R^d} \frac{\abs{\Imat+\Bmat}^\frac12}{\sqrt{(2\uppi)^d}} \exp\bigl[-\frac12(\zvec-\muvec)'(\Imat+\Bmat)(\zvec-\muvec)\bigr]\,d\zvec \\
 &= \frac{\exp\bigl[\frac12\muvec'(\Imat+\Bmat)\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}} \int_{\R^d} \ND(\zvec\mid\muvec,(\Imat+\Bmat)^{-1}) \,d\zvec \\
 &= \frac{\exp\bigl[\frac12\muvec'(\Imat+\Bmat)\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}} \\
 &= \frac{\exp\bigl[\frac12\avec'\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}} 
@@ -1094,7 +1099,18 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 %Derivation of the backpropagating equations for $E(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.
 
 
+%\subsection{Expectation via maximization}
+%We want to find the value of integral~\eqref{eq:MVGproblem}:
+%\begin{align}
+%\begin{split}
+%E(\avec,\Bmat) &= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec  \\
+%&= 
+%\end{split}
+%\end{align}
+
+
 \subsection{Stochastic expectation}
+\def\tvec{\mathbf{t}}
 Pooling is fast (addition) but expectation is slower (Cholesky decomposition). Unfortunately, our recipe above requires a new Cholesky decomposition for every LR calculation. In applications where many verification trials are processed on limited hardware, this will have a significant impact on speed. Even if we have enough CPU power available at runtime for some applications, training remains a problem because we are going to be training our meta-embedding extractors with discriminative criteria that typically require evaluating very many trials. Let us therefore consider some plans for speeding up scoring of trials by making stochastic approximations.
 
 We envisage that such stochastic approximation could work out to be especially cheap at training time, in the same way that stochastic evaluation of the ELBO in \emph{variational autoencoder} (VAE) training typically requires but a single stochastic sample per training example~\cite{VAE}. Given sufficiently many examples, the stochastic approximation errors tend to cancel, provided the errors are independent. 
@@ -1128,6 +1144,17 @@ An advantage of~\eqref{eq:priorsampling} is that it generalizes to expectations 
 
 Experiments would have to be conducted to verify if an affordably small $m$ could give reasonable accuracy. Keep in mind that in such experiments, we can compare accuracy against the exact calculation~\eqref{eq:exactMVG}.\\
 
+%\subsubsection{Transformed prior sampling}
+%\begin{align}
+%\begin{split}
+%&\int_{\R^n} \pi(\zvec) \frac{\ND(\zvec\mid\Bmat^{-1}\avec,\Bmat^{-1})}{\sqrt{\detm{\Bmat}}}  \,d\zvec  \\
+%&= \frac1{(2\uppi)^d} \int_{\R^n} \CT{\pi}(\tvec)\, \frac{\CT{\ND(\Bmat^{-1}\avec,\Bmat^{-1})}(\tvec)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\
+%&= \frac1{(2\uppi)^d} \int_{\R^n} \sqrt{\detm{2\uppi\Imat}}\pi(\tvec) \, \frac{\sqrt{\detm{2\uppi\Bmat}}\cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\ 
+%&= \int_{\R^n} \pi(\tvec) \, \cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)  \,d\tvec  
+%\end{split}
+%\end{align}
+
+
 \subsubsection{Posterior sampling} 
 If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
 \begin{align}
@@ -1148,18 +1175,34 @@ where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constra
 
 
 \section{Zero-mean Gaussians}
-Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual meta-embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity for the meta-embeddings to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. A more detailed explanation follows.
+Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual meta-embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity for the meta-embeddings to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. 
+
+Before continuing to the details below, we recommend that the reader review appendix~\ref{chap:MDFT} on multidimensional Fourier transforms and characteristic functions. Characteristic functions and Fourier transforms of probability densities are equivalent up to linear reparametrization. For our application, it will be more convenient to work with characteristic functions.
 
 \subsection{Representation}
-Let the Fourier transform of meta-embedding $f_i$ be denoted by $\tilde f_i$. If $f_i$ is a zero-mean Gaussian with strictly positive definite precision, then $\tilde f_j$ is also a zero-mean Gaussian, having covariance equal to the precision of $f_i$. Since there is a bijection between $f_i$ and $\tilde f_i$, we may as well directly extract representations for the $\tilde f_i$. Moreover, these representations can be conveniently chosen to facilitate sampling. That is, every $\tilde f_i$ is represented by a $d$-by-$d$ square (possibly triangular) matrix. Sampling is done by forming matrix vector products, where the $d$-dimensional vectors are sampled from the standard Gaussian. This is just the \emph{reparametrization trick}, familiar from the VAE literature, which plays well with gradient backpropagation through the stochastic part of the calculation~\cite{VAE}. 
+For this representation, we have already restricted our meta-embeddings to zero-mean normal distributions. The normalization constants of these distributions are irrelevant, for the same reason that we have allowed all our meta-embeddings to have arbitrary scale factors. As shown in the appendix~\ref{sec:GCF}, for meta-embedding $f_i(\zvec)\propto\ND(\zvec\mid\nulvec,\Bmat_i^{-1})$, the characteristic function is:
+\begin{align}
+\CT{f_i}(\tvec) = \phi_i(\tvec) = k_i\,\ND(\tvec\mid\nulvec,\Bmat_i)
+\end{align} 
+where $k_i$ is a scaling constant. The prior, $\pi(\zvec)=\ND(\zvec\mid\nulvec,\Imat)$, transforms as:
+\begin{align}
+\CT{\pi}(\tvec) = \phi_0(\tvec) = (2\uppi)^{d/2} \ND(\tvec\mid\nulvec,\Imat) = k_0\pi(\tvec)
+\end{align} 
+Since there is a bijection between densities and characteristic functions, we may as well directly extract representations for the $\phi_i$. Moreover, these representations can be conveniently chosen to facilitate sampling. That is, every $\phi_i$ is represented by a $d$-by-$d$ square (possibly triangular) matrix. Sampling is done by forming matrix vector products, where the $d$-dimensional vectors are sampled from the standard Gaussian. This is just the \emph{reparametrization trick}, familiar from the VAE literature, which plays well with gradient backpropagation through the stochastic part of the calculation~\cite{VAE}. 
 
-More parsimonious representations are possible. We can represent each meta-embedding via \emph{samples}, rather than via a matrix of parameters. The net that extracts the embeddings is simply required to produce Gaussian samples, using any convenient method. One way to implement this is to generate samples from a factor analysis model---where samples drawn from a full rank diagonal Gaussian are added to $D$-dimensional samples multiplied by a $D$-by-$d$ factor loading matrix, where typically $D\ll d$. The parameter count of the factor-analysis representation  is $d(D+1)$, compared to $d^2$ for full, or $\frac{d(d+1)}{2}$ for triangular covariance square root parametrizations.
+More parsimonious representations are possible. We can represent each meta-embedding via \emph{samples}, rather than via a matrix of parameters. The net that extracts the embeddings is simply required to produce Gaussian samples, using any convenient method. One way to implement this is to generate samples from a factor analysis model---where samples drawn from a full rank diagonal Gaussian are added to $D$-dimensional samples multiplied by a $D$-by-$d$ factor loading matrix, where typically $D\ll d$. The parameter count of the factor-analysis representation  is $d(D+1)$, compared to $d^2$ for full, or $\frac{d(d+1)}{2}$ for triangular covariance square-root parametrizations.
 
 \subsection{Frequency domain pooling and expectation}
-We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval's and convolution theorems as:
+We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval (\ref{sec:cfParseval}) and the convolution theorem (\ref{sec:cfConvolution}) as:
 \begin{align}
+\begin{split}
 \int_{\R^n} \pi(\zvec) \prod_{i=1}^m f_i(\zvec)  \,d\zvec  
-&= \int_{\R^n} \pi(\xvec) \tilde f_1(\xvec)\ast\tilde f_2(\xvec)\ast\cdots\ast\tilde f_m(\xvec)  \,d\xvec  
+&= \frac{1}{(2\uppi)^d}\int_{\R^n} \CT{\pi}(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
+&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
+&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1}\ast\cdots\ast\CT{f_m}(\tvec) \,d\tvec  \\
+&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND(\tvec\mid\nulvec,\Bmat_1)\ast\cdots\ast\ND(\tvec\mid\nulvec,\Bmat_m) \,d\tvec  \\
+&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND\bigl(\tvec\mid\nulvec,\sum_{i=1}^m\Bmat_i\bigr) \,d\tvec  \\
+\end{split}
 \end{align}
 where $\ast$ denotes convolution and where we do not need complex conjugation, because everything is real-valued. Since $\pi$ is standard Gaussian, its Fourier transform is also standard Gaussian. The RHS is the expected value of $\pi$, w.r.t.\ a Gaussian, formed by the convolution of $m$ zero-mean Gaussians, $\{\tilde f_i\}$. The sum of independent samples of all the $\tilde f_i$ will give a sample from the convolution. These sums can then be inserted into $\pi$ and averaged to approximate the required expectation.
 
@@ -1192,8 +1235,8 @@ We choose a parameterless prior, of the same form as the meta-embeddings:
 and
 \begin{align}
 \begin{split}
-\log \pi(\xvec,\yvec) &= \sum_{i=1}^D x_i \bigl( -\frac12\yvec'\yvec -\frac{d}{2}\log(2\pi) -\log(D)\bigr) \\
-&= -\frac{d}{2}\log(2\pi) -\log(D) + \sum_{i=1}^D -\frac12\trace\bigl[(x_i\yvec\yvec')\Imat\bigr]
+\log \pi(\xvec,\yvec) &= \sum_{i=1}^D x_i \bigl( -\frac12\yvec'\yvec -\frac{d}{2}\log(2\uppi) -\log(D)\bigr) \\
+&= -\frac{d}{2}\log(2\uppi) -\log(D) + \sum_{i=1}^D -\frac12\trace\bigl[(x_i\yvec\yvec')\Imat\bigr]
 \end{split}
 \end{align}
 As in the multivariate Gaussian case, the practical function of the prior is to add $\Imat$ to the possibly semi-definite matrices, $\Bmat_{ij}$, of the meta-embeddings, to make them properly positive definite. 
@@ -1262,24 +1305,27 @@ First pubished in~\cite{Facenet}.\\
 \appendix
 
 \chapter{Multidimensional Fourier transform}
-\def\zetavec{\mathbf{\zeta}}
+\label{chap:MDFT}
+\def\zetavec{\boldsymbol{\zeta}}
 In a mathematically rigorous treatment of Fourier transforms, one has to carefully define the function spaces in which the transforms can be applied~\cite{SteinWeiss}. In this document, we shall mostly just tacitly assume that wherever we employ definite integrals, that those integrals exist and are finite.
 
 The \emph{Fourier transform} (FT) is an \emph{operator}---it maps one function to another function. We are interested in the $n$-dimensional FT, which maps some function, $\funcdef{f}{\R^d}{\C}$ to its transform, $\funcdef{\tilde f}{\R^d}{\C}$, where $\R^d$ is $n$-dimensional real Euclidean space and $\C$ is the field of complex numbers. Denoting the transform by $\tilde f = \FT{f}$ and letting $\zvec,\zetavec\in\R^d$, we have:
 \begin{align}
 \label{eq:FT}
-\FT{f}(\zetavec) &= \tilde f(\zetavec) = \int_{\R^d} f(\zvec)e^{-2\pi i\zvec'\zetavec}\,d\zvec
+\FT{f}(\zetavec) &= \tilde f(\zetavec) = \int_{\R^d} f(\zvec)e^{-2\uppi i\zvec'\zetavec}\,d\zvec
 \end{align}
 where $\zvec'\zetavec$ denotes dot product. The inverse transform (IFT) is:
 \begin{align}
-\IFT{\tilde f}(\zvec) &= f(\zvec) = \int_{\R^d} \tilde f(\zetavec)e^{2\pi i\zvec'\zetavec}\,d\zetavec
+\IFT{\tilde f}(\zvec) &= f(\zvec) = \int_{\R^d} \tilde f(\zetavec)e^{2\uppi i\zvec'\zetavec}\,d\zetavec
 \end{align}
 Below we shall sometimes use the notation $\FT[\zvec]{f(\zvec,\yvec)}$ to denote that the transform is done w.r.t. $\zvec$.
 
-\section{Symmetry}
+\section{Properties}
+
+\subsection{Symmetry}
 A real-valued function, $\funcdef{k}{\R^d}{R}$, which is also symmetric, $k(\zvec)=k(-\zvec)$, has a real-valued FT: $\tilde k(\zetavec) = \conj{\tilde k(\zetavec)}$, where the overline indicates complex conjugation. This follows readily from the definition~\eqref{eq:FT}.
 
-\section{The convolution theorem}
+\subsection{The convolution theorem}
 Given functions $f$ and $g$, their \emph{convolution} is defined as:
 \begin{align}
 (f\ast g)(\zvec) &= \int_{\R^d} f(\zvec-\yvec)g(\yvec)\,d\yvec
@@ -1292,7 +1338,7 @@ which simplifies to multiplication in the transform domain:
 where $\tilde f=\FT{f}$ and $\tilde g=\FT{g}$.
 
 
-\section{Dirac delta}
+\subsection{Dirac delta}
 The \emph{dirac Delta}, $\delta$, has the property that:
 \begin{align}
 \label{eq:delta}
@@ -1301,31 +1347,46 @@ The \emph{dirac Delta}, $\delta$, has the property that:
 which can be used to compute its FT as:
 \begin{align}
 \label{eq:ftdelta}
-\FT[\zvec]{\delta(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} \delta(\zvec-\yvec)e^{-2\pi\zvec'\zetavec}\,d\zvec
-= e^{-2\pi i\yvec'\zetavec}
+\FT[\zvec]{\delta(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} \delta(\zvec-\yvec)e^{-2\uppi\zvec'\zetavec}\,d\zvec
+= e^{-2\uppi i\yvec'\zetavec}
 \end{align}
 where we have introduced a subscript for the operator, $\Fset_\zvec$, to make clear that it operates on $\delta(\zvec-\yvec)$ as a function of $\zvec$. Applying the IFT, $\Fset_{\zetavec}^{-1}$, on both sides of~\eqref{eq:ftdelta} gives:
 \begin{align}
 \label{eq:iftdelta}
-\delta(\zvec-\yvec) &= \int_{\R^d} e^{-2\pi i\yvec'\zetavec} e^{2\pi i \zvec'\zetavec} \,d\zetavec
-= \int_{\R^d} e^{2\pi i(\zvec-\yvec)'\zetavec} \,d\zetavec
+\delta(\zvec-\yvec) &= \int_{\R^d} e^{-2\uppi i\yvec'\zetavec} e^{2\uppi i \zvec'\zetavec} \,d\zetavec
+= \int_{\R^d} e^{2\uppi i(\zvec-\yvec)'\zetavec} \,d\zetavec
 \end{align}
 
 
-\section{Shifting property}
+\subsection{Shifting property}
 If $\FT[\zvec]{f(\zvec)}(\zetavec)=\tilde f(\zetavec)$, we want to express the FT of a shifted version of $f$, namely $f(\zvec-\yvec)$ in terms of $\tilde f$. Letting $\rvec=\zvec-\yvec$, and noting that $d\rvec=d\zvec$, we have: 
 \begin{align}
 \begin{split}
-\FT[\zvec]{f(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} f(\zvec-\yvec)e^{-2\pi i\zvec'\zetavec}\,d\zvec\\
-&= \int_{\R^d} f(\rvec)e^{-2\pi i(\rvec+\yvec)'\zetavec}\,d\rvec \\
-&= e^{-2\pi i\yvec'\zetavec}\int_{\R^d} f(\rvec)e^{-2\pi i\rvec'\zetavec}\,d\rvec \\
-&= e^{-2\pi i\yvec'\zetavec}\tilde f(\zetavec) \\
+\FT[\zvec]{f(\zvec-\yvec)}(\zetavec) &= \int_{\R^d} f(\zvec-\yvec)e^{-2\uppi i\zvec'\zetavec}\,d\zvec\\
+&= \int_{\R^d} f(\rvec)e^{-2\uppi i(\rvec+\yvec)'\zetavec}\,d\rvec \\
+&= e^{-2\uppi i\yvec'\zetavec}\int_{\R^d} f(\rvec)e^{-2\uppi i\rvec'\zetavec}\,d\rvec \\
+&= e^{-2\uppi i\yvec'\zetavec}\tilde f(\zetavec) \\
 \end{split}
 \end{align}
 Shifting in the primary domain causes amplitude modulation in the transformed domain.
 
+
+
+\subsection{Linear transformation property}
+\def\Amat{\mathbf{A}}
+Let $\yvec = \Amat\zvec$, where $\Amat$ is an invertible square matrix. Then we have that $\zvec = \Amat^{-1}\yvec$ and $d\yvec = \abs{\det(\Amat)}d\zvec$. 
+\begin{align}
+\label{eq:ftscaling}
+\begin{split}
+\FT{f(\Amat\zvec)}(\zetavec) &= \int_{\R^d} f(\Amat\zvec)e^{-2\uppi i\zvec'\zetavec}\,d\zvec\\
+&= \frac1{\abs{\det(\Amat)}}\int_{\R^d} f(\yvec)e^{-2\uppi i(\Amat^{-1}\yvec)'\zetavec}\,d\yvec\\
+&= \frac1{\abs{\det(\Amat)}}\int_{\R^d} f(\yvec)e^{-2\uppi i\yvec'(\Amat^{-1})'\zetavec}\,d\yvec\\
+&= \frac1{\abs{\det(\Amat)}}\FT{f}\bigl((\Amat^{-1})'\zetavec\bigr)
+\end{split}
+\end{align}
+
  
-\section{Definite integral}
+\subsection{Definite integral}
 It follows directly from the definition~\eqref{eq:FT} that:
 \begin{align}
 \label{eq:di}
@@ -1334,7 +1395,7 @@ It follows directly from the definition~\eqref{eq:FT} that:
 
 
 
-\section{Parseval / Plancherel}
+\subsection{Parseval / Plancherel}
 \def\dotp#1#2{\langle#1,#2\rangle}
 \def\norm#1{\lVert#1\rVert_2}
 \def\abs#1{\lvert#1\rvert}
@@ -1349,16 +1410,16 @@ Note the distinction between norm, $\norm{f}$, which is a scalar and absolute va
 \begin{align}
 \abs{f(\zvec)}=\sqrt{f(\zvec)\conj{f(\zvec)}}
 \end{align}
-Of course, we have: $\norm{f}=\int_{\R^d}\abs{f(\zvec)}^2\,d\zvec$.\\
+Of course, we have: $\norm{f}^2=\int_{\R^d}\abs{f(\zvec)}^2\,d\zvec$.\\
 
 \noindent The Parseval / Plancherel\footnote{One theorem says $\langle f,f\rangle=\langle\tilde f,\tilde f\rangle$ and the other, more generally, $\langle f,g\rangle=\langle\tilde f,\tilde g\rangle$ , but I cannot figure out from the literature which one is Plancherel and which Parseval.} theorem equates the original inner-product to one between their Fourier transforms: $\dotp{f}{g}=\dotp{\tilde f}{\tilde g}$, where the RHS may sometimes be more convenient to evaluate. More specifically, we also have $\norm{f}=\norm{\tilde f}$. To show this, we expand the inner-product in terms of the inverse transforms of $\tilde f$ and $\tilde g$, rearrange, employ~\eqref{eq:iftdelta} and then~\eqref{eq:delta}:
 \begin{align}
 \begin{split}
 \langle f, g \rangle &= \int_{\R^d} f(\zvec)\conj{g(\zvec)}\,d\zvec \\
 &= \int_{\R^d} \IFT{\tilde f}(\zvec) \conj{\IFT{\tilde g}(\zvec)}\,d\zvec \\
-&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\pi i \zetavec'\zvec} \,d\zetavec\right) \conj{\left(\int_{\R^d}\tilde g(\yvec)e^{2\pi i \yvec'\zvec} \,d\yvec\right)}\,d\zvec \\
-&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\pi i \zetavec'\zvec} \,d\zetavec\right) \left(\int_{\R^d}\conj{\tilde g(\yvec)}e^{-2\pi i \yvec'\zvec} \,d\yvec\right)\,d\zvec \\
-&= \int_{\R^d}\int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\yvec)} \left(\int_{\R^d} e^{2\pi i(\zetavec-\yvec)'\zvec}\,d\zvec \right) \,d\zetavec\,d\yvec \\
+&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\uppi i \zetavec'\zvec} \,d\zetavec\right) \conj{\left(\int_{\R^d}\tilde g(\yvec)e^{2\uppi i \yvec'\zvec} \,d\yvec\right)}\,d\zvec \\
+&= \int_{\R^d} \left(\int_{\R^d}\tilde f(\zetavec)e^{2\uppi i \zetavec'\zvec} \,d\zetavec\right) \left(\int_{\R^d}\conj{\tilde g(\yvec)}e^{-2\uppi i \yvec'\zvec} \,d\yvec\right)\,d\zvec \\
+&= \int_{\R^d}\int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\yvec)} \left(\int_{\R^d} e^{2\uppi i(\zetavec-\yvec)'\zvec}\,d\zvec \right) \,d\zetavec\,d\yvec \\
 &= \int_{\R^d}\int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\yvec)} \delta(\zetavec-\yvec) \,d\zetavec\,d\yvec \\
 &= \int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\zetavec)} \,d\zetavec \\
 &= \langle\tilde f, \tilde g\rangle 
@@ -1368,53 +1429,59 @@ This means we can form the dot product either in the original domain, or in the 
 
 
 \section{Characteristic function}
-\def\tvec{\mathbf{t}}
 The characteristic function of a probability distribution, $P$, over $\zvec\in\R^d$ is usually defined as, $\funcdef{\phi_P}{\R^d}{\C}$, where:
 \begin{align}
 \phi_P(\tvec) &= \expv{e^{i\tvec'\zvec}}{\zvec\sim P}
 \end{align}
-Notice that since $\abs{e^{i\tvec'\zvec}}\le1$, we also have $\abs{\phi_p(\tvec)}\le1$. Indeed, the characteristic function always exists. If $P$ has density function, $p(\zvec)$, then density and characteristic function essentially form a Fourier transform pair:
+Notice that since $\abs{e^{i\tvec'\zvec}}\le1$, we also have $\abs{\phi_P(\tvec)}\le1$. Indeed, the characteristic function always exists. If $P$ has a density function, $p(\zvec)$, then density and characteristic function essentially form a Fourier transform pair:
 \begin{align}
-\phi_P(\tvec) &= \int_{\R^d} e^{i\tvec'\zvec} p(\zvec)\,d\zvec
+\phi_p(\tvec) &= \CT{p}(\tvec) = \int_{\R^d} e^{i\tvec'\zvec} p(\zvec)\,d\zvec
 \end{align}
-For convenience in this document, observe that if we let $\tvec=-2\pi\zetavec$, then: 
+where we denote this reparametrized version of the Fourier transform by the operator $\Cset$. Observe that if we let $\tvec=-2\uppi\zetavec$, then: 
 \begin{align}
-\tilde p(\zetavec) = \phi_P(-2\pi\zetavec) &= \int_{\R^d} e^{-2\pi i\zetavec'\zvec} p(\zvec)\,d\zvec = \FT{p}(\zetavec)
+ \phi_p(-2\uppi\zetavec) &= \int_{\R^d} e^{-2\uppi i\zetavec'\zvec} p(\zvec)\,d\zvec = \tilde p(\zetavec)
 \end{align}
-We shall work with $\tilde p$, rather than $\phi_P$, while keeping in mind that the one is just a reparametrized version of the other. Indeed, where the distinction is unimportant, we shall also refer to $\tilde p$ as characteristic function. 
-
+or
+\begin{align}
+ \CT{p}(-2\uppi\zetavec) &= \FT{p}(\zetavec)
+\end{align}
 The characteristics functions for most standard probability distributions are known~\cite{Oberhettinger}. 
 
 \subsection{Parseval}
-How does Parseval's theorem translate in terms of characteristic functions? Let $f,g$ be probability density functions with characteristic functions, $\phi_f$ and $\phi_g$. Then, letting $\tvec=-2\pi\zetavec$ and $d\tvec=(2\pi)^d d\zetavec$
+\label{sec:cfParseval}
+How does Parseval's theorem translate in terms of characteristic functions? Let $f,g$ be probability density functions with characteristic functions, $\phi_f$ and $\phi_g$. Then, letting $\tvec=-2\uppi\zetavec$ and $d\tvec=(2\uppi)^d d\zetavec$
 \begin{align}
 \begin{split}
 \int_{\R^d} f(\zvec)g(\zvec)\,d\zvec &= \int_{\R^d} \tilde f(\zetavec)\conj{\tilde g(\zetavec)}\,d\zetavec \\
-&= \int_{\R^d} \phi_f(-2\pi\zetavec)\conj{\phi_g(-2\pi\zetavec)}\,d\zetavec\\
-&= \frac1{(2\pi)^d}\int_{\R^d} \phi_f(\tvec)\conj{\phi_g(\tvec)}\,d\tvec\\
+&= \int_{\R^d} \phi_f(-2\uppi\zetavec)\conj{\phi_g(-2\uppi\zetavec)}\,d\zetavec\\
+&= \frac1{(2\uppi)^d}\int_{\R^d} \phi_f(\tvec)\conj{\phi_g(\tvec)}\,d\tvec\\
 \end{split}
 \end{align}
 
 
+\subsection{Convolution}
+\label{sec:cfConvolution}
+The convolution theorem also works for the characteristic function~\cite{Oberhettinger}:
+\begin{align}
+\begin{split}
+\CT{f\ast g}(\tvec) &= \FT{f\ast g}\bigl(\frac{-1}{2\uppi}\tvec\bigr) \\
+&= \FT{f}\bigl(\frac{-1}{2\uppi}\tvec\bigr)\,\FT{g}\bigl(\frac{-1}{2\uppi}\tvec\bigr)\\
+&= \CT{f}(\tvec)\,\CT{g}(\tvec) 
+\end{split}
+\end{align}
+
 \subsection{Gaussian characteristic function}
+\label{sec:GCF}
 \def\Sigmamat{\boldsymbol{\Sigma}}
 The characteristic function for a multivariate Gaussian is~\cite{Oberhettinger}:
 \begin{align}
 \begin{split}
-\phi_{\ND}(\tvec;\muvec,\Sigmamat) &= \int_{\R^d} \ND(\zvec\mid \muvec,\Sigmamat) \exp(i\tvec'\zvec) \,d\zvec \\
-&= \exp(i\muvec'\tvec-\frac12\tvec'\Sigmamat\tvec)
+\CT{\ND(\muvec,\Sigmamat)}(\tvec) &= \int_{\R^d} \ND(\zvec\mid \muvec,\Sigmamat) \exp(i\tvec'\zvec) \,d\zvec \\
+&= \exp(i\muvec'\tvec-\frac12\tvec'\Sigmamat\tvec) \\
+&= e^{i\muvec'\tvec} \sqrt{\detm{2\uppi\Sigmamat^{-1}}}\,\ND(\tvec\mid\nulvec,\Sigmamat^{-1}) 
 \end{split}
 \end{align}
-Notice that for zero mean, $\muvec=\nulvec$, the characteristic function is also an unnormalized zero mean Gaussian, with the roles of covariance and precision interchanged: 
-\begin{align}
-\begin{split}
-\phi_{\ND}(\tvec;\nulvec,\Sigmamat) &= \sqrt{\detm{2\pi\Sigmamat^{-1}}}\ND(\tvec\mid\nulvec,\Sigmamat^{-1}) \\
-&= \frac{(2\pi)^{d/2}}{\sqrt{\detm{\Sigmamat}}}\ND(\tvec\mid\nulvec,\Sigmamat^{-1})
-\end{split}
-\end{align}
-As the PDF gets more concentrated, its transform gets more spread out---this inverse scaling is a general property of the Fourier transform. 
-
-Finally, if $\muvec$ is non-zero, then the characteristic function is not real-valued and is therefore not a probability density.
+Notice that for zero mean, $\muvec=\nulvec$, the characteristic function is also an unnormalized zero mean Gaussian, with the roles of covariance and precision interchanged. As the PDF gets more concentrated, its transform gets more spread out---this inverse scaling is of course due to~\eqref{eq:ftscaling}. If $\muvec$ is non-zero, then the characteristic function is not even real-valued and is therefore not a probability density.
 
 
 \subsection{Empirical characteristic function}
@@ -1425,7 +1492,7 @@ p(\zvec) &= \frac1m\sum_{\ell=1}^m \delta(\zvec-\zvec_\ell)
 The characteristic function, using~\eqref{eq:ftdelta}, is:
 \begin{align}
 \label{eq:empc}
-\tilde p(\zetavec) &= \frac1m\sum_{\ell=1}^m e^{-2\pi i\zetavec'\zvec_\ell}
+\tilde p(\zetavec) &= \frac1m\sum_{\ell=1}^m e^{-2\uppi i\zetavec'\zvec_\ell}
 \end{align}
 
 
@@ -1444,9 +1511,9 @@ Let $r(\zvec)$, be a \emph{probability density function} on $\zvec\in\R^d$. We s
 \begin{align}
 \begin{split}
 &\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} \tilde r(\zetavec_\ell-\zetavec_j)  \\
-=&\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} \int_{\R^d}r(\zvec)e^{-2\pi i(\zetavec_\ell-\zetavec_j)'\zvec}\,d\zvec \\
-=&\int_{\R^d}r(\zvec)\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell e^{-2\pi i\zetavec_\ell'\zvec}\conj{\alpha_j e^{-2\pi i\zetavec_j'\zvec}}\,d\zvec \\
-=&\int_{\R^d}r(\zvec)\left\lvert\sum_{\ell=1}^m \alpha_\ell e^{-2\pi i\zetavec_\ell'\zvec}\right\rvert^2\,d\zvec \ge 0\\
+=&\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell\conj{\alpha_j} \int_{\R^d}r(\zvec)e^{-2\uppi i(\zetavec_\ell-\zetavec_j)'\zvec}\,d\zvec \\
+=&\int_{\R^d}r(\zvec)\sum_{\ell=1}^m \sum_{j=1}^m \alpha_\ell e^{-2\uppi i\zetavec_\ell'\zvec}\conj{\alpha_j e^{-2\uppi i\zetavec_j'\zvec}}\,d\zvec \\
+=&\int_{\R^d}r(\zvec)\left\lvert\sum_{\ell=1}^m \alpha_\ell e^{-2\uppi i\zetavec_\ell'\zvec}\right\rvert^2\,d\zvec \ge 0\\
 \end{split}
 \end{align}
 Since $r(\zvec)$ is normalized, we also have by~\eqref{eq:di}, that $\tilde r(\nulvec)=1$. Bochner's theorem says that the converse (although harder to prove) is also true---the FT (or IFT) of a positive definite function (which evaluates to 1 at $\nulvec$), is a probability density~\cite{SteinWeiss}.  
