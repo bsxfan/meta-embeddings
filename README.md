@@ -5,4 +5,4 @@ Meta-embeddings are a probabilistic generalization of embeddings in machine lear
 For now, all the action is theoretical and happening via the collaborative writing of a document. See [theory](https://github.com/bsxfan/meta-embeddings/tree/master/theory) folder. 
 
 ## Code
-Hopefully we can collaborate on some open source implementations later.
+There is already some MATLAB code to demonstrate Gaussian meta-embeddings. This code is now being used to generate some examples in the document.
