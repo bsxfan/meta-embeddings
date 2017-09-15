@@ -27,7 +27,7 @@ function E = create_plain_metaEmb(a,B)
         cholBI = chol(speye(dim) + B);
         log_det = 2*sum(log(diag(cholBI)));
         mu = cholBI\(cholBI'\a);
-        y = (mu'*a + log_det)/2;
+        y = (mu'*a - log_det)/2;
     end
 
 

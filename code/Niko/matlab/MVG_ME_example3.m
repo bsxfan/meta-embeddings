@@ -14,9 +14,9 @@ function MVG_ME_example3
 
 
 
-    e1 = create_me([0.3-2;0],1,[2;0]);
-    e2 = create_me([0-2;0],1,[0;3]);
-    e3 = create_me([2-2;0],3);
+    e1 = create_me([0.3-2;0],2,[0.5;0.5]);%blue
+    e2 = create_me([0-2;0],1,[0;3]);%red
+    e3 = create_me([2-2;0],6);%green
 
     sc = 3;
     e1 = e1.scale(sc);    
@@ -31,17 +31,13 @@ function MVG_ME_example3
     prior = create_me([0;0],1);
     plotGaussian(prior,[],'black, dashed','k--');
     
-    [mu,C] = e1.get_mu_cov();
-    tikz = plotGaussian(mu,C,'blue','b');
+    plotGaussian(e1,[],'blue','b');
     
-    [mu,C] = e2.get_mu_cov();
-    tikz = plotGaussian(mu,C,'red','r');
+    plotGaussian(e2,[],'red','r');
 
-    [mu,C] = e3.get_mu_cov();
-    tikz = plotGaussian(mu,C,'green','g');
+    plotGaussian(e3,[],'green','g');
 
-    [mu,C] = e12.get_mu_cov();
-    tikz = plotGaussian(mu,C,'magenta','m');
+    plotGaussian(e12,[],'magenta','m');
 
     blue_green = exp(metaEmb_llr(e1,e3)),
     red_green = exp(metaEmb_llr(e2,e3)),
