@@ -15,7 +15,7 @@ function MVG_ME_example4
 
 
     e1 = create_me([0.1-2;0],1,[2;3]);
-    e2 = create_me([0.1-2;0],1,[3;2]);
+    e2 = create_me([0.1-2;0],1,[2;3]);
     e3 = create_me([2-2;0],3);
 
     sc = 3;
