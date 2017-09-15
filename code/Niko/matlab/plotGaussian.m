@@ -5,6 +5,10 @@ function tikz = plotGaussian(mu,C,colr,c)
         return;
     end
 
+    if isempty(C)
+        [mu,C] = mu.get_mu_cov();
+    end
+    
     [V,D] = eig(C);
     
     v1 = V(:,1);
@@ -34,7 +38,7 @@ function tikz = plotGaussian(mu,C,colr,c)
     ellipse = bsxfun(@plus,mu,V*sqrt(D)*circle);
     plot(ellipse(1,:),ellipse(2,:),c);
     
-    
+    fprintf('%s',tikz);
     
 
 

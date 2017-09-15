@@ -1116,26 +1116,83 @@ Let us again turn to some simple examples to better understand our multivariate 
 
 Every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty. 
 
-The figure below shows some meta-embeddings and the LRs between them, computed using~\eqref{eq:exactMVG} in~\eqref{eq:slrdot}, or \eqref{eq:mlrdot}. Blue, red and green represent raw embeddings, while black represents blue and red pooled, where pooling is done by adding natural parameters ($\avec_\text{black} = \avec_\text{blue} + \avec_\text{red}$, and $\Bmat_\text{black} = \Bmat_\text{blue} + \Bmat_\text{red}$):  
+The figure below shows some meta-embeddings and the LRs between them, computed using~\eqref{eq:exactMVG} in~\eqref{eq:slrdot}, or \eqref{eq:mlrdot}. The standard normal prior is shown in dashed black. Blue, red and green represent raw embeddings, while magenta represents blue and red pooled, where pooling is done by adding natural parameters ($\avec_\text{mag} = \avec_\text{blue} + \avec_\text{red}$, and $\Bmat_\text{mag} = \Bmat_\text{blue} + \Bmat_\text{red}$):  
 $$
-\begin{tikzpicture}[xscale=1,yscale=1]
-\draw[rotate around ={   0:( 0.3,   0)},blue] ( 0.3,   0) ellipse [x radius=0.447, y radius=   1];
-\draw[rotate around ={  90:(   0,   0)},red] (   0,   0) ellipse [x radius=0.316, y radius=   1];
-\draw[rotate around ={   0:(   2,   0)},green] (   2,   0) ellipse [x radius=0.577, y radius=0.577];
-\draw[rotate around ={  90:(0.25,   0)},black] (0.25,   0) ellipse [x radius=0.302, y radius=0.408];
-\node[ctext] at(6,0) {%
-\begin{tabular}{c|r|r|r}
-$\dotn{f_i}{f_j}$ & blue & red & black \\
+\begin{tikzpicture}[xscale=1.5,yscale=1.5]
+\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={   0:(-0.7,   0)},blue] (-0.7,   0) ellipse [x radius=0.447, y radius=   1];
+\draw[rotate around ={  90:(  -1,   0)},red] (  -1,   0) ellipse [x radius=0.316, y radius=   1];
+\draw[rotate around ={   0:(   1,   0)},green] (   1,   0) ellipse [x radius=0.577, y radius=0.577];
+\draw[rotate around ={  90:(-0.75,   0)},magenta] (-0.75,   0) ellipse [x radius=0.302, y radius=0.408];%
+%
+\node[ctext] at(4,0) {%
+\begin{tabular}{c|rrr}
+$\dotn{f_i}{f_j}$ & blue & red & magenta \\
 \hline
-green & 0.1  & 0.18 &  0.05 \\
-blue & & 0.55 &  
+green & 0.06  & 0.2 & 0.03 \\
+blue & & 0.8 &  
 \end{tabular}%
 };
 \end{tikzpicture}
 $$
-Notice that LR(blue,green) $<$ LR(red,green), even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (black) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is not the same as the green speaker: LR(black,green) is smaller than all the other LRs.
+Notice that LR(blue,green) $<$ LR(red,green), even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (magenta) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is not the same as the green speaker: LR(magenta,green) is smaller than all the other LRs.
 
-The only surprise in this example is perhaps that LR(red,blue) $<1$. Even though the red and blue distribution means are close, the overlap between them is not enough to favour the same-speaker hypothesis. 
+Perhaps the only surprise in this example is that LR(red,blue) $<1$, favouring the different-speaker hypotheses, even though red and blue overlap substantially. The LR depends on three things: the amount of overlap, the amount of uncertainty \emph{and} on the locations of the means relative to the prior. We repeat the same example, except that all the embeddings have been shifted to the left, increasing the \emph{rarity} of red and blue: 
+$$
+\begin{tikzpicture}[xscale=1.5,yscale=1.5]
+\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={   0:(-1.7,   0)},blue] (-1.7,   0) ellipse [x radius=0.447, y radius=   1];
+\draw[rotate around ={  90:(  -2,   0)},red] (  -2,   0) ellipse [x radius=0.316, y radius=   1];
+\draw[rotate around ={   0:(   0,   0)},green] (   0,   0) ellipse [x radius=0.577, y radius=0.577];
+\draw[rotate around ={  90:(-1.75,   0)},magenta] (-1.75,   0) ellipse [x radius=0.302, y radius=0.408];
+%
+\node[ctext] at(3.5,0) {%
+\begin{tabular}{c|rrr}
+$\dotn{f_i}{f_j}$ & blue & red & magenta \\
+\hline
+green & 0.06  & 0.2 & 0.03 \\
+blue & & \textbf{1.3} &  
+\end{tabular}%
+};
+\end{tikzpicture}
+$$
+The only change above is that the same-speaker hypotheses between red and blue is now favoured: LR(red,blue)$>1$. Let us now make the embeddings less uncertain:
+$$
+\begin{tikzpicture}[xscale=1.5,yscale=1.5]
+\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={   0:(-1.7,   0)},blue] (-1.7,   0) ellipse [x radius=0.258, y radius=0.577];
+\draw[rotate around ={  90:(  -2,   0)},red] (  -2,   0) ellipse [x radius=0.183, y radius=0.577];
+\draw[rotate around ={   0:(   0,   0)},green] (   0,   0) ellipse [x radius=0.333, y radius=0.333];
+\draw[rotate around ={  90:(-1.75,   0)},magenta] (-1.75,   0) ellipse [x radius=0.174, y radius=0.236];
+\node[ctext] at(3.5,0) {%
+\begin{tabular}{c|rrr}
+$\dotn{f_i}{f_j}$ & blue & red & magenta \\
+\hline
+green & 1.5e-4  & 9.1e-3 & 3.0e-5 \\
+blue & & 1.03 &  
+\end{tabular}%
+};
+\end{tikzpicture}
+$$
+The certainty that red and blue are not the same speaker as green has increased dramatically above. But the overlap between red and blue still does not convince that they are the same speaker. Let us now improve the alignment between the red and green distributions:  
+$$
+\begin{tikzpicture}[xscale=1.5,yscale=1.5]
+\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={   0:(-1.7,   0)},blue] (-1.7,   0) ellipse [x radius=0.258, y radius=0.577];
+\draw[rotate around ={  90:(  -2,   0)},red] (  -2,   0) ellipse [x radius=0.183, y radius=0.577];
+\draw[rotate around ={   0:(   0,   0)},green] (   0,   0) ellipse [x radius=0.333, y radius=0.333];
+\draw[rotate around ={  90:(-1.75,   0)},magenta] (-1.75,   0) ellipse [x radius=0.174, y radius=0.236];
+\node[ctext] at(3.5,0) {%
+\begin{tabular}{c|rrr}
+$\dotn{f_i}{f_j}$ & blue & red & magenta \\
+\hline
+green & 1.5e-4  & 9.1e-3 & 3.0e-5 \\
+blue & & 1.03 &  
+\end{tabular}%
+};
+\end{tikzpicture}
+$$
+
 
 
 \subsection{Stochastic expectation}

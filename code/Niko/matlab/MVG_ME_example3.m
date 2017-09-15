@@ -1,4 +1,4 @@
-function MVG_ME_example2
+function MVG_ME_example3
 
     close all;
 
@@ -18,7 +18,7 @@ function MVG_ME_example2
     e2 = create_me([0-2;0],1,[0;3]);
     e3 = create_me([2-2;0],3);
 
-    sc = 1;
+    sc = 3;
     e1 = e1.scale(sc);    
     e2 = e2.scale(sc);    
     e3 = e3.scale(sc);    

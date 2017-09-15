@@ -5,6 +5,7 @@ function E = create_plain_metaEmb(a,B)
     E.add = @add;
     E.getNatParams = @getNatParams;
     E.get_mu_cov = @get_mu_cov;
+    E.scale = @scale;
     
     
     function [a1,B1] = getNatParams()
@@ -15,6 +16,10 @@ function E = create_plain_metaEmb(a,B)
     function PE = add(AE)
         [a1,B1] = AE.getNatParams();
         PE = create_plain_metaEmb(a+a1,B+B1);
+    end
+
+    function PE = scale(s)
+        PE = create_plain_metaEmb(s*a,s*B);
     end
 
     function y = log_expectation()
