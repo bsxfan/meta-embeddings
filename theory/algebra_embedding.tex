@@ -693,6 +693,7 @@ Here we show how to write the LR of each of the examples of section~\ref{sec:exa
 
 \noindent The \emph{simple verification} likelihood ratio~\eqref{eq:SLR}, rewritten in a variety of notations, is:
 \begin{align}
+\label{eq:slrdot}
 \frac{P(r,r'\mid H_1)}{P(r,r'\mid H_2)} &= \frac{\dot{f}{f'}}{\dot{f}{\onevec}\dot{f'}{\onevec}}
 = \frac{\expv{ff'}{}}{\expv{f}{}\expv{f'}{}}
 = \dot{\normal{f}}{\normal{f'}}
@@ -701,6 +702,7 @@ where $f$ and $f'$ are the meta-embeddings extracted from $r$ and $r'$. \\
 
 \noindent The \emph{multi-enroll verification} LR, with enrollments: $r_1\mapsto f_1$ and $r_2\mapsto f_2$ and test: $r_3\mapsto f_3$, is:
 \begin{align}
+\label{eq:mlrdot}
 \frac{P(r_1,r_2,r_3\mid H_1)}{P(r_1,r_2,r_3\mid H_2)} &= \frac{\dot{f_1f_2}{f_3}}{\dot{f_1f_2}{\onevec}\dot{f_3}{\onevec}}
 = \frac{\expv{f_1f_2f_3}{}}{\expv{f_1f_2}{}\expv{f_3}{}}
 = \dot{\normal{f_1f_2}}{\normal{f_3}}
@@ -1107,6 +1109,33 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 %&= 
 %\end{split}
 %\end{align}
+
+
+\subsection{Examples}
+Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian distributions in $\Zset$-space. 
+
+Every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty. 
+
+The figure below shows some meta-embeddings and the LRs between them, computed using~\eqref{eq:exactMVG} in~\eqref{eq:slrdot}, or \eqref{eq:mlrdot}. Blue, red and green represent raw embeddings, while black represents blue and red pooled, where pooling is done by adding natural parameters ($\avec_\text{black} = \avec_\text{blue} + \avec_\text{red}$, and $\Bmat_\text{black} = \Bmat_\text{blue} + \Bmat_\text{red}$):  
+$$
+\begin{tikzpicture}[xscale=1,yscale=1]
+\draw[rotate around ={   0:( 0.3,   0)},blue] ( 0.3,   0) ellipse [x radius=0.447, y radius=   1];
+\draw[rotate around ={  90:(   0,   0)},red] (   0,   0) ellipse [x radius=0.316, y radius=   1];
+\draw[rotate around ={   0:(   2,   0)},green] (   2,   0) ellipse [x radius=0.577, y radius=0.577];
+\draw[rotate around ={  90:(0.25,   0)},black] (0.25,   0) ellipse [x radius=0.302, y radius=0.408];
+\node[ctext] at(6,0) {%
+\begin{tabular}{c|r|r|r}
+$\dotn{f_i}{f_j}$ & blue & red & black \\
+\hline
+green & 0.1  & 0.18 &  0.05 \\
+blue & & 0.55 &  
+\end{tabular}%
+};
+\end{tikzpicture}
+$$
+Notice that LR(blue,green) $<$ LR(red,green), even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (black) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is not the same as the green speaker: LR(black,green) is smaller than all the other LRs.
+
+The only surprise in this example is perhaps that LR(red,blue) $<1$. Even though the red and blue distribution means are close, the overlap between them is not enough to favour the same-speaker hypothesis. 
 
 
 \subsection{Stochastic expectation}
