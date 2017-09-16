@@ -144,7 +144,7 @@
 
 \def\KL#1#2{D_{KL}\bigl[#1\|#2\bigr]}
 
-\def\LR{\text{LR}}
+\def\LRT#1#2{\text{LR}(\text{#1},\text{#2})}
 \def\R{\mathbb{R}}
 \def\detm#1{\lvert#1\rvert}
 
@@ -1112,9 +1112,9 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 
 
 \subsection{Examples}
-Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian distributions in $\Zset$-space. 
+Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian \emph{distributions} in $\Zset$-space. 
 
-Every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty. 
+In our plots below, every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty.\footnote{The ellipse axes are aligned with the eigenvectors of the covariance, and the radii are the square roots of the eigenvalues. MATLAB code that computes LLRs and outputs Ti\emph{k}Z code for plotting the ellipses in \LaTeX~is available here: \url{http://github.com/bsxfan/meta-embeddings/tree/master/code/Niko/matlab}.}
 
 The figure below shows some hypothetical meta-embeddings and the LRs between them, computed using~\eqref{eq:exactMVG} in~\eqref{eq:slrdot}, or \eqref{eq:mlrdot}. The standard normal prior is shown in dashed black. Blue, red and green represent raw embeddings, while magenta represents blue and red pooled, where pooling is done by adding natural parameters ($\avec_\text{mag} = \avec_\text{blue} + \avec_\text{red}$, and $\Bmat_\text{mag} = \Bmat_\text{blue} + \Bmat_\text{red}$):  
 $$
@@ -1135,9 +1135,9 @@ blue & & 2.34 &
 };
 \end{tikzpicture}
 $$
-We can imagine that green was extracted from a long, clean recording; blue from a long noisy recording; and red from a short, clean recording. The short red recording gives reasonable certainty along the vertical axis, but crucial information is missing, resulting in greater uncertainty on the horizontal axis. Notice that LR(blue,green) $<$ LR(red,green), even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (magenta) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is \emph{not} the same as the green speaker: LR(magenta,green) is smaller than all the other LRs. There is enough overlap between red and blue to give some support, LR(red,blue)$>1$, for the hypothesis that red and blue are of the same speaker. 
+We can imagine that green was extracted from a long, clean recording; blue from a long noisy recording; and red from a short, clean recording. The short red recording gives reasonable certainty along the vertical axis, but crucial information is missing, resulting in greater uncertainty on the horizontal axis. Notice that $\LRT{blue}{green}<\LRT{red}{green}$, even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (magenta) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is \emph{not} the same as the green speaker: $\LRT{magenta}{green}$ is smaller than all the other LRs. There is enough overlap between red and blue to give some support, $\LRT{red}{blue}>1$, for the hypothesis that red and blue are of the same speaker. 
 
-Next, we repeat the same example, keeping everything the same, except that all the embeddings have smaller uncertainty. The effect is that the LRs also become more certain, moving further away from the neutral value of 1: 
+Next, we repeat the example, keeping everything the same, except that all the embeddings have smaller uncertainty. The effect is that the LRs also become more certain, moving further away from the neutral value of 1: 
 $$
 \begin{tikzpicture}[xscale=1.5,yscale=1.5]
 \draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
@@ -1156,7 +1156,7 @@ blue & & 5.264 &
 };
 \end{tikzpicture}
 $$
-Next, we change the example by shifting the meta-embeddings left, relative to the prior. This affects all the LRs:
+Finally, we change the example by shifting the meta-embeddings left, relative to the prior. This affects all the LRs:
 $$
 \begin{tikzpicture}[xscale=1.5,yscale=1.5]
 \draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
@@ -1174,8 +1174,32 @@ blue & & 14.260 &
 };
 \end{tikzpicture}
 $$
-The most dramatic effect is LR(red,blue), which has increased threefold due to the increased rarity of the red and blue embeddings, relative to the prior.
+The most dramatic effect of the above shift is on $\LRT{red}{blue}$, which has increased threefold due to the increased rarity of the red and blue embeddings, relative to the prior.
 
+
+\subsubsection{Food for thought}
+Let us examine pooling in more detail. Consider pooling red and blue to give magenta:
+$$
+\begin{tikzpicture}[xscale=1,yscale=1]
+%\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={  45:(  -2,   0)},blue] (  -2,   0) ellipse [x radius=0.707, y radius=0.392];
+\draw[rotate around ={  45:(   2,2.96e-016)},red] (   2,2.96e-016) ellipse [x radius=0.577, y radius=   1];
+\draw[rotate around ={  45:(-0.533,0.933)},magenta] (-0.533,0.933) ellipse [x radius=0.447, y radius=0.365];
+%\draw[rotate around ={  45:(-2.22e-016,2.96e-016)},green] (-2.22e-016,2.96e-016) ellipse [x radius=0.913, y radius=1.07];
+%
+\node[ctext] at(6,0) {%
+$\LRT{blue}{red}=0.0047$
+};
+\end{tikzpicture}
+$$
+This result is perhaps counter-intuitive: 
+\begin{itemize}
+	\item Why is the magenta mean so far away from the line connecting the red and blue means? 
+	\item If the same speaker is observed in two relatively distant locations, should this not cause the resulting uncertainty to \emph{increase}, rather than the decrease we see here?
+\end{itemize}
+Nevertheless, we have followed the theory and the magenta result is correct. One reason why our intuition has a hard time to accept this result is because pooling is conditioned on the assumption that the speakers are the same, yet $\LRT{blue}{red}\ll 1$ gives strong support to the hypothesis that blue and red are in fact different speakers.
+
+The apparently wayward magenta mean is the location where the blue and red distributions `overlap most'. It is located at the maximum of the product of the two distributions. It can be interpreted as a soft intersection between the two distributions.
 
 \subsection{Stochastic expectation}
 \def\tvec{\mathbf{t}}

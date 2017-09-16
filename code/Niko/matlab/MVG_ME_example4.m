@@ -1,4 +1,4 @@
-function MVG_ME_example4
+function MVG_ME_example1
 
     close all;
 
@@ -14,39 +14,37 @@ function MVG_ME_example4
 
 
 
-    e1 = create_me([0.1-2;0],1,[2;3]);
-    e2 = create_me([0.1-2;0],1,[2;3]);
-    e3 = create_me([2-2;0],3);
+    e1 = create_me([-2;0],2,[0.5;-0.5]*3);%blue
+    e2 = create_me([2;0],1,[0.5;0.5]*2);%red
+    %e3 = create_me([2-1;0],6);%green
 
-    sc = 3;
+    sc = 1;
     e1 = e1.scale(sc);    
     e2 = e2.scale(sc);    
-    e3 = e3.scale(sc);    
+    %e3 = e3.scale(sc);    
     
-    e12 = e1.add(e2);
+    e12 = e1.pool(e2);
+    %c12 = e1.convolve(e2);
     
     figure;hold;
     axis('square');axis('equal');
 
-    prior = create_me([0;0],1);
-    plotGaussian(prior,[],'black, dashed','k--');
+    %prior = create_me([0;0],1);
+    %plotGaussian(prior,[],'black, dashed','k--');
     
-    [mu,C] = e1.get_mu_cov();
-    tikz = plotGaussian(mu,C,'blue','b');
+    plotGaussian(e1,[],'blue','b');
     
-    [mu,C] = e2.get_mu_cov();
-    tikz = plotGaussian(mu,C,'red','r');
+    plotGaussian(e2,[],'red','r');
 
-    [mu,C] = e3.get_mu_cov();
-    tikz = plotGaussian(mu,C,'green','g');
 
-    [mu,C] = e12.get_mu_cov();
-    tikz = plotGaussian(mu,C,'magenta','m');
+    plotGaussian(e12,[],'magenta','m');
 
-    blue_green = exp(metaEmb_llr(e1,e3)),
-    red_green = exp(metaEmb_llr(e2,e3)),
-    magenta_green = exp(metaEmb_llr(e12,e3)),
+    %plotGaussian(c12,[],'green','g');
+    
+    
+    
     blue_red = exp(metaEmb_llr(e1,e2)),
-    
+
+
 
 end

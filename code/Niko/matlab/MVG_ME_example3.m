@@ -23,7 +23,7 @@ function MVG_ME_example3
     e2 = e2.scale(sc);    
     e3 = e3.scale(sc);    
     
-    e12 = e1.add(e2);
+    e12 = e1.pool(e2);
     
     figure;hold;
     axis('square');axis('equal');

@@ -23,7 +23,7 @@ function MVG_ME_example1
     e2 = e2.scale(sc);    
     e3 = e3.scale(sc);    
     
-    e12 = e1.add(e2);
+    e12 = e1.pool(e2);
     
     figure;hold;
     axis('square');axis('equal');
@@ -43,6 +43,9 @@ function MVG_ME_example1
     red_green = exp(metaEmb_llr(e2,e3)),
     magenta_green = exp(metaEmb_llr(e12,e3)),
     blue_red = exp(metaEmb_llr(e1,e2)),
-    
+
+    magenta_blue = exp(metaEmb_llr(e12,e1)),
+    magenta_red = exp(metaEmb_llr(e12,e2)),
+
 
 end
