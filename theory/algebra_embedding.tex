@@ -785,7 +785,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 \draw (top) to (n134_2);
 \draw (top) to (n12_34);
 \end{tikzpicture}
-\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc is an an atomic refinement, which splits a single subset. Example 1 is highlighted in blue , example 2a in red and 2b in green.}
+\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc is an an atomic refinement, which splits a single subset. Example 1 is highlighted in blue, example 2a in red and 2b in green.}
 \label{fig:lattice}
 \end{figure}
 If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single normalized inner product. But we show that they \emph{can} however be written as products and ratios of such inner products. We start with an example. \\
@@ -1197,7 +1197,7 @@ This result is perhaps counter-intuitive:
 	\item Why is the magenta mean so far away from the line connecting the red and blue means? 
 	\item If the same speaker is observed in two relatively distant locations, should this not cause the resulting uncertainty to \emph{increase}, rather than the decrease we see here?
 \end{itemize}
-Nevertheless, we have followed the theory and the magenta result is correct. One reason why our intuition has a hard time to accept this result is because pooling is conditioned on the assumption that the speakers are the same, yet $\LRT{blue}{red}\ll 1$ gives strong support to the hypothesis that blue and red are in fact different speakers.
+Nevertheless, we have followed the theory and the magenta result is correct. One reason why our intuition has a hard time to accept this result is because pooling is conditioned on the assumption that the speakers are the same, yet $\LRT{blue}{red}\ll 1$ gives strong support to the hypothesis that blue and red are in fact different speakers. If we were to encounter this situation in practice, it would suggest that the same-speaker assumption is wrong, or that the uncertainties in the meta-embeddings have been underestimated.
 
 The apparently wayward magenta mean is the location where the blue and red distributions `overlap most'. It is located at the maximum of the product of the two distributions. It can be interpreted as a soft intersection between the two distributions.
 
