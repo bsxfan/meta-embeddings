@@ -239,6 +239,12 @@
 \def\conj#1{\overline{#1}}
 
 
+\def\dot#1#2{\expv{#1,#2}{}}
+\def\normal#1{\overline{#1}}
+\def\dotn#1#2{\dot{\normal{#1}}{\normal{#2}}}
+
+
+
 \begin{document}
 
 \tikzstyle{every picture}+=[remember picture]
@@ -525,13 +531,12 @@ Classical embeddings in machine learning live in finite-dimensional, Euclidean s
 
 Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in the next chapter---we will consider various finite, tractable representations of our meta-embeddings.
 
-In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. Next we enrich the vector space by introducing another (elementwise) multiplicative operator, which then forms an algebra. We explain some of the properties of this algebra and finally show how these algebraic manipulations can be used to compute likelihood-ratios of the form~\eqref{eq:generalLR}.
+In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. Next we enrich the vector space by introducing another (elementwise) multiplicative operator, which then forms an algebra, the properties of which we explore.
 
-The chapter concludes with a simple graphical example to aid understanding.
+This paves the way for the next chapter where we assemble these algebraic manipulations to compute likelihood-ratios of the form~\eqref{eq:generalLR}.
+
 
 \section{Geometric properties}
-
-
 Let $\R^\Zset$ denote the space of all possible functions from $\Zset$ to $\R$ and let our meta-embeddings live in $\Fset$, where $\Fset\subset\R^{\Zset}$. We need to confine meta-embeddings to some subset of $\R^\Zset$ in order to exclude all kinds of pathological functions and to ensure that the operations defined on meta-embeddings are well behaved. Since our meta-embeddings are likelihoods, the function values are always non-negative, so we might consider restricting ourselves to $\R_+^{\Zset}$, where $\R_+ = [0,\infty)$. But this does not give a vector space, because it will not be closed w.r.t.\ scalar multiplication. It will therefore be more convenient to work in a more general space, $\Fset$, that includes functions with negative values.
 
 
@@ -549,7 +554,6 @@ h &= \alpha f + \beta g & \Leftrightarrow && h(\zvec) &= \alpha f(\zvec) + \beta
 As long as we choose $\Fset$ such that it is closed under these operations and to include the constant function with value $0$, then $\Fset$ is a vector space, even though the vectors are infinite-dimensional. To quality as a vector space, the properties required of the addition and scalar multiplication operators ---commutativity, associativity and distributivity---follow directly from~\eqref{eq:vsops}.
 
 \subsection{Inner product}
-\def\dot#1#2{\expv{#1,#2}{}}
 We already have that $\Fset$ is a vector space. To further make it an \emph{inner product space}, we need to define the inner product, which is a function, $\Fset\times\Fset\to\R$. For $f,g,h\in\Fset$, and $\alpha,\beta\in\R$, we define our inner product as:
 \begin{align}
 \label{eq:innerp}
@@ -566,25 +570,60 @@ Is $\Fset$ a Hilbert space? A Hilbert space is an inner product space with the a
 \subsection{Norm, distance, angle}
 \def\norm#1{\left\lVert#1\right\rVert}
 \def\abs#1{\left\lvert#1\right\rvert}
-The inner product naturally supplies the notions of length, distance and angle, making our space a metric space and a normed space. The norm (length) is defined as:
+The inner product naturally supplies the notions of length, distance and angle, making our space a metric space and a normed space. The \emph{norm, or length} is defined as:
 \begin{align}
 \norm{f} &= \sqrt{\dot{f}{f}}
 \end{align}
-while (squared) distance is defined as:
+Once we have length, \emph{distance} is defined as the length of the difference between two vectors, so that squared distance is given by:
 \begin{align}
 \label{eq:sqdist}
 \norm{f-g}^2 &= \dot{f-g}{f-g} = \norm{f}^2 +\norm{g}^2 -2\dot{f}{g}
 \end{align}
-For any inner product space we have the Cauchy-Schwartz inequality:
+Conversely, it may be useful in some situations to express inner product in terms of norms. We can solve for $\dot{f}{g}$ in~\eqref{eq:sqdist}, but notice that we can alternatively use:
+\begin{align}
+\label{eq:sumnorm}
+\norm{f+g}^2 &= \dot{f+g}{f+g} = \norm{f}^2 +\norm{g}^2 +2\dot{f}{g}
+\end{align}
+Addition of~\eqref{eq:sqdist} and~\eqref{eq:sumnorm} give the \emph{parallelogram law}:
+\begin{align}
+\label{eq:parlaw}
+\norm{f+g}^2 + \norm{f-g}^2&= 2\norm{f}^2 +2\norm{g}^2
+\end{align}
+Combining everything, we can express the \emph{inner product in terms of norms} in at least three different ways:
+\begin{align}
+\label{eq:dotvianorms}
+\begin{split}
+\dot{f}{g} &= \frac12\bigl(\norm{f}^2+\norm{g}^2 - \norm{f-g}^2\bigr) \\
+&= \frac12\bigl(\norm{f+g}^2 - \norm{f}^2- \norm{g}^2\bigr)  \\
+&= \frac14\bigl(\norm{f+g}^2-\norm{f-g}^2\bigr)
+\end{split}
+\end{align}
+To better understand this geometry, view the parallelogram, with sides $f$, $g$, and diagonals $f+g$ and $f-g$: 
+$$
+\begin{tikzpicture}[xscale=1,yscale=1]
+\draw[->] (0,0) -- node[left]{$g$} (1,2);  %g
+\draw (1,2) -- (3,2) -- (2,0);
+\draw[->] (0,0) -- node[below]{$f$} (2,0); %f
+\draw[->,red] (0,0) --  (3,2) node[right]{$f+g$}; %f+g
+\draw[->,blue] (1,2) --node[near end] {$f-g$} (2,0); %f-g
+\end{tikzpicture}
+$$
+Finally, we can also define angle. For any inner product space we have the \emph{Cauchy-Schwartz inequality}:
 \begin{align}
 \label{eq:CSI}
 \abs{\dot{f}{g}} \le \norm{f}\norm{g}
 \end{align}	
-so that the angle, $\theta$, between $f$ and $g$ can be defined as:
+so that the \emph{angle} between $f$ and $g$, say $\theta$, can be defined as:
 \begin{align}
 \cos\theta &= \frac{\dot{f}{g}}{\norm{f}\norm{g}}
 \end{align}	
-because then $\abs{\cos\theta}\le1$, as it should.
+because then $\abs{\cos\theta}\le1$, as it should. 
+
+Having defined angle, we can also talk about pairs orthogonal vectors, for which the inner product is zero and which have an angle of $\uppi/2$ between them. For orthogonal vectors, with $\dot{f}{g}=0$, we can use~\eqref{eq:sqdist} to derive the \emph{theorem of Pythagoras}:
+\begin{align}
+\label{eq:Pythagoras}
+\norm{f-g}^2 &= \norm{f}^2 +\norm{g}^2 
+\end{align} 
 
 
 \subsection{Note on meta-embeddings as random variables}
@@ -656,7 +695,7 @@ If $f$ is non-negative, then $\dot{f}{1}=\norm{f}_1\le\norm{f}_2$. More generall
 Below we restrict attention to meta-embeddings for which $\abs{\dot{f}{\onevec}}<\infty$ and it is useful to know that this condition is automatically satisfied if $\norm{f}=\norm{f}_2<\infty$.  
 
 \subsection{Normalized meta-embedding}
-\def\normal#1{\overline{#1}}
+\label{sec:normalization}
 Let $f\in\Fset$ be a meta-embedding. We define the corresponding \emph{normalized meta-embedding} as:
 \begin{align}
 \label{eq:normalize}
@@ -672,9 +711,73 @@ Similarly, for a set of recordings, $\Rset$, all of the same speaker, let $f_\Rs
 P(\zvec\mid\Rset,H_1,\pi) &= \pi(\zvec)\normal{f_\Rset}(\zvec)
 \end{align}
 We shall require that all meta-embeddings are \emph{normalizable} in the sense that $\abs{\dot{f}{1}}<\infty$. By~\eqref{eq:norm_ineq}, $\norm{f}<\infty$ is a sufficient condition. Alternatively, any bounded function, $f(\zvec)$ also satisfies this requirement. 
+
+
+\subsubsection{Properties}
+The following properties of normalized meta-embeddings are easily shown. Be definition, we have that the length of the projection of any normalized meta-embedding on $\onevec$ is unity:
+\begin{align}
+\label{eq:LR1}
+\dot{\normal{f}}{\onevec} = 1
+\end{align}
+This gives that differences between normalized meta-embeddings live in a hyperplane perpendicular to $\onevec$: 
+\begin{align}
+\dot{\normal{f}-\normal{g}}{\onevec} = 0
+\end{align}
+By~\eqref{eq:L1vsL2} we have:
+\begin{align}
+\norm{\normal{f}} \ge 1
+\end{align} 
+with equality at $\normal{f}=\onevec$. Using Pythagoras~\eqref{eq:Pythagoras}, we find the interesting formula:
+\begin{align}
+\label{eq:normalnorm}
+\norm{\normal{f}}^2 &= \norm{\onevec}^2 + \norm{\normal{f}-\onevec}^2 
+= 1 + \norm{\normal{f}-\onevec}^2 
+\end{align}
+The sum of two normalized meta-embeddings is easy to renormalize:
+\begin{align}
+\normal{\normal{f}+\normal{g}} &= \frac12(\normal{f}+\normal{g})
+\end{align}
+Which, when used with~\eqref{eq:normalnorm}, gives:
+\begin{align}
+\norm{\frac12(\normal{f}+\normal{g})}^2 &= \norm{\normal{\normal{f}+\normal{g}}}^2
+= 1 + \norm{\frac12\normal{f}+\frac12\normal{g}-\onevec}^2
+\end{align}
+or
+\begin{align}
+\norm{\normal{f}+\normal{g}}^2 
+= 4 + \norm{(\normal{f}-\onevec)+(\normal{g}-\onevec)}^2
+\end{align}
+This compares to:
+\begin{align}
+\norm{\normal{f}-\normal{g}}^2 
+= \norm{(\normal{f}-\onevec)-(\normal{g}-\onevec)}^2
+\end{align}
+which inspires the definition of centered meta-embeddings:	
 	
+\subsection{Centered meta-embeddings}
+For a meta-embedding $f$, the normalized meta-embedding is $\normal{f}$ and the \emph{centered} meta embedding is:
+\begin{align}
+\tilde{f} &= \normal{f}-\onevec
+\end{align}	
+The inner product is:
+\begin{align}
+\begin{split}
+\dot{\tilde{f}}{\tilde{g}} &= \dot{\normal{f}-\onevec}{\normal{f}-\onevec} \\
+&= \dotn{f}{g} -\dot{\normal{d}}{\onevec} -\dot{\normal{d}}{\onevec} + \dot{\onevec}{\onevec} \\
+&= \dotn{f}{g} -1
+\end{split}
+\end{align}
+By~\eqref{eq:dotvianorms}, we therefore have:
+\begin{align}
+\begin{split}
+\dotn{f}{g} &= 1+ \dot{\tilde{f}}{\tilde{g}} \\
+&= 1+ \frac12\bigl(\norm{\tilde{f}}^2+\norm{\tilde{g}}^2 - \norm{\tilde{f}-\tilde{g}}^2\bigr) \\
+&= 1+ \frac12\bigl(\norm{\tilde{f}+\tilde{g}}^2 - \norm{\tilde{f}}^2- \norm{\tilde{g}}^2\bigr)  \\
+&= 1+ \frac14\bigl(\norm{\tilde{f}+\tilde{g}}^2-\norm{\tilde{f}-\tilde{g}}^2\bigr)
+\end{split}
+\end{align}	
 \subsection{Notations for inner product and expectation}
-Using the defnitions of inner product and elementwise multiplication, notice that $\dot{f}{g}=\dot{fg}{\onevec}$ and indeed that $\dot{fgh}{\onevec}=\dot{fg}{h}=\dot{f}{gh}=\dot{\onevec}{fgh}$, and so on. The comma in the inner product notation has no real function and it can be omitted. We shall write:
+Using the definitions of inner product and elementwise multiplication, notice that $\dot{f}{g}=\dot{fg}{\onevec}$ and indeed that $\dot{fgh}{\onevec}=\dot{fg}{h}=\dot{f}{gh}=\dot{\onevec}{fgh}$, and so on. The comma in the inner product notation has no real function and it can be omitted. We shall write:
 \begin{align}
 \dot{f}{g} &= \expv{fg}{} = \expv{f(\zvec)g(\zvec)}{\zvec\sim\pi}
 \end{align} 
@@ -684,10 +787,14 @@ and more generally,
 \end{align} 
 In what follows, we shall interchangeably use the notations with or without comma, to respectively emphasize the dot-product or expectation interpretations.
 
-\section{Likelihood-ratios}
-Finally, we demonstrate the utility of our operations on meta-embeddings by expressing the LR formulas of chapter~\ref{chap:fp} in terms of these operations.\\ 
+\chapter{Likelihood-ratios}
+We are now ready to demonstrate the utility of our operations on meta-embeddings and show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
 
-\subsection{Simple LRs}
+We start with \emph{simple LRs}, which can be used to compare any two hypotheses for the partitioning of a set of recordings according to speaker, where the partitions differ by splitting or combining a single subset. Then we treat the general case, to compute LRs to compare any arbitrary pair of hypotheses. The chapter concludes with a graphical example to aid understanding.
+
+ 
+
+\section{Simple LRs}
 \label{sec:simpleLR}
 Here we show how to write the LR of each of the examples of section~\ref{sec:examples} as an inner product between normalized meta-embeddings.\\
 
@@ -719,15 +826,31 @@ L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_
 \end{split}
 \end{align} \\
 
-\noindent For \emph{agglomerative clustering} we can similarly write the LR~\eqref{eq:LR_AHC} in terms of normalized embeddings as:
+\noindent For \emph{agglomerative clustering} we can similarly write the LR~\eqref{eq:LR_AHC} in terms of normalized meta-embeddings as:
 \begin{align}
 L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\ell\in\Sset_i}f_\ell}{}\expv{\prod_{\ell\in\Sset_i}f_\ell}{}} = \dot{\normal{\prod_{\ell\in\Sset_i}f_\ell}}{\normal{\prod_{\ell\in\Sset_j}f_\ell}}
 \end{align}\\
 
-\noindent \textbf{In summary:} In each of these simple cases, the likelihood-ratio is most compactly represented as an \emph{inner product between normalized meta-embeddings}. In what follows, we refer to suchs inner products more concisely as \emph{normalized inner products}. 
+\noindent \textbf{In summary:} In each of these simple cases, the likelihood-ratio is most compactly represented as an \emph{inner product between normalized meta-embeddings}. In what follows, we refer to these inner products more concisely as \emph{normalized inner products}. %Let us examine more closely some of their properties. 
 
-\subsection{The general case}
-\def\dotn#1#2{\dot{\normal{#1}}{\normal{#2}}}
+%\subsection{Properties of normalized inner products}
+%Since the normalized inner products plays a key role in LR calculation, let us examine some of its properties more closely. 
+%
+%First, we highlight~\eqref{eq:LR1}: $\dot{\normal{f}}{\onevec}=1$. Since $\onevec$ represents any empty recording, we have that any simple LR calculation involving the empty recording gives the neutral value of $1$. If one or both of the recordings are empty, information extracted from them cannot help to differentiate between $H_1$ and $H_2$.
+%
+%Next, let us interpret the normalized inner product in terms of \emph{distance} in meta-embedding space. Using~\eqref{eq:dotvianorms}, we have three possibilities:
+%\begin{enumerate}
+%\item $\dotn{f}{g} = \frac12\bigl(\norm{\normal{f}}^2+\norm{\normal{g}}^2 - \norm{\normal{f}-\normal{g}}^2\bigr)$
+%%
+%\item $\dotn{f}{g} = \frac12\bigl(\norm{\normal{f}+\normal{g}}^2 - \norm{\normal{f}}^2- \norm{\normal{g}}^2\bigr)$  
+%%
+%\item $\dotn{f}{g} = \frac14\bigl(\norm{\normal{f}+\normal{g}}^2-\norm{\normal{f}-\normal{g}}^2\bigr)$
+%%
+%\end{enumerate}
+%The first and third relate the LR to negative squared distance between $f$ and $g$, but in both cases, the LR has  
+
+
+\section{The general case}
 \begin{figure}[htb!]
 \centering
 \begin{tikzpicture}[xscale=1,yscale=1]
@@ -807,7 +930,7 @@ In general, the partitions of a set form a \emph{partial order}, where $A<C$ is 
 
 More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows an example of such a lattice, with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them via any path connected by arcs, but the shortest paths will go via the supremum or the infimum. Since the infimum and supremum always exist, there will always be a path. Every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. 
 
-In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} decomposition. This is however not true in general---different paths will give different decompositions of the LR. This is shown in the next example.\\
+In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} decomposition. This is however not true in general---different paths can give different decompositions of the LR. This is shown in the next example.\\
 
 \noindent\textbf{Example 2a.} Let's try a more complex path, highlighted in red in figure~\ref{fig:lattice}. Let $A:1|23|4$ and $B:124|3$. We have $\sup(A,B)=1234$ and $\inf(A,B)=1|2|3|4$. Whether we go up or down, we need at least three steps to traverse between $A$ and $B$. There are three such paths via the supremum and three more via the infimum. Following the red highlighted path, the LR can be re-arranged as:
 \begin{align}
@@ -859,17 +982,21 @@ Finally, we mention another interesting building block. It is not difficult to s
 \end{align}  
 for $m=1,2,\ldots$. This factor is just the LR comparing the coarsest to the finest partition of a set of $m$ recordings. It can be argued that this building block is not primitive, because it can be assembled via pooling and expectation (or pooling and inner products).
 
-\subsection{Note on cosine similarity}
+\section{Note on cosine similarity}
 \def\evec{\mathbf{e}}
-It is of interest to note that the normalized inner products that form our LRs are very similar to the popular cosine similarity,
-$$\frac{\dot{\evec_1}{\evec_2}}{\sqrt{\norm{\evec_1}_2\norm{\evec_2}_2}},$$ 
-between embeddings $\evec_1$ and $\evec_2$. The difference is the use of L1 vs L2 normalization. 
+It is of interest to note that our normalized inner product (LR):
+$$
+\dotn{f_1}{f_2}=\frac{\dot{f_1}{f_2}}{\norm{f_1}_1\norm{f_2}_1}
+$$
+is very similar to the popular cosine similarity between traditional embeddings, say $\xvec_1,\xvec_2$, given by:
+$$\frac{\dot{\xvec_1}{\xvec_2}}{\norm{\xvec_1}_2\norm{\xvec_2}_2}$$ 
+The difference is the use of L1 vs L2 normalization. 
 
 In the literature, there are many examples where embeddings are L2-normalized before computing dot products or distances. In speaker recognition, the first i-vector scoring recipe used cosine-similarity~\cite{ivector-Brighton}, and indeed in current PLDA scoring recipes, it is still standard practice to use L2-normalized i-vectors~\cite{Dani_length_norm}. In face recognition, Facenet uses cosine similarity to compare embeddings~\cite{Facenet}, although subsequently~\cite{Defense_Triplet} advises against such normalization. In~\cite{LIMSI_Language_embedding}, the embeddings for language recognition are compared with cosine similarity.
 
 Notice that by~\eqref{eq:sqdist}, if embeddings have unit L2 norm, then there is no essential difference (other than the sign) between cosine similarity (inner product) and squared distance. By the Cauchy-Schwartz inequality~\eqref{eq:CSI}, inner products between L2-normalized embeddings are limited to the range $[-1,1]$, where $-1$ corresponds to embeddings on opposite sides of the unit hypersphere (maximum distance) and $1$ to embeddings that coincide (zero distance). 
 
-In speaker recognition, cosine similarity between embeddings in Euclidean space is regarded as an uncalibrated form of \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratio magnitudes are not limited to be at most unity.   
+In speaker recognition, cosine similarity between embeddings in Euclidean space is regarded as an uncalibrated form of \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratio magnitudes are \emph{not} limited to be at most unity.   
 
 
 
