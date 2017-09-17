@@ -1,10 +1,13 @@
-function [llr,PE,lognum,logden1,logden2] = metaEmb_llr(E1,E2)
-
-    PE = E1.pool(E2);
+function [llr,f1f2,lognum,logden1,logden2] = metaEmb_llr(f1,f2)
+% Computes logLR for two meta-embeddings, f1 and f2
+%
+%   log LR = log E{f1f2} - log E{f1} - log E{f2}
     
-    lognum = PE.log_expectation();
-    logden1 = E1.log_expectation();
-    logden2 = E2.log_expectation(); 
+    f1f2 = f1.pool(f2);
+    
+    lognum = f1f2.log_expectation();
+    logden1 = f1.log_expectation();
+    logden2 = f2.log_expectation(); 
     
     llr = lognum - logden1 - logden2;
     

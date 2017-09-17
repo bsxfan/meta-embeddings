@@ -1110,6 +1110,23 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 %\end{split}
 %\end{align}
 
+\subsubsection{The one-dimensional case}
+To better understand this formula, let us examine the one-dimensional case, $\Zset=\R$. Denoting $b=\Bmat$ and $a=\avec$, where $a\in\R$ and $b\ge0$, we find:
+\begin{align}
+\begin{split}
+E(a,b) &= \frac{e^{\frac12\frac{a^2}{1+b}}}{\sqrt{1+b}} \\
+&= \frac1{\sqrt{2\uppi}(1+b)\ND(a\mid0,1+b)}\\
+&= \frac1{1+b}\,\frac{\ND(0\mid0,1)}{\ND(0\mid a,1+b)}\\
+\end{split}
+\end{align}
+Given two meta-embeddings, $f_1,f_2$, respectively represented by $(a_1,b_1)$ and $(a_2,b_2)$, the LR between them is:
+\begin{align}
+\begin{split}
+\dotn{f_1}{f_2} &= \frac{E(a_1+a_2,b_1+b_2)}{E(a_1,b_1)E(a_2,b_2)} \\
+&= \frac{(1+b_1)(1+b_2)}{1+b_1+b_2}\,\frac{\ND(0\mid a_1,1+b_1)\ND(0\mid a_2,1+b_2)}{\ND(0\mid 0,1)\ND(0\mid a_1+a_2,1+b_1+b_2)}
+\end{split}
+\end{align} 
+
 
 \subsection{Examples}
 Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian \emph{distributions} in $\Zset$-space. 
@@ -1178,7 +1195,7 @@ The most dramatic effect of the above shift is on $\LRT{red}{blue}$, which has i
 
 
 \subsubsection{Food for thought}
-Let us examine pooling in more detail. Consider pooling red and blue to give magenta:
+Let us examine pooling in more detail. In the above examples, when we pooled the suboptimal information extracted by the (short) red and (noisy) blue recordings, the result (magenta) gave less uncertainty about the value of $\zvec$ for the speaker common to red and blue. Intuition suggests that things are working properly. But now consider pooling red and blue embeddings which are far apart:
 $$
 \begin{tikzpicture}[xscale=1,yscale=1]
 %\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
@@ -1192,7 +1209,7 @@ $\LRT{blue}{red}=0.0047$
 };
 \end{tikzpicture}
 $$
-This result is perhaps counter-intuitive: 
+This result (magenta) is perhaps counter-intuitive: 
 \begin{itemize}
 	\item Why is the magenta mean so far away from the line connecting the red and blue means? 
 	\item If the same speaker is observed in two relatively distant locations, should this not cause the resulting uncertainty to \emph{increase}, rather than the decrease we see here?

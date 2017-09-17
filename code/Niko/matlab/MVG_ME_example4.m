@@ -1,4 +1,7 @@
-function MVG_ME_example1
+function MVG_ME_example4
+% Plots Gaussians and computes LRs for example in document at:
+% Practical meta-embeddings: Multivariate gaussian: Examples.
+% TikZ code for plotting in LaTeX is output to the console.
 
     close all;
 
