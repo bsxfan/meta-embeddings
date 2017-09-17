@@ -584,7 +584,7 @@ Conversely, it may be useful in some situations to express inner product in term
 \label{eq:sumnorm}
 \norm{f+g}^2 &= \dot{f+g}{f+g} = \norm{f}^2 +\norm{g}^2 +2\dot{f}{g}
 \end{align}
-Addition of~\eqref{eq:sqdist} and~\eqref{eq:sumnorm} give the \emph{parallelogram law}:
+Addition of~\eqref{eq:sqdist} and~\eqref{eq:sumnorm} gives the \emph{parallelogram law}:
 \begin{align}
 \label{eq:parlaw}
 \norm{f+g}^2 + \norm{f-g}^2&= 2\norm{f}^2 +2\norm{g}^2
@@ -619,7 +619,7 @@ so that the \emph{angle} between $f$ and $g$, say $\theta$, can be defined as:
 \end{align}	
 because then $\abs{\cos\theta}\le1$, as it should. 
 
-Having defined angle, we can also talk about pairs orthogonal vectors, for which the inner product is zero and which have an angle of $\uppi/2$ between them. For orthogonal vectors, with $\dot{f}{g}=0$, we can use~\eqref{eq:sqdist} to derive the \emph{theorem of Pythagoras}:
+Having defined angle, we can also talk about pairs of orthogonal vectors, for which the inner product is zero and which have an angle of $\uppi/2$ between them. For orthogonal vectors, with $\dot{f}{g}=0$, we can use~\eqref{eq:sqdist} to derive the \emph{theorem of Pythagoras}:
 \begin{align}
 \label{eq:Pythagoras}
 \norm{f-g}^2 &= \norm{f}^2 +\norm{g}^2 
@@ -714,12 +714,12 @@ We shall require that all meta-embeddings are \emph{normalizable} in the sense t
 
 
 \subsubsection{Properties}
-The following properties of normalized meta-embeddings are easily shown. Be definition, we have that the length of the projection of any normalized meta-embedding on $\onevec$ is unity:
+The following properties of normalized meta-embeddings are easily shown. By definition, we have that the length of the projection of any normalized meta-embedding onto $\onevec$ is unity:
 \begin{align}
 \label{eq:LR1}
 \dot{\normal{f}}{\onevec} = 1
 \end{align}
-This gives that differences between normalized meta-embeddings live in a hyperplane perpendicular to $\onevec$: 
+This gives that \emph{differences between normalized meta-embeddings} live in a hyperplane perpendicular to $\onevec$: 
 \begin{align}
 \dot{\normal{f}-\normal{g}}{\onevec} = 0
 \end{align}
@@ -752,7 +752,7 @@ This compares to:
 \norm{\normal{f}-\normal{g}}^2 
 = \norm{(\normal{f}-\onevec)-(\normal{g}-\onevec)}^2
 \end{align}
-which inspires the definition of centered meta-embeddings:	
+which inspires the definition of \emph{centered} meta-embeddings:	
 	
 \subsection{Centered meta-embeddings}
 For a meta-embedding $f$, the normalized meta-embedding is $\normal{f}$ and the \emph{centered} meta embedding is:
@@ -790,7 +790,7 @@ In what follows, we shall interchangeably use the notations with or without comm
 \chapter{Likelihood-ratios}
 We are now ready to demonstrate the utility of our operations on meta-embeddings and show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
 
-We start with \emph{simple LRs}, which can be used to compare any two hypotheses for the partitioning of a set of recordings according to speaker, where the partitions differ by splitting or combining a single subset. Then we treat the general case, to compute LRs to compare any arbitrary pair of hypotheses. The chapter concludes with a graphical example to aid understanding.
+We start with \emph{simple LRs}, which can be used to compare any two hypotheses for the partitioning of a set of recordings according to speaker, where the partitions differ by splitting or combining a single subset. Then we treat the general case, where we compute LRs that compare arbitrary hypotheses. The chapter concludes with a graphical toy example to aid understanding.
 
  
 
@@ -1001,7 +1001,7 @@ In speaker recognition, cosine similarity between embeddings in Euclidean space 
 
 
 
-\section{Meta-embedding example}
+\section{Toy example, with binary hidden variable}
 \label{sec:exem}
 \def\male{\texttt{m}}
 \def\female{\texttt{f}}
@@ -1255,7 +1255,7 @@ Given two meta-embeddings, $f_1,f_2$, respectively represented by $(a_1,b_1)$ an
 \end{align} 
 
 
-\subsection{Examples}
+\subsection{Graphical multivariate Gaussian examples}
 Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian \emph{distributions} in $\Zset$-space. 
 
 In our plots below, every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty.\footnote{The ellipse axes are aligned with the eigenvectors of the covariance, and the radii are the square roots of the eigenvalues. MATLAB code that computes LLRs and outputs Ti\emph{k}Z code for plotting the ellipses in \LaTeX~is available here: \url{http://github.com/bsxfan/meta-embeddings/tree/master/code/Niko/matlab}.}
