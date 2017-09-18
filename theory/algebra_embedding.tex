@@ -1240,6 +1240,7 @@ For non-negative Gaussians, expectation is also L1 norm. As we have seen, we can
 \end{align}  
 Notice that 
 \begin{align}
+\label{eq:MVG_normalL2}
 \norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E(2\avec,2\Bmat)}{E(\avec,\Bmat)^2}
 \end{align}  
 If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If we use the closed-form expressions, maybe not. But as we shall see below, stochastic approximations to the L2 norm may have advantages relative to stochastic L1 norm approximations.
@@ -1374,9 +1375,9 @@ We envisage that such stochastic approximation could work out to be especially c
 We will not be too concerned about expectations of a single factor, of the form $\expv{f}{}$. These expectations are required to normalize trial sides (typically meta-embeddings extracted from single recordings) and there are far fewer trial sides than there are trials. The calculations for which we need speed, are expectations of the form $\expv{\normal{f_i}\,\normal{f_j}}{}$. We consider three solutions below.\\
 
 \subsubsection{Prior sampling}
-An obvious choice, perhaps naive, would be to form the expectation by sampling from the prior, $\pi$. The expectation could be approximated via $m$ such samples as:
+An obvious choice, perhaps naive, would be to form the expectation by sampling from the prior, $\pi$. The expectation could be approximated via $N$ such samples as:
 \begin{align}
-\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &\approx \frac1m\sum_{\tilde\zvec\sim\ND(\nulvec,\Imat)} \normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec)
+\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &\approx \frac1N\sum_{\tilde\zvec\sim\ND(\nulvec,\Imat)} \normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec)
 \end{align}
 We fear this might be inaccurate, because in high-dimensional space, samples from $\pi$ will be very unlikely to hit the peak\footnote{The product is still Gaussian and therefore has single peak.} of $\normal{f_i}\,\normal{f_j}$ and therefore an affordable number of samples might not be able to sufficiently explore the volume under the peak. Experiments might be needed to check whether this is indeed a problem. Let us nevertheless explore in more detail the calculation required for each sample:
 \begin{align}
@@ -1394,7 +1395,7 @@ We fear this might be inaccurate, because in high-dimensional space, samples fro
 where using~\eqref{eq:Bmat}, we have defined $\tilde\gammavec = [\tilde\gamma_1,\ldots,\tilde\gamma_D]\in\R^D$, with $\tilde\gamma_\ell = \tilde\zvec'\Emat_\ell\tilde\zvec$ and 
 where $c_i,c_j$ reflect the normalizations. The meta-embedding representations, $\avec_i,\bvec_i$ and $\avec_j,\bvec_j$, and the trainable constants, $\{\Emat_\ell\}_{\ell=1}^D$, are as defined in the beginning of section~\ref{sec:MVG}. 
 
-Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $m$ different samples, $\tilde\zvec$, and therefore also $m$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $m$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
+Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $m$ different samples, $\tilde\zvec$, and therefore also $N$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $N$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
 
 An advantage of~\eqref{eq:priorsampling} is that it generalizes to expectations of more (or fewer) than two factors---the argument in the exponent will have independent terms for each of the factors in the expectation.
 
@@ -1414,10 +1415,11 @@ Experiments would have to be conducted to verify if an affordably small $m$ coul
 \subsubsection{Posterior sampling} 
 If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
 \begin{align}
+\label{eq:cross_sampling}
 \expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &= \expv{\normal{f_j}(\tilde\zvec)}{\tilde\zvec\sim\pi\normal{f_i}}
-\approx\frac1m\sum_{\tilde\zvec\sim\pi\normal{f_i}}c_j\exp\bigl[\avec'_j\tilde\zvec -\frac12\bvec'_j\tilde\gammavec\bigr]
+\approx\frac1N\sum_{\tilde\zvec\sim\pi\normal{f_i}}c_j\exp\bigl[\avec'_j\tilde\zvec -\frac12\bvec'_j\tilde\gammavec\bigr]
 \end{align}
-This might be more accurate than prior sampling, because when $f_i$ and $f_j$ represent the same speaker, their peaks should overlap. If they are of different speakers, their peaks might be far apart, but then we do want a value close to zero for the expectation. With this variant, we may be able to use smaller values for $m$. 
+This might be more accurate than prior sampling, because when $f_i$ and $f_j$ represent the same speaker, their peaks should overlap. If they are of different speakers, their peaks might be far apart, but then we do want a value close to zero for the expectation. With this variant, we may be able to use smaller values for $N$. 
 
 This method is asymmetric. Which version is best---should we sample from $f_i$, or from $f_j$? If $f_i$ is much sharper than $f_j$, so that $f_j$ is almost constant compared to $f_j$, then one sample would suffice, while if we sampled the other way round, we would need many samples to properly explore the volume of $f_i$. Pooling generally sharpens peaks, so it would be more accurate to sample from the side that consists of the most pooled factors. Unfortunately, fast pooling and sampling are conflicting requirements---after adding natural parameters to compute the pooling, we need a Cholesky factorization before we can sample.
 
@@ -1428,6 +1430,41 @@ Another option would be to change the representation. We could let:
 \Bmat_i &= \Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)\Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)'
 \end{align}  
 where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constrained to be non-negative. This gives a free Cholesky decomposition, and fast, approximate evaluation of LRs of the form $\dot{\normal{f_i}}{\normal{f_j}}$, but it complicates pooling for more complex LR calculations.\\
+
+\subsection{Stochastic L2 norm}
+\def\Mset{\mathcal{M}}
+The above stochastic expectation recipes are fragile because the distributions from which we sample can be mismatched to the arguments of the expectations. If we instead do stochastic L2 norm, we can make use of the symmetry to combat this problem. Using~\eqref{eq:dotvianorms}, we want to do the following calculation:
+\begin{align}
+\dotn{f}{g} &= \frac12\bigl(\norm{\normal{f}+\normal{g}}^2 - \norm{\normal{f}}^2- \norm{\normal{g}}^2\bigr) 
+\end{align} 
+Again, we assume that we can afford to compute each $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ in closed form, using~\eqref{eq:MVG_normalL2}. However, we need a faster way to compute $\norm{\normal{f}+\normal{g}}^2$. Keep in mind that $\pi(\zvec)\normal{f}(\zvec)$ and $\pi(\zvec)\normal{g}(\zvec)$ are normalized probability densities from which we can sample. We can also sample from the \emph{mixture}: 
+\begin{align}
+\Mset(\zvec) &= \frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)
+\end{align}
+Expanding the term of interest, we find:
+\begin{align}
+\label{eq:matched_sampling}
+\begin{split}
+&\frac12\norm{\normal{f}+\normal{g}}^2 \\
+&= \int_{\R^d}\frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)^2\,d\zvec \\
+&= \int_{\R^d}\Mset(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
+&= \frac12\int_{\R^d}\pi(\zvec)\normal{f}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec 
++ \frac12\int_{\R^d}\pi(\zvec)\normal{g}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
+&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
++\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
+\end{split}
+\end{align}
+where $N$ samples are drawn from each distribution. If $f$ and $g$ are both sharp relative to the prior, then the sampling distribution and argument of the expectation are very well matched. Even if $f$ or $g$ are not so sharp, then the peaks of $\Mset(\zvec)$ will be sharper, which is the good way round.
+
+In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ stochastically. If we use the same samples everywhere, cancellation of terms gives:
+\begin{align}
+\begin{split}
+\dotn{f}{g} &= \frac12\norm{\normal{f}+\normal{g}}^2 - \frac12\norm{\normal{f}}^2- \frac12\norm{\normal{g}}^2 \\
+&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{g}(\tilde\zvec)}{2}
++\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)}{2}
+\end{split}
+\end{align} 
+which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
 \section{Zero-mean Gaussians}

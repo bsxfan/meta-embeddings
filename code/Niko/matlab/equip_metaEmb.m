@@ -23,7 +23,7 @@ function f = equip_metaEmb(f)
     end
     
     if ~isfield(f,'distance_square')
-        f.distance_square = @(g) f.normsquare() + g.normsquare - 2*f.innerprod(g);
+        f.distance_square = @(g) f.norm_square() + g.norm_square() - 2*f.innerprod(g);
     end
     
     if ~isfield(f,'L1normalize')
