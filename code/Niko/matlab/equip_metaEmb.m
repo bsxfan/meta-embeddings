@@ -1,5 +1,6 @@
 function f = equip_metaEmb(f)
-
+% Equip an existing meta-embedding implementation with some default derived
+% functionality. Existing function handles are not overwritten. 
     
     if ~isfield(f,'llr')
         f.llr = @llr;
