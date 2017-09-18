@@ -531,9 +531,9 @@ Classical embeddings in machine learning live in finite-dimensional, Euclidean s
 
 Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in the next chapter---we will consider various finite, tractable representations of our meta-embeddings.
 
-In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. Next we enrich the vector space by introducing another (elementwise) multiplicative operator, which then forms an algebra, the properties of which we explore.
+In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. 
 
-This paves the way for the next chapter where we assemble these algebraic manipulations to compute likelihood-ratios of the form~\eqref{eq:generalLR}.
+Second, we enrich the vector space by introducing another (elementwise) multiplicative operator, which then forms an algebra, the properties of which we explore. This paves the way for the next chapter where we assemble these algebraic manipulations to compute likelihood-ratios of the form~\eqref{eq:generalLR}.
 
 
 \section{Geometric properties}
@@ -787,8 +787,9 @@ and more generally,
 \end{align} 
 In what follows, we shall interchangeably use the notations with or without comma, to respectively emphasize the dot-product or expectation interpretations.
 
+
 \chapter{Likelihood-ratios}
-We are now ready to demonstrate the utility of our operations on meta-embeddings and show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
+We are now ready to demonstrate the utility of our meta-embeddings operators. We show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
 
 We start with \emph{simple LRs}, which can be used to compare any two hypotheses for the partitioning of a set of recordings according to speaker, where the partitions differ by splitting or combining a single subset. Then we treat the general case, where we compute LRs that compare arbitrary hypotheses. The chapter concludes with a graphical toy example to aid understanding.
 
@@ -928,9 +929,11 @@ We have achieved this re-arrangement by observing that we can get from $A$ to $B
 
 In general, the partitions of a set form a \emph{partial order}, where $A<C$ is defined as: $C$ \emph{is finer than} $A$. In our example, we have both $A<C$ and $B<C$, but $A$ and $B$ are \emph{not directly comparable}. If two hypotheses \emph{are} directly comparable (if they differ by joining or splitting a single subset), then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}. 
 
-More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows an example of such a lattice, with example 1 highlighted in blue. To form the LR between any pair of hypotheses, we can choose to traverse the lattice between them via any path connected by arcs, but the shortest paths will go via the supremum or the infimum. Since the infimum and supremum always exist, there will always be a path. Every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. 
+More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows the Hasse diagram representing the lattice of four recordings. Every arc in the Hasse diagram corresponds to splitting or joining a single subset. As we shall see, there is a simple LR associated with every arc. 
 
-In example 1 we traversed via $C=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} decomposition. This is however not true in general---different paths can give different decompositions of the LR. This is shown in the next example.\\
+To form the LR between any pair of hypotheses, we can traverse the lattice from one hypothesis to the other via any path connected by arcs, but the shortest paths will go via the supremum or the infimum. Since the infimum and supremum always exist, there will always be a path. Every step (split or join)\footnote{In lattice theory, infimum and supremum are alternatively termed \emph{meet} and \emph{join}. In our usage here, we mean by \emph{join} simply to form the union of two subsets of recordings.} contributes a normalized inner product factor to the final LR. 
+
+In example 1 we traversed the blue path via $13|24=\sup(A,B)$. If we instead traverse via $1|2|3|4=\inf(A,B)$, we get the \emph{same} decomposition. This is however not true in general---different paths can give different decompositions of the LR. This is shown in the next example.\\
 
 \noindent\textbf{Example 2a.} Let's try a more complex path, highlighted in red in figure~\ref{fig:lattice}. Let $A:1|23|4$ and $B:124|3$. We have $\sup(A,B)=1234$ and $\inf(A,B)=1|2|3|4$. Whether we go up or down, we need at least three steps to traverse between $A$ and $B$. There are three such paths via the supremum and three more via the infimum. Following the red highlighted path, the LR can be re-arranged as:
 \begin{align}
@@ -1198,7 +1201,7 @@ To do expectations we need to define the prior. The simplest choice is the stand
 \pi(\zvec) &= \ND(\zvec\mid\nulvec,\Imat) = \frac{e^{-\frac12\zvec'\zvec}}{\sqrt{(2\uppi)^d}}
 \end{align}
 
-\subsection{Expectation}
+\subsection{Expectation (L1 norm)}
 Since our logarithmic representation is closed under elementwise multiplication, our expectations can always be performed on representations of the form~\eqref{eq:gaussembed}. Dropping the subscript $j$ to avoid clutter, we derive an expression for $E(\avec,\Bmat)=\expv{f}{}$, where $f(\zvec)=\exp[\avec'\zvec-\frac12\zvec'\Bmat\zvec]$:
 \begin{align}
 \label{eq:MVGproblem}
@@ -1222,7 +1225,24 @@ E(\avec,\Bmat) &= \expv{f}{} \\
 &= \frac{\exp\bigl[\frac12\avec'\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}} 
 \end{split}
 \end{align}
-Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky decomposition of the positive definite matrix $\Imat+\Bmat$.
+Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky decomposition of the positive definite matrix $\Imat+\Bmat$. 
+
+Our pooling and expectation operations can now be combined for LR calculation. For $f_1,f_2$ represented by $(\avec_1,\Bmat_1)$ and $(\avec_2,\Bmat_2)$, the normalized inner product is given by:
+\begin{align}
+\dotn{f_1}{f_2} &= \frac{\expp{f_1f_2}}{\expp{f_1}\expp{f_2}} = \frac{E(\avec_1+\avec_2,\Bmat_1+\Bmat_2)}{E(\avec_1,\Bmat_1)E(\avec_2,\Bmat_2)}
+\end{align}
+
+
+\subsection{L2 norm}
+For non-negative Gaussians, expectation is L1 norm. As we have seen, we can represent all LR calculations via pooling and expectation (L1 norm). However, as~\eqref{eq:dotvianorms} shows, we can also assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
+\begin{align}
+\norm{f}^2 &= \dot{f}{f} = \expp{f^2} = \int_{\R^d}f(\zvec)^2\pi(\zvec)\,d\zvec = E(2\avec,2\Bmat)
+\end{align}  
+Notice that 
+\begin{align}
+\norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E(2\avec,2\Bmat)}{E(\avec,\Bmat)^2}
+\end{align}  
+
 
 %\subsubsection{Backpropagation}
 %Derivation of the backpropagating equations for $E(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.
@@ -1237,23 +1257,23 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 %\end{split}
 %\end{align}
 
-\subsubsection{The one-dimensional case}
-To better understand this formula, let us examine the one-dimensional case, $\Zset=\R$. Denoting $b=\Bmat$ and $a=\avec$, where $a\in\R$ and $b\ge0$, we find:
-\begin{align}
-\begin{split}
-E(a,b) &= \frac{e^{\frac12\frac{a^2}{1+b}}}{\sqrt{1+b}} \\
-&= \frac1{\sqrt{2\uppi}(1+b)\ND(a\mid0,1+b)}\\
-&= \frac1{1+b}\,\frac{\ND(0\mid0,1)}{\ND(0\mid a,1+b)}\\
-\end{split}
-\end{align}
-Given two meta-embeddings, $f_1,f_2$, respectively represented by $(a_1,b_1)$ and $(a_2,b_2)$, the LR between them is:
-\begin{align}
-\begin{split}
-\dotn{f_1}{f_2} &= \frac{E(a_1+a_2,b_1+b_2)}{E(a_1,b_1)E(a_2,b_2)} \\
-&= \frac{(1+b_1)(1+b_2)}{1+b_1+b_2}\,\frac{\ND(0\mid a_1,1+b_1)\ND(0\mid a_2,1+b_2)}{\ND(0\mid 0,1)\ND(0\mid a_1+a_2,1+b_1+b_2)}
-\end{split}
-\end{align} 
-
+%\subsubsection{The one-dimensional case}
+%To better understand this formula, let us examine the one-dimensional case, $\Zset=\R$. Denoting $b=\Bmat$ and $a=\avec$, where $a\in\R$ and $b\ge0$, we find:
+%\begin{align}
+%\begin{split}
+%E(a,b) &= \frac{e^{\frac12\frac{a^2}{1+b}}}{\sqrt{1+b}} \\
+%&= \frac1{\sqrt{2\uppi}(1+b)\ND(a\mid0,1+b)}\\
+%&= \frac1{1+b}\,\frac{\ND(0\mid0,1)}{\ND(0\mid a,1+b)}\\
+%\end{split}
+%\end{align}
+%Given two meta-embeddings, $f_1,f_2$, respectively represented by $(a_1,b_1)$ and $(a_2,b_2)$, the LR between them is:
+%\begin{align}
+%\begin{split}
+%\dotn{f_1}{f_2} &= \frac{E(a_1+a_2,b_1+b_2)}{E(a_1,b_1)E(a_2,b_2)} \\
+%&= \frac{(1+b_1)(1+b_2)}{1+b_1+b_2}\,\frac{\ND(0\mid a_1,1+b_1)\ND(0\mid a_2,1+b_2)}{\ND(0\mid 0,1)\ND(0\mid a_1+a_2,1+b_1+b_2)}
+%\end{split}
+%\end{align} 
+%
 
 \subsection{Graphical multivariate Gaussian examples}
 Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian \emph{distributions} in $\Zset$-space. 
