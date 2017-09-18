@@ -22,9 +22,9 @@ function MVG_ME_example3
     e3 = create_me([2-2;0],6);%green
 
     sc = 3;
-    e1 = e1.scale(sc);    
-    e2 = e2.scale(sc);    
-    e3 = e3.scale(sc);    
+    e1 = e1.raise(sc);    
+    e2 = e2.raise(sc);    
+    e3 = e3.raise(sc);    
     
     e12 = e1.pool(e2);
     
@@ -42,10 +42,10 @@ function MVG_ME_example3
 
     plotGaussian(e12,[],'magenta','m');
 
-    blue_green = exp(metaEmb_llr(e1,e3)),
-    red_green = exp(metaEmb_llr(e2,e3)),
-    magenta_green = exp(metaEmb_llr(e12,e3)),
-    blue_red = exp(metaEmb_llr(e1,e2)),
+    blue_green = exp(e1.llr(e3)),
+    red_green = exp(e2.llr(e3)),
+    magenta_green = exp(e12.llr(e3)),
+    blue_red = exp(e1.llr(e2)),
     
 
 end

@@ -22,8 +22,8 @@ function MVG_ME_example4
     %e3 = create_me([2-1;0],6);%green
 
     sc = 1;
-    e1 = e1.scale(sc);    
-    e2 = e2.scale(sc);    
+    e1 = e1.raise(sc);    
+    e2 = e2.raise(sc);    
     %e3 = e3.scale(sc);    
     
     e12 = e1.pool(e2);
@@ -46,7 +46,7 @@ function MVG_ME_example4
     
     
     
-    blue_red = exp(metaEmb_llr(e1,e2)),
+    blue_red = exp(e1.llr(e2)),
 
 
 

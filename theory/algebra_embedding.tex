@@ -1234,7 +1234,7 @@ Our pooling and expectation operations can now be combined for LR calculation. F
 
 
 \subsection{L2 norm}
-For non-negative Gaussians, expectation is L1 norm. As we have seen, we can represent all LR calculations via pooling and expectation (L1 norm). However, as~\eqref{eq:dotvianorms} shows, we can also assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
+For non-negative Gaussians, expectation is also L1 norm. As we have seen, we can represent all LR calculations via pooling and expectation (L1 norm). However, as~\eqref{eq:dotvianorms} shows, we can also assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
 \begin{align}
 \norm{f}^2 &= \dot{f}{f} = \expp{f^2} = \int_{\R^d}f(\zvec)^2\pi(\zvec)\,d\zvec = E(2\avec,2\Bmat)
 \end{align}  
@@ -1242,7 +1242,7 @@ Notice that
 \begin{align}
 \norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E(2\avec,2\Bmat)}{E(\avec,\Bmat)^2}
 \end{align}  
-
+If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If we use the closed-form expressions, maybe not. But as we shall see below, stochastic approximations to the L2 norm may have advantages relative to stochastic L1 norm approximations.
 
 %\subsubsection{Backpropagation}
 %Derivation of the backpropagating equations for $E(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.

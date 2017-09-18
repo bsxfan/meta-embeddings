@@ -1,7 +1,8 @@
-function E = create_plain_metaEmb(a,B)
+function E = create_plain_metaEmb(a,B,logscale)
 % Creates an object representing a multivariate Gaussian meta-embedding.
 % The Gaussian is represented by its natural parameters, a in R^d 
-% and B, a positve semi-definte matrix. The meta-embedding is: 
+% and B, a positve semi-definite matrix. The meta-embedding is: 
+%
 %   f(z) = exp(a'z -(1/2)z'Bz)
 %
 % The `object' created here is home-made in the sense that it does not use
@@ -13,31 +14,46 @@ function E = create_plain_metaEmb(a,B)
     E.pool = @pool;
     E.getNatParams = @getNatParams;
     E.get_mu_cov = @get_mu_cov;
-    E.scale = @scale;
+    E.shiftlogscale = @shiftlogscale;
+    E.raise = @raise;
     E.convolve = @convolve;
+    
+    E = equip_metaEmb(E);
+ 
+    if ~exist('logscale','var')
+        logscale = 0;
+    end
+    
+    
     
     
     % returns the same a,B used in construction
-    function [a1,B1] = getNatParams()
+    function [a1,B1,logscale1] = getNatParams()
         a1 = a;
         B1 = B;
+        logscale1 = logscale;
     end
 
     % Returns new object, constructed with sum of natural parameters of 
     % this Gaussian and another represented by AE. This is just the product 
     % of the two Gaussians.
     function PE = pool(AE)
-        [a1,B1] = AE.getNatParams();
-        PE = create_plain_metaEmb(a+a1,B+B1);
+        [a1,B1,s1] = AE.getNatParams();
+        PE = create_plain_metaEmb(a+a1,B+B1,logscale+s1);
     end
 
-    % This is not scalar multiplication of the meta-embedding
-    % It is scaling of the natural parameters.
-    function PE = scale(s)
-        PE = create_plain_metaEmb(s*a,s*B);
+    % Raises meta-embedding to the power s.
+    % It scales the natural parameters.
+    function PE = raise(e)
+        PE = create_plain_metaEmb(e*a,e*B,e*logscale);
     end
 
-    % Computes log E{f(z)}, w.r.t. N(0,I)
+
+    function PE = shiftlogscale(shift)
+        PE = create_plain_metaEmb(a,B,logscale+shift);
+    end
+
+% Computes log E{f(z)}, w.r.t. N(0,I)
     function y = log_expectation()
         dim = length(a);
         cholBI = chol(speye(dim) + B);
@@ -45,8 +61,9 @@ function E = create_plain_metaEmb(a,B)
         %mu = cholBI\(cholBI'\a);
         %y = (mu'*a - log_det)/2;
         z = cholBI.'\a;
-        y = (z.'*z - logdetBI)/2;
+        y = logscale + (z.'*z - logdetBI)/2;
     end
+
 
 
     %For inspection purposes (eg plotting), not speed
@@ -62,14 +79,17 @@ function E = create_plain_metaEmb(a,B)
     % natural parameters. For improved efficiency and accuracy, we use: 
     % inv( inv(B1)+inv(B2) ) = B1*inv(B1+B2)*B2 = B2*inv(B1+B2)*B1  
     function CE = convolve(AE)
-        [a1,B1] = deal(a,B); %rename, just for clear code
-        [a2,B2] = AE.getNatParams();
+        [a1,B1,s1] = deal(a,B,logscale); %rename, just for clear code
+        [a2,B2,s2] = AE.getNatParams();
         chol12 = chol(B1+B2);
         solve = @(rhs) chol12\(chol12.'\rhs); % inv(B1+B2)*rhs
         newB = B1*solve(B2);  %this is inv(inv(B1)+inv(B2))  
         newa = B2*solve(a1) + B1*solve(a2); %newB * (B1\a1 + B2\a2 )
-        CE = create_plain_metaEmb(newa,newB);
+        CE = create_plain_metaEmb(newa,newB,s1+s2);
     end
 
+ 
     
+
+
 end
