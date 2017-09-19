@@ -737,7 +737,7 @@ The sum of two normalized meta-embeddings is easy to renormalize:
 \begin{align}
 \normal{\normal{f}+\normal{g}} &= \frac12(\normal{f}+\normal{g})
 \end{align}
-Which, when used with~\eqref{eq:normalnorm}, gives:
+which, when used with~\eqref{eq:normalnorm}, gives:
 \begin{align}
 \norm{\frac12(\normal{f}+\normal{g})}^2 &= \norm{\normal{\normal{f}+\normal{g}}}^2
 = 1 + \norm{\frac12\normal{f}+\frac12\normal{g}-\onevec}^2
@@ -762,8 +762,8 @@ For a meta-embedding $f$, the normalized meta-embedding is $\normal{f}$ and the 
 The inner product is:
 \begin{align}
 \begin{split}
-\dot{\tilde{f}}{\tilde{g}} &= \dot{\normal{f}-\onevec}{\normal{f}-\onevec} \\
-&= \dotn{f}{g} -\dot{\normal{d}}{\onevec} -\dot{\normal{d}}{\onevec} + \dot{\onevec}{\onevec} \\
+\dot{\tilde{f}}{\tilde{g}} &= \dot{\normal{f}-\onevec}{\normal{g}-\onevec} \\
+&= \dotn{f}{g} -\dot{\normal{f}}{\onevec} -\dot{\onevec}{\normal{g}} + \dot{\onevec}{\onevec} \\
 &= \dotn{f}{g} -1
 \end{split}
 \end{align}
@@ -1467,43 +1467,43 @@ In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\n
 which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
-\section{Zero-mean Gaussians}
-Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual meta-embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity for the meta-embeddings to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. 
-
-Before continuing to the details below, we recommend that the reader review appendix~\ref{chap:MDFT} on multidimensional Fourier transforms and characteristic functions. Characteristic functions and Fourier transforms of probability densities are equivalent up to linear reparametrization. For our application, it will be more convenient to work with characteristic functions.
-
-\subsection{Representation}
-For this representation, we have already restricted our meta-embeddings to zero-mean normal distributions. The normalization constants of these distributions are irrelevant, for the same reason that we have allowed all our meta-embeddings to have arbitrary scale factors. As shown in the appendix~\ref{sec:GCF}, for meta-embedding $f_i(\zvec)\propto\ND(\zvec\mid\nulvec,\Bmat_i^{-1})$, the characteristic function is:
-\begin{align}
-\CT{f_i}(\tvec) = \phi_i(\tvec) = k_i\,\ND(\tvec\mid\nulvec,\Bmat_i)
-\end{align} 
-where $k_i$ is a scaling constant. The prior, $\pi(\zvec)=\ND(\zvec\mid\nulvec,\Imat)$, transforms as:
-\begin{align}
-\CT{\pi}(\tvec) = \phi_0(\tvec) = (2\uppi)^{d/2} \ND(\tvec\mid\nulvec,\Imat) = k_0\pi(\tvec)
-\end{align} 
-Since there is a bijection between densities and characteristic functions, we may as well directly extract representations for the $\phi_i$. Moreover, these representations can be conveniently chosen to facilitate sampling. That is, every $\phi_i$ is represented by a $d$-by-$d$ square (possibly triangular) matrix. Sampling is done by forming matrix vector products, where the $d$-dimensional vectors are sampled from the standard Gaussian. This is just the \emph{reparametrization trick}, familiar from the VAE literature, which plays well with gradient backpropagation through the stochastic part of the calculation~\cite{VAE}. 
-
-More parsimonious representations are possible. We can represent each meta-embedding via \emph{samples}, rather than via a matrix of parameters. The net that extracts the embeddings is simply required to produce Gaussian samples, using any convenient method. One way to implement this is to generate samples from a factor analysis model---where samples drawn from a full rank diagonal Gaussian are added to $D$-dimensional samples multiplied by a $D$-by-$d$ factor loading matrix, where typically $D\ll d$. The parameter count of the factor-analysis representation  is $d(D+1)$, compared to $d^2$ for full, or $\frac{d(d+1)}{2}$ for triangular covariance square-root parametrizations.
-
-\subsection{Frequency domain pooling and expectation}
-We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval (\ref{sec:cfParseval}) and the convolution theorem (\ref{sec:cfConvolution}) as:
-\begin{align}
-\begin{split}
-\int_{\R^n} \pi(\zvec) \prod_{i=1}^m f_i(\zvec)  \,d\zvec  
-&= \frac{1}{(2\uppi)^d}\int_{\R^n} \CT{\pi}(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
-&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
-&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1}\ast\cdots\ast\CT{f_m}(\tvec) \,d\tvec  \\
-&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND(\tvec\mid\nulvec,\Bmat_1)\ast\cdots\ast\ND(\tvec\mid\nulvec,\Bmat_m) \,d\tvec  \\
-&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND\bigl(\tvec\mid\nulvec,\sum_{i=1}^m\Bmat_i\bigr) \,d\tvec  \\
-\end{split}
-\end{align}
-where $\ast$ denotes convolution and where we do not need complex conjugation, because everything is real-valued. Since $\pi$ is standard Gaussian, its Fourier transform is also standard Gaussian. The RHS is the expected value of $\pi$, w.r.t.\ a Gaussian, formed by the convolution of $m$ zero-mean Gaussians, $\{\tilde f_i\}$. The sum of independent samples of all the $\tilde f_i$ will give a sample from the convolution. These sums can then be inserted into $\pi$ and averaged to approximate the required expectation.
-
-\subsection{Could it work?}
-The question is whether meta-embeddings without means could distinguish between speakers. All our meta-embeddings share the same expected value. All peaks coincide. Still, these concentric Gaussians can be very different, with probability mass spread in different directions in $\R^d$ space. 
-
-\subsection{Complex Gaussians}
-Do complex Gaussians perhaps have complex Gaussians as Fourier transforms? Can we get around the zero-mean restriction in this way? 
+%\section{Zero-mean Gaussians}
+%Next, let us place a restriction on our multivariate Gaussian embeddings in the quest for fast and accurate stochastic expectation solutions. By restricting meta-embeddings to \emph{zero-mean Gaussians with strictly positive definite precisions}, the Fourier transforms of these Gaussians always exist and are also multivariate Gaussians---from which we can sample in the frequency domain. By Parseval's theorem, we can compute the expectation integrals instead in the frequency domain. By the convolution theorem, products of Gaussians in the original $\Zset$ domain become convolutions in the frequency domain. These convolutions can be stochastically implemented by \emph{adding} samples drawn from individual meta-embeddings. We now have made both pooling and expectation \emph{simultaneously easy}---a property which has thus far eluded us. The disadvantage is that we have lost the capacity for the meta-embeddings to have means and it is not immediately obvious whether this would be a serious drawback for the application at hand. 
+%
+%Before continuing to the details below, we recommend that the reader review appendix~\ref{chap:MDFT} on multidimensional Fourier transforms and characteristic functions. Characteristic functions and Fourier transforms of probability densities are equivalent up to linear reparametrization. For our application, it will be more convenient to work with characteristic functions.
+%
+%\subsection{Representation}
+%For this representation, we have already restricted our meta-embeddings to zero-mean normal distributions. The normalization constants of these distributions are irrelevant, for the same reason that we have allowed all our meta-embeddings to have arbitrary scale factors. As shown in the appendix~\ref{sec:GCF}, for meta-embedding $f_i(\zvec)\propto\ND(\zvec\mid\nulvec,\Bmat_i^{-1})$, the characteristic function is:
+%\begin{align}
+%\CT{f_i}(\tvec) = \phi_i(\tvec) = k_i\,\ND(\tvec\mid\nulvec,\Bmat_i)
+%\end{align} 
+%where $k_i$ is a scaling constant. The prior, $\pi(\zvec)=\ND(\zvec\mid\nulvec,\Imat)$, transforms as:
+%\begin{align}
+%\CT{\pi}(\tvec) = \phi_0(\tvec) = (2\uppi)^{d/2} \ND(\tvec\mid\nulvec,\Imat) = k_0\pi(\tvec)
+%\end{align} 
+%Since there is a bijection between densities and characteristic functions, we may as well directly extract representations for the $\phi_i$. Moreover, these representations can be conveniently chosen to facilitate sampling. That is, every $\phi_i$ is represented by a $d$-by-$d$ square (possibly triangular) matrix. Sampling is done by forming matrix vector products, where the $d$-dimensional vectors are sampled from the standard Gaussian. This is just the \emph{reparametrization trick}, familiar from the VAE literature, which plays well with gradient backpropagation through the stochastic part of the calculation~\cite{VAE}. 
+%
+%More parsimonious representations are possible. We can represent each meta-embedding via \emph{samples}, rather than via a matrix of parameters. The net that extracts the embeddings is simply required to produce Gaussian samples, using any convenient method. One way to implement this is to generate samples from a factor analysis model---where samples drawn from a full rank diagonal Gaussian are added to $D$-dimensional samples multiplied by a $D$-by-$d$ factor loading matrix, where typically $D\ll d$. The parameter count of the factor-analysis representation  is $d(D+1)$, compared to $d^2$ for full, or $\frac{d(d+1)}{2}$ for triangular covariance square-root parametrizations.
+%
+%\subsection{Frequency domain pooling and expectation}
+%We are interested in expectations of the form $\expv{\prod_{i=1}^m f_i}{\pi}$, which we rewrite via Parseval (\ref{sec:cfParseval}) and the convolution theorem (\ref{sec:cfConvolution}) as:
+%\begin{align}
+%\begin{split}
+%\int_{\R^n} \pi(\zvec) \prod_{i=1}^m f_i(\zvec)  \,d\zvec  
+%&= \frac{1}{(2\uppi)^d}\int_{\R^n} \CT{\pi}(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
+%&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1\cdots f_m}(\tvec) \,d\tvec  \\
+%&= \frac{k_0}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \CT{f_1}\ast\cdots\ast\CT{f_m}(\tvec) \,d\tvec  \\
+%&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND(\tvec\mid\nulvec,\Bmat_1)\ast\cdots\ast\ND(\tvec\mid\nulvec,\Bmat_m) \,d\tvec  \\
+%&= \frac{k_0k_1\cdots k_m}{(2\uppi)^d}\int_{\R^n} \pi(\tvec) \ND\bigl(\tvec\mid\nulvec,\sum_{i=1}^m\Bmat_i\bigr) \,d\tvec  \\
+%\end{split}
+%\end{align}
+%where $\ast$ denotes convolution and where we do not need complex conjugation, because everything is real-valued. Since $\pi$ is standard Gaussian, its Fourier transform is also standard Gaussian. The RHS is the expected value of $\pi$, w.r.t.\ a Gaussian, formed by the convolution of $m$ zero-mean Gaussians, $\{\tilde f_i\}$. The sum of independent samples of all the $\tilde f_i$ will give a sample from the convolution. These sums can then be inserted into $\pi$ and averaged to approximate the required expectation.
+%
+%\subsection{Could it work?}
+%The question is whether meta-embeddings without means could distinguish between speakers. All our meta-embeddings share the same expected value. All peaks coincide. Still, these concentric Gaussians can be very different, with probability mass spread in different directions in $\R^d$ space. 
+%
+%\subsection{Complex Gaussians}
+%Do complex Gaussians perhaps have complex Gaussians as Fourier transforms? Can we get around the zero-mean restriction in this way? 
 
 
 
@@ -1578,6 +1578,73 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 \section{Mean embedding}
 
+\chapter{Toy example with heavy-tailed noise}
+In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
+
+\section{The generative model}
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$, where in general, we allow $d\ne D$.
+
+\subsection{Prior}
+The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
+
+\subsection{Noise model and likelihood function}
+\def\etavec{\boldsymbol{\eta}}
+The likelihood, $P(\rvec_j\mid\zvec_i)$ is parametrized by a rectangular, $D$-by-$d$ \emph{factor loading matrix}, $\Fmat$, and the \emph{degrees of freedom}, an integer, $\nu\ge1$. For speaker $i$, multiple observations, $\rvec_j\in\R^D$, are produced by the addition of independently drawn, heavy-tailed noise:
+\begin{align}
+\rvec_j &= \Fmat\zvec_i + \etavec_j 
+\end{align}
+The heavy-tailed noise is effectively Gaussian with variable precision, $\lambda_j$, sampled from the chi-squared distribution, with degrees of freedom $\nu$:   
+\begin{align}
+\etavec_j&\sim \ND(\nulvec,\tfrac{\nu}{\lambda_j}\Imat) &\text{and} && \lambda_j &\sim \chi_\nu^2
+\end{align}
+The expected value\footnote{By Jensen's inequality, the expected value of the \emph{variance} scaling factor, is greater than 1. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a t-distribution:\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}}
+\begin{align}
+\label{eq:noise_model}
+P(\rvec\mid\zvec_i) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec_i)'(\rvec-\Fmat\zvec_i)\Bigr]^{-\frac{\nu+D}{2}}
+\end{align}
+where we have ignored the somewhat complex normalization constant, which is irrelevant to our present purpose of inference for $\zvec$. We can use~\eqref{eq:noise_model} as-is for our meta-embedding: 
+\begin{align}
+f_j(\zvec) &\propto \Bigl[1+\frac1\nu(\rvec_j-\Fmat\zvec)'(\rvec_j-\Fmat\zvec)\Bigr]^{-\frac{\nu+D}{2}}
+\end{align}
+But if $\Fmat'\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
+\begin{align}
+\muvec &= (\Fmat'\Fmat)^{-1}\Fmat'\rvec& \text{and} && \Gmat &= \Imat-\Fmat(\Fmat'\Fmat)^{-1}\Fmat' 
+\end{align}
+and we rearrange the quadratic form as:
+\begin{align}
+\begin{split}
+Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'(\rvec-\Fmat\zvec)\\ 
+&= \rvec'\rvec -2\zvec'\Fmat'\rvec + \zvec'\Fmat'\Fmat\zvec \\
+&= \rvec'\rvec -2\zvec'\Fmat'\Fmat\muvec + \zvec'\Fmat'\Fmat\zvec \\
+&= (\rvec'\rvec -\muvec'\Fmat'\Fmat\muvec) + (\zvec'\Fmat'\Fmat\zvec -2\zvec\Fmat'\Fmat\muvec + \muvec'\Fmat'\Fmat\muvec) \\
+&= \rvec'\Gmat\rvec + (\zvec-\muvec)'\Fmat'\Fmat(\zvec-\muvec) \\
+&= E + Q_{\zvec\mid\rvec}
+\end{split}
+\end{align}
+Before continuing to assemble our t-distribution from $Q_{\zvec\mid\rvec}$, we diverge to comment on a pleasant surprise: Our re-arrangement had the side effect of isolating the following interesting \emph{ancillary statistic}:
+\begin{align}
+E &= \rvec'\Gmat\rvec = (\Fmat\zvec+\etavec)'\Gmat(\Fmat\zvec+\etavec) = \etavec'\Gmat\etavec = (\Gmat\etavec)'(\Gmat\etavec)
+\end{align}
+By examining its definition above, you can check that $\Gmat$ is an \emph{idempotent projection matrix}, which removes the influence of $\zvec$ from $\rvec$. That is, $\Gmat\rvec$ is the projection of $\rvec$ onto the complement of the subspace spanned by $\Fmat$. Intuitively, $E_{\rvec_j}/(D-d)$ estimates the hidden noise variance $\lambda_j^{-1}$. This statistic is called \emph{ancillary}, because it is independent of $\zvec$, which we are trying to infer, yet it is still relevant to that inference, as we shall see. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E=0$.
+
+Let's continue to finally assemble our t-distribution likelihood:
+\begin{align}
+\begin{split}
+f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
+&= \Bigl[1+\frac{E_j + Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
+&= \Bigl[\frac{\nu+E_j}{\nu} + \frac{Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
+&\propto \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
+&= \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})(\zvec-\muvec_j)'\Fmat'\Fmat(\zvec-\muvec_j)}{\nu}\Bigr]^{-\frac{\nu+D}{2}} 
+\end{split}
+\end{align}
+where
+\begin{align}
+\muvec_j &= (\Fmat'\Fmat)^{-1}\Fmat'\rvec_j &\text{and} &&
+E_j &= \rvec'_j\Gmat\rvec_j
+\end{align}
+We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,(\Fmat'\Fmat)^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Fmat'\Fmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is also the maximum-likelihood estimate for $\zvec$.
+
+Let us examine $E_j$ in more detail. Since it is computed from heavy-tailed variables, it is also going to be heavy-tailed. Its scale is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (more Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition: since the noise precision scaling factor, $\frac{\lambda_j}{/nu}$, will be almost constant for large $\nu$. 
 
 
 \chapter{Discriminative training}

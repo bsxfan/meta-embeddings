@@ -26,6 +26,10 @@ function f = equip_metaEmb(f)
         f.distance_square = @(g) f.norm_square() + g.norm_square() - 2*f.innerprod(g);
     end
     
+    if ~isfield(f,'norm_square_of_sum')
+        f.norm_square_of_sum = @(g) f.norm_square() + g.norm_square() + 2*f.innerprod(g);
+    end
+    
     if ~isfield(f,'L1normalize')
         f.L1normalize = @() f.shiftlogscale(-f.log_expectation());
     end
