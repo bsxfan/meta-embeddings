@@ -1229,6 +1229,7 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found by Cholesky d
 
 Our pooling and expectation operations can now be combined for LR calculation. For $f_1,f_2$ represented by $(\avec_1,\Bmat_1)$ and $(\avec_2,\Bmat_2)$, the normalized inner product is given by:
 \begin{align}
+\label{eq:LRMVG}
 \dotn{f_1}{f_2} &= \frac{\expp{f_1f_2}}{\expp{f_1}\expp{f_2}} = \frac{E(\avec_1+\avec_2,\Bmat_1+\Bmat_2)}{E(\avec_1,\Bmat_1)E(\avec_2,\Bmat_2)}
 \end{align}
 
@@ -1362,7 +1363,7 @@ This result (magenta) is perhaps counter-intuitive:
 	\item Why is the magenta mean so far away from the line connecting the red and blue means? 
 	\item If the same speaker is observed in two relatively distant locations, should this not cause the resulting uncertainty to \emph{increase}, rather than the decrease we see here?
 \end{itemize}
-Nevertheless, we have followed the theory and the magenta result is correct. One reason why our intuition has a hard time to accept this result is because pooling is conditioned on the assumption that the speakers are the same, yet $\LRT{blue}{red}\ll 1$ gives strong support to the hypothesis that blue and red are in fact different speakers. If we were to encounter this situation in practice, it would suggest that the same-speaker assumption is wrong, or that the uncertainties in the meta-embeddings have been underestimated.
+Nevertheless, we have followed the theory and the magenta result is correct. One reason why our intuition has a hard time to accept this result is because pooling is conditioned on the assumption that the speakers are the same, yet $\LRT{blue}{red}\ll 1$ gives strong support to the hypothesis that this is not so. If we were to encounter this situation in practice, it would suggest that the same-speaker assumption is wrong, or that the uncertainties represented in the meta-embeddings have been underestimated.
 
 The apparently wayward magenta mean is the location where the blue and red distributions `overlap most'. It is located at the maximum of the product of the two distributions. It can be interpreted as a soft intersection between the two distributions.
 
@@ -1589,6 +1590,7 @@ The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are d
 
 \subsection{Noise model and likelihood function}
 \def\etavec{\boldsymbol{\eta}}
+\def\TD{\mathcal{T}}
 The likelihood, $P(\rvec_j\mid\zvec_i)$ is parametrized by a rectangular, $D$-by-$d$ \emph{factor loading matrix}, $\Fmat$, and the \emph{degrees of freedom}, an integer, $\nu\ge1$. For speaker $i$, multiple observations, $\rvec_j\in\R^D$, are produced by projection into the $D$-dimensional space and the addition of independently drawn noise, $\etavec_j$:
 \begin{align}
 \rvec_j &= \Fmat\zvec_i + \etavec_j 
@@ -1597,10 +1599,11 @@ The noise is heavy-tailed in the sense that it is Gaussian with variable precisi
 \begin{align}
 \etavec_j&\sim \ND\bigl(\nulvec,\frac{\nu}{\lambda_j}\Imat\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
 \end{align}
-The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a t-distribution:
+The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
 \begin{align}
 \label{eq:noise_model}
-P(\rvec\mid\zvec_i) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec_i)'(\rvec-\Fmat\zvec_i)\Bigr]^{-\frac{\nu+D}{2}}
+P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Imat,\nu) \\
+&\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec_i)'(\rvec-\Fmat\zvec_i)\Bigr]^{-\frac{\nu+D}{2}}
 \end{align}
 where we have ignored the somewhat complex normalization constant, which is irrelevant to our present purpose of inference for $\zvec$. We can use~\eqref{eq:noise_model} as-is for our meta-embedding: 
 \begin{align}
@@ -1608,7 +1611,7 @@ f_j(\zvec) &\propto \Bigl[1+\frac1\nu(\rvec_j-\Fmat\zvec)'(\rvec_j-\Fmat\zvec)\B
 \end{align}
 But if $\Fmat'\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
 \begin{align}
-\muvec &= (\Fmat'\Fmat)^{-1}\Fmat'\rvec& \text{and} && \Gmat &= \Imat-\Fmat(\Fmat'\Fmat)^{-1}\Fmat' 
+\Bmat &= \Fmat'\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\rvec& \text{and} && \Gmat &= \Imat-\Fmat\Bmat^{-1}\Fmat' 
 \end{align}
 and we rearrange the quadratic form as:
 \begin{align}
@@ -1617,7 +1620,7 @@ Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'(\rvec-\Fmat\zvec)\\
 &= \rvec'\rvec -2\zvec'\Fmat'\rvec + \zvec'\Fmat'\Fmat\zvec \\
 &= \rvec'\rvec -2\zvec'\Fmat'\Fmat\muvec + \zvec'\Fmat'\Fmat\zvec \\
 &= (\rvec'\rvec -\muvec'\Fmat'\Fmat\muvec) + (\zvec'\Fmat'\Fmat\zvec -2\zvec\Fmat'\Fmat\muvec + \muvec'\Fmat'\Fmat\muvec) \\
-&= \rvec'\Gmat\rvec + (\zvec-\muvec)'\Fmat'\Fmat(\zvec-\muvec) \\
+&= \rvec'\Gmat\rvec + (\zvec-\muvec)'\Bmat(\zvec-\muvec) \\
 &= E + Q_{\zvec\mid\rvec}
 \end{split}
 \end{align}
@@ -1629,22 +1632,23 @@ By examining the definition of $\Gmat$ above, you can check that it is an \emph{
 
 We term this statistic, $E$, \emph{ancillary}, because it is independent of $\zvec$, which we are trying to infer, yet it is still relevant to that inference, as we shall see. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E=0$.
 
-Let's continue to finally assemble our t-distribution likelihood:
+Let's continue to finally assemble our t-distribution likelihood (now again with subscript $j$):
 \begin{align}
 \begin{split}
 f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
 &= \Bigl[1+\frac{E_j + Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
 &= \Bigl[\frac{\nu+E_j}{\nu} + \frac{Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
 &\propto \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&= \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})(\zvec-\muvec_j)'\Fmat'\Fmat(\zvec-\muvec_j)}{\nu}\Bigr]^{-\frac{\nu+D}{2}} 
+&= \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})(\zvec-\muvec_j)'\Bmat(\zvec-\muvec_j)}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
+&\propto\TD(\zvec\mid \muvec_j,(\frac{\nu}{\nu+E_j})\Bmat,\nu)
 \end{split}
 \end{align}
 where
 \begin{align}
-\muvec_j &= (\Fmat'\Fmat)^{-1}\Fmat'\rvec_j &\text{and} &&
+\muvec_j &= \Bmat^{-1}\Fmat'\rvec_j &\text{and} &&
 E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
-We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,(\Fmat'\Fmat)^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Fmat'\Fmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is also the maximum-likelihood estimate for $\zvec$.
+We have shown that the meta-embedding, $f_j(\zvec)$ is proportional, to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,\Bmat^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is also the maximum-likelihood estimate for $\zvec$.
 
 Let us examine $E_j$ in more detail. Since it is computed from heavy-tailed data, it is also heavy-tailed. Its scale is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (almost Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition, since $\frac{\nu}{\lambda_j}$, is almost constant for large $\nu$. 
 
@@ -1657,11 +1661,38 @@ Our model can be generalized in the following ways:
   \begin{align}
   P(\rvec\mid\zvec) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\Bigr]^{-\frac{\nu+D}{2}}
   \end{align}
+	which gives: 
+	\begin{align}
+	\label{eq:BGWmu}
+	\Bmat&=\Fmat'\Wmat\Fmat, & \Gmat&=\Wmat-\Wmat\Fmat'\Bmat^{-1}\Fmat'\Wmat, &\muvec_j&=\Bmat^{-1}\Fmat'\Wmat\rvec_j 
+	\end{align}
+	Although $\Gmat$ is no longer idempotent in this case, we still have $\Gmat\Fmat\zvec=\nulvec$ and $E_j=\rvec'_j\Gmat\rvec_j$ fulfils the same function as before. Nothing essential has changed with this generalization, because a fixed, invertible linear transform of the data can recover $\Wmat=\Imat$.
 %
 	\item Our derivation of the t-distribution, with precision scaling factor drawn from $\chi^2_\nu$ is from Wikipedia.\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}.} Noting that $\chi^2_\nu(\lambda)=\GD(\lambda\mid\tfrac{\nu}{2},\tfrac12)$, where $\GD$ is the gamma distribution, we can indeed generalize the model slightly to non-integer degrees of freedom, by drawing $\lambda$ from a Gamma distribution---see Bishop's equation (2.161) in chapter 2 of~\cite{PRML}. 
 %
 	\item Finally, consider drawing the \emph{whole noise precision matrix} from a Wishart prior, rather than just the scaling factor. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68) from appendix B.
 \end{itemize}
+
+\section{LR computation}
+First, let us rewrite the meta-embedding (likelihood function) in a more convenient form:
+\begin{align}
+f_j(\zvec) &\propto \TD(\zvec\mid \muvec_j,(\beta_j\Bmat)^{-1},\nu)
+\end{align} 
+where we use the generalization~\eqref{eq:BGWmu} and where have defined:
+\begin{align}
+\beta_j &= \frac{\nu}{\nu+E_j}
+\end{align}
+%\avec_j &= \beta_j\Bmat\muvec_j = \beta_j\Fmat'\Wmat\rvec_j
+We can rewrite the t-distribution again as a continuous scale mixture of Gaussians and then approximate it with some quadrature recipe as a finite mixture:
+\begin{align}
+f_j(\zvec) &\propto \int_0^{\infty} \ND\bigl(\zvec\mid \muvec_j,(\frac{\lambda\beta_j}{\nu}\Bmat)^{-1}\bigr)\chi^2_\nu(\lambda)\,d\lambda\\
+&\approx\sum_{k=1}^K w_k\, \ND\bigl(\zvec\mid \muvec_j,(\alpha_k\beta_j\Bmat)^{-1}\bigr)
+\end{align} 
+where $\alpha_k=\frac{\lambda_k}{\nu}$ and $w_k>0$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
+
+Now given this mixture form, when we compute an expectation of the form $\expp{f_if_j}$, we have to do $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}.
+
+TBD: Compute approximate log LR via 2nd-order Taylor series expansion, to give a qaudratic recipe, similar to PLDA scoring. The variables should be $[\avec_i,\beta_i,\avec_j,\beta_j]$, or maybe $[\avec_i,\log\beta_i,\avec_j,\log\beta_j]$ and the expansion should be relative to a fixed point, e.g. all zeros (in the 2nd parametrization). 
 
 
 
