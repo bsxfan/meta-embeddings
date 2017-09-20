@@ -1578,7 +1578,7 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 \section{Mean embedding}
 
-\chapter{Toy example with heavy-tailed noise}
+\chapter{Application: PLDA with heavy-tailed noise}
 In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
 
 \section{The generative model}
@@ -1589,15 +1589,15 @@ The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are d
 
 \subsection{Noise model and likelihood function}
 \def\etavec{\boldsymbol{\eta}}
-The likelihood, $P(\rvec_j\mid\zvec_i)$ is parametrized by a rectangular, $D$-by-$d$ \emph{factor loading matrix}, $\Fmat$, and the \emph{degrees of freedom}, an integer, $\nu\ge1$. For speaker $i$, multiple observations, $\rvec_j\in\R^D$, are produced by the addition of independently drawn, heavy-tailed noise:
+The likelihood, $P(\rvec_j\mid\zvec_i)$ is parametrized by a rectangular, $D$-by-$d$ \emph{factor loading matrix}, $\Fmat$, and the \emph{degrees of freedom}, an integer, $\nu\ge1$. For speaker $i$, multiple observations, $\rvec_j\in\R^D$, are produced by projection into the $D$-dimensional space and the addition of independently drawn noise, $\etavec_j$:
 \begin{align}
 \rvec_j &= \Fmat\zvec_i + \etavec_j 
 \end{align}
-The heavy-tailed noise is effectively Gaussian with variable precision, $\lambda_j$, sampled from the chi-squared distribution, with degrees of freedom $\nu$:   
+The noise is heavy-tailed in the sense that it is Gaussian with variable precision, $\lambda_j$, sampled from the chi-squared distribution, $\chi_\nu^2$, parametrized by $\nu$, the \emph{degrees of freedom}. The noise is generated as:
 \begin{align}
-\etavec_j&\sim \ND(\nulvec,\tfrac{\nu}{\lambda_j}\Imat) &\text{and} && \lambda_j &\sim \chi_\nu^2
+\etavec_j&\sim \ND\bigl(\nulvec,\frac{\nu}{\lambda_j}\Imat\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
 \end{align}
-The expected value\footnote{By Jensen's inequality, the expected value of the \emph{variance} scaling factor, is greater than 1. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a t-distribution:\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}}
+The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a t-distribution:
 \begin{align}
 \label{eq:noise_model}
 P(\rvec\mid\zvec_i) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec_i)'(\rvec-\Fmat\zvec_i)\Bigr]^{-\frac{\nu+D}{2}}
@@ -1625,7 +1625,9 @@ Before continuing to assemble our t-distribution from $Q_{\zvec\mid\rvec}$, we d
 \begin{align}
 E &= \rvec'\Gmat\rvec = (\Fmat\zvec+\etavec)'\Gmat(\Fmat\zvec+\etavec) = \etavec'\Gmat\etavec = (\Gmat\etavec)'(\Gmat\etavec)
 \end{align}
-By examining its definition above, you can check that $\Gmat$ is an \emph{idempotent projection matrix}, which removes the influence of $\zvec$ from $\rvec$. That is, $\Gmat\rvec$ is the projection of $\rvec$ onto the complement of the subspace spanned by $\Fmat$. Intuitively, $E_{\rvec_j}/(D-d)$ estimates the hidden noise variance $\lambda_j^{-1}$. This statistic is called \emph{ancillary}, because it is independent of $\zvec$, which we are trying to infer, yet it is still relevant to that inference, as we shall see. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E=0$.
+By examining the definition of $\Gmat$ above, you can check that it is an \emph{idempotent projection matrix}, which removes the influence of $\zvec$ from $\rvec$. That is, $\Gmat\rvec$ is the projection of $\rvec$ onto the complement of the subspace spanned by the columns of $\Fmat$. Since $\Gmat\rvec$ is $(D-d)$-dimensional, $(\Gmat\rvec)'(\Gmat\rvec)$ is effectively composed of the sum of $D-d$ squares. Intuitively, $\rvec'_j\Gmat\rvec_j/(D-d)$ estimates the hidden noise variance scaling factor $\frac{\nu}{\lambda_j}$. 
+
+We term this statistic, $E$, \emph{ancillary}, because it is independent of $\zvec$, which we are trying to infer, yet it is still relevant to that inference, as we shall see. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E=0$.
 
 Let's continue to finally assemble our t-distribution likelihood:
 \begin{align}
@@ -1644,7 +1646,24 @@ E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
 We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,(\Fmat'\Fmat)^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Fmat'\Fmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is also the maximum-likelihood estimate for $\zvec$.
 
-Let us examine $E_j$ in more detail. Since it is computed from heavy-tailed variables, it is also going to be heavy-tailed. Its scale is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (more Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition: since the noise precision scaling factor, $\frac{\lambda_j}{/nu}$, will be almost constant for large $\nu$. 
+Let us examine $E_j$ in more detail. Since it is computed from heavy-tailed data, it is also heavy-tailed. Its scale is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (almost Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition, since $\frac{\nu}{\lambda_j}$, is almost constant for large $\nu$. 
+
+
+\section{Generalizations}
+\def\GD{\mathcal{G}}
+Our model can be generalized in the following ways:
+\begin{itemize}
+  \item We can generalize the isotropic noise, $\etavec\sim \ND\bigl(\nulvec,\frac{\nu}{\lambda}\Imat\bigr)$ to $\ND\bigl(\nulvec,\frac{\nu}{\lambda}\Wmat^{-1}\bigl)$, where $\Wmat^{-1}$ is a more general within-speaker covariance matrix. This changes~\eqref{eq:noise_model} to:
+  \begin{align}
+  P(\rvec\mid\zvec) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\Bigr]^{-\frac{\nu+D}{2}}
+  \end{align}
+%
+	\item Our derivation of the t-distribution, with precision scaling factor drawn from $\chi^2_\nu$ is from Wikipedia.\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}.} Noting that $\chi^2_\nu(\lambda)=\GD(\lambda\mid\tfrac{\nu}{2},\tfrac12)$, where $\GD$ is the gamma distribution, we can indeed generalize the model slightly to non-integer degrees of freedom, by drawing $\lambda$ from a Gamma distribution---see Bishop's equation (2.161) in chapter 2 of~\cite{PRML}. 
+%
+	\item Finally, consider drawing the \emph{whole noise precision matrix} from a Wishart prior, rather than just the scaling factor. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68) from appendix B.
+\end{itemize}
+
+
 
 
 \chapter{Discriminative training}
