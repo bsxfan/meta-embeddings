@@ -243,7 +243,7 @@
 \def\normal#1{\overline{#1}}
 \def\dotn#1#2{\dot{\normal{#1}}{\normal{#2}}}
 
-
+\def\bmat#1{\begin{bmatrix}#1\end{bmatrix}}
 
 \begin{document}
 
@@ -1166,12 +1166,14 @@ The first two proposals below, based on exponential family distributions, meet a
 
 
 
-\section{Multivariate Gaussian}
+\section{GME: Gaussian meta-embedding}
 \label{sec:MVG}
 \def\dvec{\mathbf{d}}
-This recipe supposes a continuous speaker identity variable, $\zvec\in\R^d$. A trainable neural net processes each recording, $r_j$, and outputs the corresponding meta-embedding, $f_j$, in the form of a $(d+D)$-dimensional representation:
+An obvious candidate for a practical meta-embedding is the multivariate Gaussian. A big advantage of this representation is that everything can be computed in closed form and that makes it an important building block in everything that follows. We shall refer to \emph{Gaussian meta-embeddings} with the acronym GME.
+
+This representation supposes a continuous speaker identity variable, $\zvec\in\R^d$. A trainable neural net processes each recording, $r_j$, and outputs the corresponding meta-embedding, $f_j$, in the form of a $(d+D)$-dimensional representation:
 $$r_j\mapsto\evec_j=(\avec_j,\bvec_j)$$
-where $\avec\in\R^d$ and $\bvec_j=(b_{1j},\ldots,b_{Dj})\in\R_+^D$, where $D\ge1$ and the $b_{ij}\ge0$. While the representation, $\evec_j$, is finite-dimensional, it parametrizes the \emph{infinite-dimensional} meta-embedding, $f_j$, defined as:
+where $\avec\in\R^d$ and $\bvec_j=(b_{1j},\ldots,b_{Dj})\in\R_+^D$, where $D\ge0$ and the $b_{ij}\ge0$. (We allow the degenerate case, $D=0$ to include also PLDA, where meta-embedding precisions are constant.) While the representation, $\evec_j$, is finite-dimensional, it parametrizes the \emph{infinite-dimensional} meta-embedding, $f_j$, defined as:
 \begin{align}
 \label{eq:gaussembed}
 f_j(\zvec) &= \exp\bigl[\avec_j'\zvec -\frac12\zvec'\Bmat_j\zvec]
@@ -1179,9 +1181,9 @@ f_j(\zvec) &= \exp\bigl[\avec_j'\zvec -\frac12\zvec'\Bmat_j\zvec]
 where $\Bmat_j$ is a $d$-by-$d$, positive semi-definite precision matrix, composed as a conical combination:
 \begin{align}
 \label{eq:Bmat}
-\Bmat_j &= \sum_{i=1}^D b_{ij} \Emat_i
+\Bmat_j &= \Emat_0 + \sum_{i=1}^D b_{ij} \Emat_i
 \end{align}
-where $\{\Emat_i\}_{i=1}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with the parameters of the neural net that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
+where $\{\Emat_i\}_{i=0}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with the parameters of the neural net that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
 
 Since $\zvec\in\R^d$ is hidden, we are free to choose the dimensionality, $d$. Experience with PLDA suggests $100\le d\le200$ is a good choice. This can also be compared to the Facenet embeddings, which are 120-dimensional. The size, $D$, of the precision parametrization can be used to trade off computational complexity vs capacity. To keep the complexity significantly less than that which would be needed for fully specified precision matrices, we probably want to constrain $D\ll\frac{d(d+1)}{2}$. 
 
@@ -1235,7 +1237,7 @@ Our pooling and expectation operations can now be combined for LR calculation. F
 
 
 \subsection{L2 norm}
-For non-negative Gaussians, expectation is also L1 norm. As we have seen, we can represent all LR calculations via pooling and expectation (L1 norm). However, as~\eqref{eq:dotvianorms} shows, we can also assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
+As we have seen, we can represent all LR calculations via pooling and expectation. For non-negative Gaussians, expectation is also L1 norm.  However, as~\eqref{eq:dotvianorms} shows, we can alternatively assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
 \begin{align}
 \norm{f}^2 &= \dot{f}{f} = \expp{f^2} = \int_{\R^d}f(\zvec)^2\pi(\zvec)\,d\zvec = E(2\avec,2\Bmat)
 \end{align}  
@@ -1244,7 +1246,7 @@ Notice that
 \label{eq:MVG_normalL2}
 \norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E(2\avec,2\Bmat)}{E(\avec,\Bmat)^2}
 \end{align}  
-If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If we use the closed-form expressions, maybe not. But as we shall see below, stochastic approximations to the L2 norm may have advantages relative to stochastic L1 norm approximations.
+If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If we use the closed-form expressions, maybe not. But as we shall see in section~\ref{sec:stochL2} below, stochastic approximations to the L2 norm may have advantages relative to stochastic L1 norm approximations.
 
 %\subsubsection{Backpropagation}
 %Derivation of the backpropagating equations for $E(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.
@@ -1367,105 +1369,6 @@ Nevertheless, we have followed the theory and the magenta result is correct. One
 
 The apparently wayward magenta mean is the location where the blue and red distributions `overlap most'. It is located at the maximum of the product of the two distributions. It can be interpreted as a soft intersection between the two distributions.
 
-\subsection{Stochastic expectation}
-\def\tvec{\mathbf{t}}
-Pooling is fast (addition) but expectation is slower (Cholesky decomposition). Unfortunately, our recipe above requires a new Cholesky decomposition for every LR calculation. In applications where many verification trials are processed on limited hardware, this will have a significant impact on speed. Even if we have enough CPU power available at runtime for some applications, training remains a problem because we are going to be training our meta-embedding extractors with discriminative criteria that typically require evaluating very many trials. Let us therefore consider some plans for speeding up scoring of trials by making stochastic approximations.
-
-We envisage that such stochastic approximation could work out to be especially cheap at training time, in the same way that stochastic evaluation of the ELBO in \emph{variational autoencoder} (VAE) training typically requires but a single stochastic sample per training example~\cite{VAE}. Given sufficiently many examples, the stochastic approximation errors tend to cancel, provided the errors are independent. 
-
-We will not be too concerned about expectations of a single factor, of the form $\expv{f}{}$. These expectations are required to normalize trial sides (typically meta-embeddings extracted from single recordings) and there are far fewer trial sides than there are trials. The calculations for which we need speed, are expectations of the form $\expv{\normal{f_i}\,\normal{f_j}}{}$. We consider three solutions below.\\
-
-\subsubsection{Prior sampling}
-An obvious choice, perhaps naive, would be to form the expectation by sampling from the prior, $\pi$. The expectation could be approximated via $N$ such samples as:
-\begin{align}
-\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &\approx \frac1N\sum_{\tilde\zvec\sim\ND(\nulvec,\Imat)} \normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec)
-\end{align}
-We fear this might be inaccurate, because in high-dimensional space, samples from $\pi$ will be very unlikely to hit the peak\footnote{The product is still Gaussian and therefore has single peak.} of $\normal{f_i}\,\normal{f_j}$ and therefore an affordable number of samples might not be able to sufficiently explore the volume under the peak. Experiments might be needed to check whether this is indeed a problem. Let us nevertheless explore in more detail the calculation required for each sample:
-\begin{align}
-\label{eq:priorsampling}
-\begin{split}
-\normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec) 
-&= c_ic_j\exp\bigl[
-\avec'_i\tilde\zvec +\avec_j'\tilde\zvec -\frac12\tilde\zvec'\Bmat_i\tilde\zvec  -\frac12\tilde\zvec'\Bmat_j\tilde\zvec
-\bigr]\\
-&= c_ic_j\exp\bigl[
-\avec'_i\tilde\zvec +\avec_j'\tilde\zvec -\frac12 \bvec'_i\tilde\gammavec -\frac12 \bvec'_j\tilde\gammavec
-\bigr]\\
-\end{split}
-\end{align}
-where using~\eqref{eq:Bmat}, we have defined $\tilde\gammavec = [\tilde\gamma_1,\ldots,\tilde\gamma_D]\in\R^D$, with $\tilde\gamma_\ell = \tilde\zvec'\Emat_\ell\tilde\zvec$ and 
-where $c_i,c_j$ reflect the normalizations. The meta-embedding representations, $\avec_i,\bvec_i$ and $\avec_j,\bvec_j$, and the trainable constants, $\{\Emat_\ell\}_{\ell=1}^D$, are as defined in the beginning of section~\ref{sec:MVG}. 
-
-Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $m$ different samples, $\tilde\zvec$, and therefore also $N$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $N$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
-
-An advantage of~\eqref{eq:priorsampling} is that it generalizes to expectations of more (or fewer) than two factors---the argument in the exponent will have independent terms for each of the factors in the expectation.
-
-Experiments would have to be conducted to verify if an affordably small $m$ could give reasonable accuracy. Keep in mind that in such experiments, we can compare accuracy against the exact calculation~\eqref{eq:exactMVG}.\\
-
-%\subsubsection{Transformed prior sampling}
-%\begin{align}
-%\begin{split}
-%&\int_{\R^n} \pi(\zvec) \frac{\ND(\zvec\mid\Bmat^{-1}\avec,\Bmat^{-1})}{\sqrt{\detm{\Bmat}}}  \,d\zvec  \\
-%&= \frac1{(2\uppi)^d} \int_{\R^n} \CT{\pi}(\tvec)\, \frac{\CT{\ND(\Bmat^{-1}\avec,\Bmat^{-1})}(\tvec)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\
-%&= \frac1{(2\uppi)^d} \int_{\R^n} \sqrt{\detm{2\uppi\Imat}}\pi(\tvec) \, \frac{\sqrt{\detm{2\uppi\Bmat}}\cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\ 
-%&= \int_{\R^n} \pi(\tvec) \, \cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)  \,d\tvec  
-%\end{split}
-%\end{align}
-
-
-\subsubsection{Posterior sampling} 
-If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
-\begin{align}
-\label{eq:cross_sampling}
-\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &= \expv{\normal{f_j}(\tilde\zvec)}{\tilde\zvec\sim\pi\normal{f_i}}
-\approx\frac1N\sum_{\tilde\zvec\sim\pi\normal{f_i}}c_j\exp\bigl[\avec'_j\tilde\zvec -\frac12\bvec'_j\tilde\gammavec\bigr]
-\end{align}
-This might be more accurate than prior sampling, because when $f_i$ and $f_j$ represent the same speaker, their peaks should overlap. If they are of different speakers, their peaks might be far apart, but then we do want a value close to zero for the expectation. With this variant, we may be able to use smaller values for $N$. 
-
-This method is asymmetric. Which version is best---should we sample from $f_i$, or from $f_j$? If $f_i$ is much sharper than $f_j$, so that $f_j$ is almost constant compared to $f_j$, then one sample would suffice, while if we sampled the other way round, we would need many samples to properly explore the volume of $f_i$. Pooling generally sharpens peaks, so it would be more accurate to sample from the side that consists of the most pooled factors. Unfortunately, fast pooling and sampling are conflicting requirements---after adding natural parameters to compute the pooling, we need a Cholesky factorization before we can sample.
-
-Whether we pool or not, a disadvantage of posterior sampling vs prior sampling is that we have reintroduced the need for Cholesky factorization. Fortunately, we need this only for one side of the trial and we are still avoiding per-trial Cholesky decompositions. Also note that for the sampled side of the trial we do not need to separately compute the normalization constant, because the samples already come from the normalized distribution. 
-
-Another option would be to change the representation. We could let:
-\begin{align}
-\Bmat_i &= \Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)\Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)'
-\end{align}  
-where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constrained to be non-negative. This gives a free Cholesky decomposition, and fast, approximate evaluation of LRs of the form $\dot{\normal{f_i}}{\normal{f_j}}$, but it complicates pooling for more complex LR calculations.\\
-
-\subsection{Stochastic L2 norm}
-\def\Mset{\mathcal{M}}
-The above stochastic expectation recipes are fragile because the distributions from which we sample can be mismatched to the arguments of the expectations. If we instead do stochastic L2 norm, we can make use of the symmetry to combat this problem. Using~\eqref{eq:dotvianorms}, we want to do the following calculation:
-\begin{align}
-\dotn{f}{g} &= \frac12\bigl(\norm{\normal{f}+\normal{g}}^2 - \norm{\normal{f}}^2- \norm{\normal{g}}^2\bigr) 
-\end{align} 
-Again, we assume that we can afford to compute each $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ in closed form, using~\eqref{eq:MVG_normalL2}. However, we need a faster way to compute $\norm{\normal{f}+\normal{g}}^2$. Keep in mind that $\pi(\zvec)\normal{f}(\zvec)$ and $\pi(\zvec)\normal{g}(\zvec)$ are normalized probability densities from which we can sample. We can also sample from the \emph{mixture}: 
-\begin{align}
-\Mset(\zvec) &= \frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)
-\end{align}
-Expanding the term of interest, we find:
-\begin{align}
-\label{eq:matched_sampling}
-\begin{split}
-&\frac12\norm{\normal{f}+\normal{g}}^2 \\
-&= \int_{\R^d}\frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)^2\,d\zvec \\
-&= \int_{\R^d}\Mset(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
-&= \frac12\int_{\R^d}\pi(\zvec)\normal{f}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec 
-+ \frac12\int_{\R^d}\pi(\zvec)\normal{g}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
-&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
-+\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
-\end{split}
-\end{align}
-where $N$ samples are drawn from each distribution. If $f$ and $g$ are both sharp relative to the prior, then the sampling distribution and argument of the expectation are very well matched. Even if $f$ or $g$ are not so sharp, then the peaks of $\Mset(\zvec)$ will be sharper, which is the good way round.
-
-In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ stochastically. If we use the same samples everywhere, cancellation of terms gives:
-\begin{align}
-\begin{split}
-\dotn{f}{g} &= \frac12\norm{\normal{f}+\normal{g}}^2 - \frac12\norm{\normal{f}}^2- \frac12\norm{\normal{g}}^2 \\
-&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{g}(\tilde\zvec)}{2}
-+\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)}{2}
-\end{split}
-\end{align} 
-which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
 %\section{Zero-mean Gaussians}
@@ -1579,6 +1482,177 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 \section{Mean embedding}
 
+
+\chapter{Approximate computation}
+Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be completely intractable, or too slow to be useful in practice. Even the multivariate Gaussian meta-embeddings, which have tractable closed-form calculations are a lot slower than traditional PLDA scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the PLDA scoring function.
+
+
+\section{The PLDA score}
+When recordings are represented by i-vectors, which are in turn modelled by Gaussian PLDA, then a Gaussian meta-embedding (GME), with \emph{constant precision}, can be extracted in closed form from every i-vector. The meta-embedding is extracted as a simple function of the i-vector and the PLDA parameters. (This formula is given by ~\eqref{eq:TME} below, by letting $\nu\to\infty$.) No neural net is required to extract the GME. The PLDA parameters can be generatively, or discriminatively trained. 
+
+Following the notation of section~\ref{sec:MVG}, the PLDA GMEs have $D=0$, giving constant precision, $\Bmat_j=\Emat_0$. This leads to a fast, quadratic scoring recipe. Let the embeddings $f_i,f_j$ be represented by $\avec_i$ and $\avec_j$, then by~\eqref{eq:LRMVG} the log-LR between them is:
+\begin{align}
+\label{eq:PLDAscore}
+\begin{split}
+\log\dotn{f_i}{f_j} &=\log E(\avec_i+\avec_j,2\Emat_0)  -\log E(\avec_i,\Emat_0) -\log E(\avec_j,\Emat_0) \\
+&= (\avec_i+\avec_j)' \Kmat (\avec_i+\avec_j)
+-\avec_i' \Lmat \avec_i -\avec_j' \Lmat \avec_j + C
+\end{split}
+\end{align} 
+where $C$ is a constant representing the log-determinant terms and
+\begin{align}
+\Kmat &= (\Imat+2\Emat_0)^{-1}&\text{and} && \Lmat &=(\Imat+\Emat_0)^{-1}
+\end{align}
+
+\section{Taylor series approximations}
+In this section, we assume we have a slow, but closed-form scoring recipe (e.g. GME) to compute the LR, $\log\dotn{f}{g}$. Second-order Taylor series approximations of $\log\dotn{f}{g}$ will give us scoring recipes with the same functional form---and therefore the same speed---as the quadratic PLDA score above. 
+
+Let $f,g$ be represented respectively by $\xvec,\yvec\in\R^k$ and let the scoring function be denoted: 
+\begin{align}
+F(\xvec,\yvec) &= \log\dotn{f}{g}
+\end{align} 
+We assume that $F$ can be evaluated and differentiated at least twice. There are at least two ways to form second order Taylor series approximations. We consider symmetric and asymmetric variants.
+
+\subsection{Symmetric Taylor series approximation}
+Define $\zvec$ as the stacked vector containing both sides: $\zvec=\bmat{\xvec'&\yvec'}'$. We do the second-order expansion about some convenient, fixed value $\zvec_0=\bmat{\xvec_0'&\yvec_0'}'$. The approximation is:
+\begin{align}
+\begin{split}
+F(\xvec,\yvec) &\approx F(\xvec_0,\yvec_0) + (\zvec-\zvec_0)'\nabla_\zvec(\xvec_0,\yvec_0)\\ 
+&+ \frac12(\zvec-\zvec_0)'\Hmat_\zvec(\xvec_0,\yvec_0)(\zvec-\zvec_0)
+\end{split}
+\end{align} 
+where $\nabla_\zvec$ and $\Hmat_\zvec$ are gradient and Hessian of $F$, obtained by differentiating w.r.t.\ $\zvec$. Since $\zvec_0$ is fixed, all of $F(\xvec_0,\yvec_0)$, $\nabla_\zvec(\xvec_0,\yvec_0)$ and $\Hmat_\zvec(\xvec_0,\yvec_0)$ can be precomputed before runtime. The storage requirement is $1 + k + k^2$, or a bit smaller if the symmetry of the Hessian is used.
+
+It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the PLDA score exactly. 
+
+\subsubsection{Implementation}
+In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious second-order differentiation. 
+
+
+\subsection{Asymmetric Taylor series approximation}
+A potentially more accurate, but somewhat slower approximation can be obtained by evaluating $F(\xvec,\yvec)$ at the exact, required value of say $\xvec$ and doing the expansion only w.r.t.\ $\yvec$. The approximation is:  
+\begin{align}
+\begin{split}
+F(\xvec,\yvec) &\approx F(\xvec,\yvec_0) + (\yvec-\yvec_0)'\nabla_\yvec(\xvec,\yvec_0)\\
+&+ \frac12(\yvec-\yvec_0)'\Hmat_\yvec(\xvec,\yvec_0)(\yvec-\yvec_0)
+\end{split}
+\end{align} 
+This recipe is slower, because for every $\xvec$ we need a new computation of $F(\xvec,\yvec_0)$, $\nabla_\yvec(\xvec,\yvec_0)$ and $\Hmat_\yvec(\xvec,\yvec_0)$. Of course, this recipe can be symmetrized by doing it also from the other side and averaging.
+
+
+\section{Stochastic approximations}
+Since our meta-embeddings are essentially probability distributions, we can sample from them in many cases. This is explored below.
+
+
+\subsection{Stochastic expectation for GMEs}
+\def\tvec{\mathbf{t}}
+For the GMEs of section~\ref{sec:MVG}, pooling is fast (addition), but expectation is slower (Cholesky decomposition). Unfortunately, when precisions vary, this representation requires a new Cholesky decomposition for \emph{every} LR calculation. 
+
+In applications where many verification trials are processed on limited hardware, this will have a significant impact on speed. Even if we have enough CPU power available at runtime for some applications, discriminative training of meta-embedding extractors remains a problem because discriminative training criteria typically require evaluating very many trials. Let us therefore consider some plans for speeding up scoring of trials by making stochastic approximations.
+
+We envisage that such stochastic approximation could work out to be especially cheap at training time, in the same way that stochastic evaluation of the ELBO in \emph{variational autoencoder} (VAE) training typically requires but a single stochastic sample per training example~\cite{VAE}. Given sufficiently many examples, the stochastic approximation errors tend to cancel, provided the errors are independent. 
+
+We will not be too concerned about expectations of a single factor, of the form $\expv{f}{}$. These expectations are required to normalize trial sides (typically meta-embeddings extracted from single recordings) and there are far fewer trial sides than there are trials. The calculations for which we need speed, are expectations of the form $\expv{\normal{f_i}\,\normal{f_j}}{}$. We consider two proposals below.
+
+\subsubsection{Prior sampling}
+An obvious choice, perhaps naive, would be to form the expectation by sampling from the prior, $\pi$. The expectation could be approximated via $N$ such samples as:
+\begin{align}
+\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &\approx \frac1N\sum_{\tilde\zvec\sim\ND(\nulvec,\Imat)} \normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec)
+\end{align}
+We fear this might be inaccurate, because in high-dimensional space, samples from $\pi$ will be very unlikely to hit the peak\footnote{The product is still Gaussian and therefore has single peak.} of $\normal{f_i}\,\normal{f_j}$ and therefore an affordable number of samples might not be able to sufficiently explore the volume under the peak. Experiments might be needed to check whether this is indeed a problem. Let us nevertheless explore in more detail the calculation required for each sample:
+\begin{align}
+\label{eq:priorsampling}
+\begin{split}
+\normal{f_i}(\tilde \zvec)\normal{f_j}(\tilde \zvec) 
+&= c_ic_j\exp\bigl[
+\avec'_i\tilde\zvec +\avec_j'\tilde\zvec -\frac12\tilde\zvec'\Bmat_i\tilde\zvec  -\frac12\tilde\zvec'\Bmat_j\tilde\zvec
+\bigr]\\
+&= c_ic_j\exp\bigl[
+\avec'_i\tilde\zvec +\avec_j'\tilde\zvec -\frac12 \bvec'_i\tilde\gammavec -\frac12 \bvec'_j\tilde\gammavec
+\bigr]\\
+\end{split}
+\end{align}
+where using~\eqref{eq:Bmat}, we have defined $\tilde\gammavec = [\tilde\gamma_1,\ldots,\tilde\gamma_D]\in\R^D$, with $\tilde\gamma_\ell = \tilde\zvec'\Emat_\ell\tilde\zvec$ and 
+where $c_i,c_j$ reflect the normalizations. The meta-embedding representations, $\avec_i,\bvec_i$ and $\avec_j,\bvec_j$, and the trainable constants, $\{\Emat_\ell\}_{\ell=1}^D$, are as defined in the beginning of section~\ref{sec:MVG}. 
+
+Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $m$ different samples, $\tilde\zvec$, and therefore also $N$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $N$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
+
+An advantage of~\eqref{eq:priorsampling} is that it generalizes to expectations of more (or fewer) than two factors---the argument in the exponent will have independent terms for each of the factors in the expectation.
+
+Experiments would have to be conducted to verify if an affordably small $m$ could give reasonable accuracy. Keep in mind that in such experiments, we can compare accuracy against the exact calculation~\eqref{eq:exactMVG}.\\
+
+%\subsubsection{Transformed prior sampling}
+%\begin{align}
+%\begin{split}
+%&\int_{\R^n} \pi(\zvec) \frac{\ND(\zvec\mid\Bmat^{-1}\avec,\Bmat^{-1})}{\sqrt{\detm{\Bmat}}}  \,d\zvec  \\
+%&= \frac1{(2\uppi)^d} \int_{\R^n} \CT{\pi}(\tvec)\, \frac{\CT{\ND(\Bmat^{-1}\avec,\Bmat^{-1})}(\tvec)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\
+%&= \frac1{(2\uppi)^d} \int_{\R^n} \sqrt{\detm{2\uppi\Imat}}\pi(\tvec) \, \frac{\sqrt{\detm{2\uppi\Bmat}}\cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)}{\sqrt{\detm{\Bmat}}}  \,d\tvec  \\ 
+%&= \int_{\R^n} \pi(\tvec) \, \cos(\tvec'\Bmat^{-1}\avec)\ND(\tvec\mid\nulvec,\Bmat)  \,d\tvec  
+%\end{split}
+%\end{align}
+
+
+\subsubsection{Posterior sampling} 
+If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
+\begin{align}
+\label{eq:cross_sampling}
+\expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &= \expv{\normal{f_j}(\tilde\zvec)}{\tilde\zvec\sim\pi\normal{f_i}}
+\approx\frac1N\sum_{\tilde\zvec\sim\pi\normal{f_i}}c_j\exp\bigl[\avec'_j\tilde\zvec -\frac12\bvec'_j\tilde\gammavec\bigr]
+\end{align}
+This might be more accurate than prior sampling, because when $f_i$ and $f_j$ represent the same speaker, their peaks should overlap. If they are of different speakers, their peaks might be far apart, but then we do want a value close to zero for the expectation. With this variant, we may be able to use smaller values for $N$. 
+
+This method is asymmetric. Which version is best---should we sample from $f_i$, or from $f_j$? If $f_i$ is much sharper than $f_j$, so that $f_j$ is almost constant compared to $f_j$, then one sample would suffice, while if we sampled the other way round, we would need many samples to properly explore the volume of $f_i$. Pooling generally sharpens peaks, so it would be more accurate to sample from the side that consists of the most pooled factors. Unfortunately, fast pooling and sampling are conflicting requirements---after adding natural parameters to compute the pooling, we need a Cholesky factorization before we can sample.
+
+Whether we pool or not, a disadvantage of posterior sampling vs prior sampling is that we have reintroduced the need for Cholesky factorization. Fortunately, we need this only for one side of the trial and we are still avoiding per-trial Cholesky decompositions. Also note that for the sampled side of the trial we do not need to separately compute the normalization constant, because the samples already come from the normalized distribution. 
+
+Another option would be to change the representation. We could let:
+\begin{align}
+\Bmat_i &= \Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)\Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)'
+\end{align}  
+where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constrained to be non-negative. This gives a free Cholesky decomposition, and fast, approximate evaluation of LRs of the form $\dot{\normal{f_i}}{\normal{f_j}}$, but it complicates pooling for more complex LR calculations.\\
+
+\subsection{Stochastic L2 norm}
+\label{sec:stochL2}
+\def\Mset{\mathcal{M}}
+The above stochastic expectation recipes are fragile because the distributions from which we sample can be mismatched to the arguments of the expectations. If we instead do stochastic L2 norm, we can make use of the symmetry to combat this problem. The analysis in this section is applicable more generally, not just to multivariate Gaussian meta-embeddings.
+
+Using~\eqref{eq:dotvianorms}, we want to do the following calculation:
+\begin{align}
+\dotn{f}{g} &= \frac12\bigl(\norm{\normal{f}+\normal{g}}^2 - \norm{\normal{f}}^2- \norm{\normal{g}}^2\bigr) 
+\end{align} 
+Again, we assume that we can afford to compute each $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ in closed form, using~\eqref{eq:MVG_normalL2}. However, we need a faster way to compute $\norm{\normal{f}+\normal{g}}^2$. Keep in mind that $\pi(\zvec)\normal{f}(\zvec)$ and $\pi(\zvec)\normal{g}(\zvec)$ are normalized probability densities from which we can sample. We can also sample from the \emph{mixture}: 
+\begin{align}
+\Mset(\zvec) &= \frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)
+\end{align}
+Expanding the term of interest, we find:
+\begin{align}
+\label{eq:matched_sampling}
+\begin{split}
+&\frac12\norm{\normal{f}+\normal{g}}^2 \\
+&= \int_{\R^d}\frac12\pi(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)^2\,d\zvec \\
+&= \int_{\R^d}\Mset(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
+&= \frac12\int_{\R^d}\pi(\zvec)\normal{f}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec 
++ \frac12\int_{\R^d}\pi(\zvec)\normal{g}(\zvec)\bigl(\normal{f}(\zvec)+\normal{g}(\zvec)\bigr)\,d\zvec \\
+&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
++\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)+\normal{g}(\tilde\zvec)}{2}
+\end{split}
+\end{align}
+where $N$ samples are drawn from each distribution. If $f$ and $g$ are both sharp relative to the prior, then the sampling distribution and argument of the expectation are very well matched. Even if $f$ or $g$ are not so sharp, then the peaks of $\Mset(\zvec)$ will be sharper, which is the good way round.
+
+In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\norm{\normal{g}}^2$ stochastically. If we use the same samples everywhere, cancellation of terms gives:
+\begin{align}
+\begin{split}
+\dotn{f}{g} &= \frac12\norm{\normal{f}+\normal{g}}^2 - \frac12\norm{\normal{f}}^2- \frac12\norm{\normal{g}}^2 \\
+&\approx\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{f}} \frac{\normal{g}(\tilde\zvec)}{2}
++\frac{1}{N} \sum_{\tilde\zvec\sim\pi\normal{g}}\frac{\normal{f}(\tilde\zvec)}{2}
+\end{split}
+\end{align} 
+which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
+
+
+
+
+
 \chapter{Application: PLDA with heavy-tailed noise}
 In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
 
@@ -1597,43 +1671,36 @@ The likelihood, $P(\rvec_j\mid\zvec_i)$ is parametrized by a rectangular, $D$-by
 \end{align}
 The noise is heavy-tailed in the sense that it is Gaussian with variable precision, $\lambda_j$, sampled from the chi-squared distribution, $\chi_\nu^2$, parametrized by $\nu$, the \emph{degrees of freedom}. The noise is generated as:
 \begin{align}
-\etavec_j&\sim \ND\bigl(\nulvec,\frac{\nu}{\lambda_j}\Imat\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
+\etavec_j&\sim \ND\bigl(\nulvec,(\frac{\lambda_j}{\nu}\Wmat)^{-1}\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
 \end{align}
-The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
+where $\Wmat$ is the noise precision, or $\Wmat^{-1}$ is the within-speaker covariance. The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
 \begin{align}
 \label{eq:noise_model}
-P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Imat,\nu) \\
-&\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec_i)'(\rvec-\Fmat\zvec_i)\Bigr]^{-\frac{\nu+D}{2}}
+P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Wmat^{-1},\nu) \\
+&\propto \Bigl[1+\frac{(\rvec-\Fmat\zvec_i)'\Wmat(\rvec-\Fmat\zvec_i)}{\nu}\Bigr]^{-\frac{\nu+D}{2}}
 \end{align}
 where we have ignored the somewhat complex normalization constant, which is irrelevant to our present purpose of inference for $\zvec$. We can use~\eqref{eq:noise_model} as-is for our meta-embedding: 
 \begin{align}
-f_j(\zvec) &\propto \Bigl[1+\frac1\nu(\rvec_j-\Fmat\zvec)'(\rvec_j-\Fmat\zvec)\Bigr]^{-\frac{\nu+D}{2}}
+f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)}{\nu}\Bigr]^{-\frac{\nu+D}{2}}
 \end{align}
-But if $\Fmat'\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
+But if $\Fmat'\Wmat\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
 \begin{align}
-\Bmat &= \Fmat'\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\rvec& \text{and} && \Gmat &= \Imat-\Fmat\Bmat^{-1}\Fmat' 
+\Bmat &= \Fmat'\Wmat\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\Wmat\rvec& \text{and} && \Gmat &= \Wmat-\Wmat\Fmat\Bmat^{-1}\Fmat'\Wmat 
 \end{align}
 and we rearrange the quadratic form as:
 \begin{align}
 \begin{split}
-Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'(\rvec-\Fmat\zvec)\\ 
-&= \rvec'\rvec -2\zvec'\Fmat'\rvec + \zvec'\Fmat'\Fmat\zvec \\
-&= \rvec'\rvec -2\zvec'\Fmat'\Fmat\muvec + \zvec'\Fmat'\Fmat\zvec \\
-&= (\rvec'\rvec -\muvec'\Fmat'\Fmat\muvec) + (\zvec'\Fmat'\Fmat\zvec -2\zvec\Fmat'\Fmat\muvec + \muvec'\Fmat'\Fmat\muvec) \\
+Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\\ 
+&= \rvec'\Wmat\rvec -2\zvec'\Fmat'\Wmat\rvec + \zvec'\Fmat'\Wmat\Fmat\zvec \\
+&= \rvec'\Wmat\rvec -2\zvec'\Bmat\muvec + \zvec'\Bmat\zvec \\
+&= (\rvec'\Wmat\rvec -\muvec'\Bmat\muvec) + (\zvec'\Bmat\zvec -2\zvec\Bmat\muvec + \muvec'\Bmat\muvec) \\
 &= \rvec'\Gmat\rvec + (\zvec-\muvec)'\Bmat(\zvec-\muvec) \\
 &= E + Q_{\zvec\mid\rvec}
 \end{split}
 \end{align}
-Before continuing to assemble our t-distribution from $Q_{\zvec\mid\rvec}$, we diverge to comment on a pleasant surprise: Our re-arrangement had the side effect of isolating the following interesting \emph{ancillary statistic}:
+Reintroducing the subscript $j$, let's reassemble our t-distribution likelihood:
 \begin{align}
-E &= \rvec'\Gmat\rvec = (\Fmat\zvec+\etavec)'\Gmat(\Fmat\zvec+\etavec) = \etavec'\Gmat\etavec = (\Gmat\etavec)'(\Gmat\etavec)
-\end{align}
-By examining the definition of $\Gmat$ above, you can check that it is an \emph{idempotent projection matrix}, which removes the influence of $\zvec$ from $\rvec$. That is, $\Gmat\rvec$ is the projection of $\rvec$ onto the complement of the subspace spanned by the columns of $\Fmat$. Since $\Gmat\rvec$ is $(D-d)$-dimensional, $(\Gmat\rvec)'(\Gmat\rvec)$ is effectively composed of the sum of $D-d$ squares. Intuitively, $\rvec'_j\Gmat\rvec_j/(D-d)$ estimates the hidden noise variance scaling factor $\frac{\nu}{\lambda_j}$. 
-
-We term this statistic, $E$, \emph{ancillary}, because it is independent of $\zvec$, which we are trying to infer, yet it is still relevant to that inference, as we shall see. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E=0$.
-
-Let's continue to finally assemble our t-distribution likelihood (now again with subscript $j$):
-\begin{align}
+\label{eq:TME}
 \begin{split}
 f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
 &= \Bigl[1+\frac{E_j + Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
@@ -1645,32 +1712,35 @@ f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{
 \end{align}
 where
 \begin{align}
-\muvec_j &= \Bmat^{-1}\Fmat'\rvec_j &\text{and} &&
+\muvec_j &= \Bmat^{-1}\Fmat'\Wmat\rvec_j &\text{and} &&
 E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
-We have shown that the meta-embedding, $f_j(\zvec)$ is proportional, to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,\Bmat^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is also the maximum-likelihood estimate for $\zvec$.
+We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,\Bmat^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$.
 
-Let us examine $E_j$ in more detail. Since it is computed from heavy-tailed data, it is also heavy-tailed. Its scale is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (almost Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition, since $\frac{\nu}{\lambda_j}$, is almost constant for large $\nu$. 
+Let us examine $E_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because: 
+\begin{align}
+\Gmat\rvec=\Gmat(\Fmat\zvec+\etavec)=\Gmat\etavec
+\end{align}
+Even though it is independent of $\zvec$, which we are trying to infer, it is nevertheless relevant to that inference, because it modulates the uncertainty. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E_j=0$.
+
+To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertible linear transform to the data, such that the model for the transformed data now has $\Wmat=\Imat$. Since this transform does not change anything essential, the role played by $\Gmat$ is much the same as in the general case. We now have:
+\begin{align*}
+\Gmat=\Imat - \Fmat(\Fmat'\Fmat)^{-1}\Fmat
+\end{align*}
+which is an \emph{idempotent projection matrix}, for which:
+\begin{align*}
+E_j &= \rvec_j'\Gmat\rvec_j = (\Fmat\zvec+\etavec_j)'\Gmat(\Fmat\zvec+\etavec_j) = \etavec_j'\Gmat\etavec_j = (\Gmat\etavec_j)'(\Gmat\etavec_j)
+\end{align*}
+That is, $\Gmat\rvec_j$ is the projection of $\rvec_j$ onto the complement of the subspace spanned by the columns of $\Fmat$. Since $\Gmat\rvec_j$ is $(D-d)$-dimensional, $(\Gmat\rvec_j)'(\Gmat\rvec_j)$ is effectively composed of the sum of $D-d$ squares. Intuitively, $E_j/(D-d)$ estimates the hidden noise variance scaling factor $\frac{\nu}{\lambda_j}$. The scale of $E_j$ is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. Its scale is however independent of $\nu$, so that for large $\nu$ (almost Gaussian noise), the factor $\frac{\nu}{\nu+E_j}$ will tend to unity---this also agrees with intuition, since $\frac{\nu}{\lambda_j}\approx 1$ is almost constant for large $\nu$. 
 
 
 \section{Generalizations}
 \def\GD{\mathcal{G}}
 Our model can be generalized in the following ways:
 \begin{itemize}
-  \item We can generalize the isotropic noise, $\etavec\sim \ND\bigl(\nulvec,\frac{\nu}{\lambda}\Imat\bigr)$ to $\ND\bigl(\nulvec,\frac{\nu}{\lambda}\Wmat^{-1}\bigl)$, where $\Wmat^{-1}$ is a more general within-speaker covariance matrix. This changes~\eqref{eq:noise_model} to:
-  \begin{align}
-  P(\rvec\mid\zvec) &\propto \Bigl[1+\frac1\nu(\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\Bigr]^{-\frac{\nu+D}{2}}
-  \end{align}
-	which gives: 
-	\begin{align}
-	\label{eq:BGWmu}
-	\Bmat&=\Fmat'\Wmat\Fmat, & \Gmat&=\Wmat-\Wmat\Fmat'\Bmat^{-1}\Fmat'\Wmat, &\muvec_j&=\Bmat^{-1}\Fmat'\Wmat\rvec_j 
-	\end{align}
-	Although $\Gmat$ is no longer idempotent in this case, we still have $\Gmat\Fmat\zvec=\nulvec$ and $E_j=\rvec'_j\Gmat\rvec_j$ fulfils the same function as before. Nothing essential has changed with this generalization, because a fixed, invertible linear transform of the data can recover $\Wmat=\Imat$.
-%
 	\item Our derivation of the t-distribution, with precision scaling factor drawn from $\chi^2_\nu$ is from Wikipedia.\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}.} Noting that $\chi^2_\nu(\lambda)=\GD(\lambda\mid\tfrac{\nu}{2},\tfrac12)$, where $\GD$ is the gamma distribution, we can indeed generalize the model slightly to non-integer degrees of freedom, by drawing $\lambda$ from a Gamma distribution---see Bishop's equation (2.161) in chapter 2 of~\cite{PRML}. 
 %
-	\item Finally, consider drawing the \emph{whole noise precision matrix} from a Wishart prior, rather than just the scaling factor. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68) from appendix B.
+	\item Consider making the \emph{whole noise precision matrix} hidden, rather than just a scalar precision modulation factor. That would require a Wishart prior, rather a Gamma prior. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68) from appendix B.
 \end{itemize}
 
 \section{LR computation}
