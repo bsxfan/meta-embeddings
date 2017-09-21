@@ -1658,7 +1658,7 @@ which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the mat
 In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
 
 \section{The generative model}
-Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$, where in general, we allow $d\ne D$.
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we allow any $D,d\ge1$, but we get more desirable properties for $D>d$.
 
 \subsection{Prior}
 The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
@@ -1677,8 +1677,10 @@ The noise is heavy-tailed in the sense that it is Gaussian with variable precisi
 where $\Wmat$ is the noise precision, or $\Wmat^{-1}$ is the within-speaker covariance. The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
 \begin{align}
 \label{eq:noise_model}
+\begin{split}
 P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Wmat^{-1},\nu) \\
 &\propto \Bigl[1+\frac{(\rvec-\Fmat\zvec_i)'\Wmat(\rvec-\Fmat\zvec_i)}{\nu}\Bigr]^{-\frac{\nu+D}{2}}
+\end{split}
 \end{align}
 where we have ignored the somewhat complex normalization constant, which is irrelevant to our present purpose of inference for $\zvec$. We can use~\eqref{eq:noise_model} as-is for our meta-embedding: 
 \begin{align}
@@ -1716,15 +1718,15 @@ where
 \muvec_j &= \Bmat^{-1}\Fmat'\Wmat\rvec_j &\text{and} &&
 E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
-We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{Precision is used here informally. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,\Bmat^{-1}$.} proportional to $\frac{\nu}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribuition meta-embedding} as TME.
+We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu$, location parameter $\muvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu>2$ and is given in this case by $\frac{\nu+E_j}{\nu-2}\,\Bmat^{-1}$.} $\frac{\nu}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
 
-Let us examine $E_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because: 
+Let us examine $E_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
 \begin{align}
 \Gmat\rvec=\Gmat(\Fmat\zvec+\etavec)=\Gmat\etavec
 \end{align}
-Even though it is independent of $\zvec$, which we are trying to infer, it is nevertheless relevant to that inference, because it modulates the uncertainty. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E_j=0$.
+Even though $E_j$ is independent of $\zvec$, which we are trying to infer, it is nevertheless relevant to that inference, because it modulates the uncertainty. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E_j=0$.
 
-To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertible linear transform to the data, such that the model for the transformed data now has $\Wmat=\Imat$. Since this transform does not change anything essential, the role played by $\Gmat$ is much the same as in the general case. We now have:
+To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertible linear transform to the data, such that the model for the transformed data then has $\Wmat=\Imat$. Since this transform does not change anything essential, the role played by $\Gmat$ is much the same as in the general case. For $\Wmat=\Imat$ we have:
 \begin{align*}
 \Gmat=\Imat - \Fmat(\Fmat'\Fmat)^{-1}\Fmat
 \end{align*}
@@ -1755,7 +1757,7 @@ f_j(\zvec) &\propto \TD(\zvec\mid \muvec_j,(\beta_j\Bmat)^{-1},\nu) \\
 &\approx\sum_{k=1}^K w_k\, \ND\bigl(\zvec\mid \muvec_j,(\alpha_k\beta_j\Bmat)^{-1}\bigr)
 \end{split}
 \end{align} 
-where the $w_k>0$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
+where the $w_k$ are mixture weights that sum to $1$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
 
 As long as $K$ is not too large, MoGME LRs of the form $\dotn{f_i}{f_j}$ remain tractable, requiring $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}. Taylor series approximations can make this fast. 
 
