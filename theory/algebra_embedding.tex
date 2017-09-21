@@ -1409,6 +1409,32 @@ The apparently wayward magenta mean is the location where the blue and red distr
 %\subsection{Complex Gaussians}
 %Do complex Gaussians perhaps have complex Gaussians as Fourier transforms? Can we get around the zero-mean restriction in this way? 
 
+\section{MoGME: Mixture of Gaussian meta-embeddings}
+\def\GME{\text{GME}}
+\def\nGME{\normal{\GME}}
+A mixture of Gaussians gives a more powerful representation that retains some of the advantages of the GME. For a moderate number of mixture components, we retain tractability of LR calculations, but pooling is not so straight-forward.
+
+\subsection{Definition and normalization}
+Let $\nGME_{jk}$ denote a \emph{normalized Gaussian meta-embedding},\footnote{Remember, a normalized meta-embedding is \emph{not} a normalized probability distribution. In fact, it need not even be normalizable. The meta-embedding is normalized when its product with the prior is a normalized distribution.} with parameters indexed by $jk$. We define a MoGME of order K as:
+\begin{align}
+f_j(\zvec) &= \sum_{k=1}^K w_{jk} \nGME_{jk}(\zvec)
+\end{align} 
+where every $w_{jk}>0$. As with any meta-embedding, the scaling is unimportant, so we do not insist that $\sum_{k=1}^Kw_{jk}=1$. However, the \emph{relative} scaling of the components \emph{is} important, so we do insist on having normalized components. If we do have $\sum_{k=1}^Kw_{jk}=1$, then it is easy to verify that $f_j$ is then also normalized, so that:
+\begin{align}
+\normal{f_j} &= \frac{f_j}{\sum_{k=1}^Kw_{jk}}
+\end{align}
+
+\subsection{Likelihood ratio}
+The LR, or normalized inner product, between a pair of MoGMEs has the complexity of $K^2$ MGE inner products:
+\begin{align}
+\begin{split}
+\dotn{f_i}{f_j} &= \frac{\expp{(\sum_{k=1}^K w_{ik}\nGME_{ik})(\sum_{\ell=1}^K w_{j\ell}\nGME_{j\ell})}}{(\sum_{k=1}^K w_{ik})(\sum_{\ell=1}^K w_{j\ell})}\\
+&= \frac{\sum_{k=1}^K\sum_{\ell=1}^K w_{ik}w_{j\ell}\dot{\nGME_{ik}}{\nGME_{j\ell}}}{(\sum_{k=1}^K w_{ik})(\sum_{\ell=1}^K w_{j\ell})}
+\end{split}
+\end{align}
+
+
+\subsection{Pooling}
 
 
 \section{Exponential family Gaussian mixture}
