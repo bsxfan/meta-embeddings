@@ -1824,20 +1824,41 @@ The likelihood can be rewritten without assuming invertibility of the $\Bmat_k$ 
 \begin{align}
 \begin{split}
 f_j(\zvec) &\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12(\rvec_j-\Fmat_k\zvec)'\Wmat_k(\rvec_j-\Fmat_k\zvec)\bigr]\\
-&\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12\rvec_j'\Wmat_k\rvec_j-\frac12\zvec'\Bmat_k\zvec+\zvec'\avec_{jk})\bigr]\\
-&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+&= \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12\rvec_j'\Wmat_k\rvec_j-\frac12\zvec'\Bmat_k\zvec+\zvec'\avec_{jk})\bigr]\\
+&= \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
 \exp\bigl[\frac12\avec'_{jk}(\Imat+\Bmat_k)^{-1}\avec_{jk}-\frac12\rvec_j'\Wmat_k\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) \\
-&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+&= \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
 \exp\bigl[\frac12\rvec'_j(\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k-\Wmat_k)\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) \\
-&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
-\exp\bigl[-\frac12\rvec'_j\tilde\Gmat\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) 
+&= \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+\exp\bigl[-\frac12\rvec'_j\tilde\Gmat_k\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) 
 \end{split}
 \end{align} 
-where  
+We can simplify $\tilde\Gmat_k$ by applying the Woodbury identity:\footnote{\url{http://en.wikipedia.org/wiki/Woodbury_matrix_identity}} 
 \begin{align}
-\tilde\Gmat &= \Wmat_k-\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k
+\tilde\Gmat_k &= \Wmat_k-\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k
+= (\Wmat^{-1}+\Fmat\Fmat')^{-1}
 \end{align}
-plays a similar role to $\Gmat$. The (almost ancillary) statistic, $\rvec_j'\tilde\Gmat\rvec_j$ effects a data-dependent modulation of the mixture weights. In fact, if we normalize the modulated weights, they turn out to be the posterior distribution for the component $k$ that was responsible for generating $\rvec_j$, i.e. the distribution $P(k\mid\rvec_j)$.
+from which we can see, $\tilde\Gmat_k^{-1}$ is the variance of $\rvec$, which results if we sample: 
+\begin{align*}
+\zvec&\sim\ND(\nulvec,\Imat) &\text{and} && \rvec&\sim\ND(\Fmat_k\zvec,\Wmat_k^{-1}) 
+\end{align*}
+The matrix determinant lemma\footnote{\url{http://en.wikipedia.org/wiki/Matrix_determinant_lemma}} further reveals that:
+\begin{align}
+\detm{\tilde\Gmat_k} &= \frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}
+\end{align} 
+so that we can simplify:
+\begin{align}
+\begin{split}
+f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1})\, \normal{g_{jk}}(\zvec)  \\
+&\propto \sum_{k=1}^K P(k\mid\rvec_j)\,\normal{g_{jk}}(\zvec)  
+\end{split}
+\end{align} 
+
+plays a similar role to $\Gmat$. The (almost ancillary) statistic, $\rvec_j'\tilde\Gmat\rvec_j$ effects a data-dependent modulation of the mixture weights. In fact, if we normalize the modulated weights, they turn out to be the posterior distribution for the component $k$ that was responsible for generating $\rvec_j$:
+\begin{align}
+P(k\mid\rvec_j) &\propto w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+\exp\bigl[-\frac12\rvec'_j\tilde\Gmat\rvec_j\bigr]
+\end{align}
 
 
 \chapter{Discriminative training}
