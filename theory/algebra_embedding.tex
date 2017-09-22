@@ -1409,32 +1409,47 @@ The apparently wayward magenta mean is the location where the blue and red distr
 %\subsection{Complex Gaussians}
 %Do complex Gaussians perhaps have complex Gaussians as Fourier transforms? Can we get around the zero-mean restriction in this way? 
 
-\section{MoGME: Mixture of Gaussian meta-embeddings}
+\section{MoGME: Mixture of GME}
 \def\GME{\text{GME}}
 \def\nGME{\normal{\GME}}
 A mixture of Gaussians gives a more powerful representation that retains some of the advantages of the GME. For a moderate number of mixture components, we retain tractability of LR calculations, but pooling is not so straight-forward.
 
 \subsection{Definition and normalization}
-Let $\nGME_{jk}$ denote a \emph{normalized Gaussian meta-embedding},\footnote{Remember, a normalized meta-embedding is \emph{not} a normalized probability distribution. In fact, it need not even be normalizable. The meta-embedding is normalized when its product with the prior is a normalized distribution.} with parameters indexed by $jk$. We define a MoGME of order K as:
+Let $\nGME_{jk}$ denote a \emph{normalized} Gaussian meta-embedding,\footnote{Remember, a normalized meta-embedding is \emph{not} a normalized probability distribution. In fact, it need not even be normalizable. The meta-embedding is normalized when its product with the prior is a normalized distribution.} with parameters indexed by $jk$. We define a \emph{mixture of Gaussian meta-embeddings} (MoGME) of order K as:
 \begin{align}
 f_j(\zvec) &= \sum_{k=1}^K w_{jk} \nGME_{jk}(\zvec)
 \end{align} 
-where every $w_{jk}>0$. As with any meta-embedding, the scaling is unimportant, so we do not insist that $\sum_{k=1}^Kw_{jk}=1$. However, the \emph{relative} scaling of the components \emph{is} important, so we do insist on having normalized components. If we do have $\sum_{k=1}^Kw_{jk}=1$, then it is easy to verify that $f_j$ is then also normalized, so that:
+where every $w_{jk}>0$. As with any meta-embedding, the scaling is unimportant, so we do not insist that $\sum_{k=1}^Kw_{jk}=1$. However, the \emph{relative} scaling of the components \emph{is} important, so we do insist on having normalized components. Normalization of the whole MogME is done by weight normalization:
 \begin{align}
 \normal{f_j} &= \frac{f_j}{\sum_{k=1}^Kw_{jk}}
 \end{align}
 
 \subsection{Likelihood ratio}
-The LR, or normalized inner product, between a pair of MoGMEs has the complexity of $K^2$ MGE inner products:
+The LR, or normalized inner product, can be computed using the GME inner product~\eqref{eq:LRMVG}: 
 \begin{align}
 \begin{split}
 \dotn{f_i}{f_j} &= \frac{\expp{(\sum_{k=1}^K w_{ik}\nGME_{ik})(\sum_{\ell=1}^K w_{j\ell}\nGME_{j\ell})}}{(\sum_{k=1}^K w_{ik})(\sum_{\ell=1}^K w_{j\ell})}\\
 &= \frac{\sum_{k=1}^K\sum_{\ell=1}^K w_{ik}w_{j\ell}\dot{\nGME_{ik}}{\nGME_{j\ell}}}{(\sum_{k=1}^K w_{ik})(\sum_{\ell=1}^K w_{j\ell})}
 \end{split}
 \end{align}
-
+The complexity scales as $K^2$.
 
 \subsection{Pooling}
+Pooling (product) of two MoGMEs of order $K$ gives a MoGME of order $K^2$, where the resultant weights have an interesting form. To derive the weight formula, notice that for any normalized meta-embeddings, $\normal{f},\normal{g}$, renormalizing their product gives:
+\begin{align}
+\normal{\normal{f}\normal{g}} &=  \frac{\normal{f}\normal{g}}{\dot{\normal{f}\normal{g}}{\onevec}} = \frac{\normal{f}\normal{g}}{\dotn{f}{g}}
+\end{align}  
+We use this to write the MogME product in the required form with normalized components:
+\begin{align}
+\begin{split}
+f_if_j &= \sum_{k=1}^K\sum_{\ell=1}^K w_{ik}w_{j\ell} \nGME_{ik}\nGME_{j\ell} \\
+&= \sum_{k=1}^K\sum_{\ell=1}^K \Bigl(w_{ik}w_{j\ell} \dot{\nGME_{ik}}{\nGME_{j\ell}}\Bigr)\normal{\nGME_{ik}\nGME_{j\ell}} \\
+\end{split}
+\end{align}
+where the parenthesis shows the new weight for component $k\ell$. Pairs of matching components get large weights, while mismatched pairs get smaller weights.
+
+To avoid the polynomial explosion of complexity associated with pooling, the possibility exists to form approximate products that retain only $K$ terms. The weights could be used to select the best $K$. More sophisticated methods could numerically optimize the normalized inner product between full and approximate representations, but this would have $K^3$ complexity per iteration. 
+
 
 
 \section{Exponential family Gaussian mixture}
@@ -1532,13 +1547,13 @@ where $C$ is a constant representing the log-determinant terms and
 
 \section{Taylor series approximations}
 \label{sec:TSapr}
-In this section, we assume we have a slow, but closed-form scoring recipe (e.g. GME) to compute the LR, $\log\dotn{f}{g}$. Second-order Taylor series approximations of $\log\dotn{f}{g}$ will give us scoring recipes with the same functional form---and therefore the same speed---as the quadratic PLDA score above. 
+In this section, we assume that we have available a slow, but closed-form scoring recipe (e.g.\ GME) to compute the log-LR, $\log\dotn{f}{g}$. Second-order Taylor series approximations of $\log\dotn{f}{g}$ will give us scoring recipes with the same functional form---and therefore the same speed---as the quadratic PLDA score above. 
 
 Let $f,g$ be represented respectively by $\xvec,\yvec\in\R^k$ and let the scoring function be denoted: 
 \begin{align}
 F(\xvec,\yvec) &= \log\dotn{f}{g}
 \end{align} 
-We assume that $F$ can be evaluated and differentiated at least twice. There are at least two ways to form second order Taylor series approximations. We consider symmetric and asymmetric variants.
+We assume that $F$ can be evaluated and differentiated at least twice. There are at least two ways to form second-order Taylor series approximations. We consider symmetric and asymmetric variants.
 
 \subsection{Symmetric Taylor series approximation}
 Define $\zvec$ as the stacked vector containing both sides: $\zvec=\bmat{\xvec'&\yvec'}'$. We do the second-order expansion about some convenient, fixed value $\zvec_0=\bmat{\xvec_0'&\yvec_0'}'$. The approximation is:
@@ -1553,7 +1568,7 @@ where $\nabla_\zvec$ and $\Hmat_\zvec$ are gradient and Hessian of $F$, obtained
 It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the PLDA score exactly. 
 
 \subsubsection{Implementation}
-In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious second-order differentiation. 
+In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived second-order differentiation. 
 
 
 \subsection{Asymmetric Taylor series approximation}
@@ -1684,7 +1699,7 @@ which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the mat
 In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
 
 \section{The generative model}
-Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we allow any $D,d\ge1$, but we get more desirable properties for $D>d$.
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we allow any $D,d\ge1$, but we get more desirable properties for $D>d$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both of which have heavy-tailed priors. 
 
 \subsection{Prior}
 The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
@@ -1700,7 +1715,7 @@ The noise is heavy-tailed in the sense that it is Gaussian with variable precisi
 \begin{align}
 \etavec_j&\sim \ND\bigl(\nulvec,(\frac{\lambda_j}{\nu}\Wmat)^{-1}\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
 \end{align}
-where $\Wmat$ is the noise precision, or $\Wmat^{-1}$ is the within-speaker covariance. The expected value\footnote{By Jensen's inequality, although $\expp{\frac{\lambda_j}{\nu}}=1$, we have $\expp{\frac{\nu}{\lambda_j}}>1$. For $\nu>2$, it is $\expp{\frac{\nu}{\lambda_j}}=\frac{\nu}{\nu-2}$.} of the precision scaling factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
+where $\Wmat$ is the noise precision, or $\Wmat^{-1}$ is the within-speaker covariance. The expected value of the precision modulation factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
 \begin{align}
 \label{eq:noise_model}
 \begin{split}
@@ -1714,10 +1729,12 @@ f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)
 \end{align}
 But if $\Fmat'\Wmat\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
 \begin{align}
+\label{eq:defBmuG}
 \Bmat &= \Fmat'\Wmat\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\Wmat\rvec& \text{and} && \Gmat &= \Wmat-\Wmat\Fmat\Bmat^{-1}\Fmat'\Wmat 
 \end{align}
 and we rearrange the quadratic form as:
 \begin{align}
+\label{eq:rearrangeQ}
 \begin{split}
 Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\\ 
 &= \rvec'\Wmat\rvec -2\zvec'\Fmat'\Wmat\rvec + \zvec'\Fmat'\Wmat\Fmat\zvec \\
@@ -1788,7 +1805,39 @@ where the $w_k$ are mixture weights that sum to $1$. In the simplest case, we ca
 As long as $K$ is not too large, MoGME LRs of the form $\dotn{f_i}{f_j}$ remain tractable, requiring $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}. Taylor series approximations can make this fast. 
 
 \section{Mixture of PLDAs}
+Our PLDA model with heavy-tailed noise makes use of a continuous mixture of Gaussians. The resultant meta-embeddings are t-distributions, which we then resorted to approximate by discrete mixtures of Gaussians. In this section we investigate instead what happens if we start out with a discrete mixture of PLDA models instead. 
 
+In this generative model, the prior remains standard normal, but the likelihood is now a mixture of the form:
+\begin{align}
+f_j(\zvec)&\propto P(\rvec_j\mid\zvec) = \sum_{k=1}^K w_k\, \ND(\rvec_j \mid \Fmat_k\zvec,\Wmat_k^{-1})
+\end{align}
+We shall express the likelihood as a mixture of normalized GMEs of the form: 
+\begin{align}
+\normal{g_{jk}}(\zvec) &= \frac{\detm{\Imat+\Bmat_k}^\frac12}{\exp[\frac12\avec'(\Imat+\Bmat_k)\avec]}\exp[\zvec'\avec_{jk}-\frac12\zvec'\Bmat_k\zvec]
+\end{align}
+with parameters of the form:
+\begin{align}
+\Bmat_k &= \Fmat_k'\Wmat_k\Fmat_k,& \text{and} &&
+\avec_{jk} &= \Fmat_k'\Wmat_k\rvec_j 
+\end{align}
+The likelihood can be rewritten without assuming invertibility of the $\Bmat_k$ as:
+\begin{align}
+\begin{split}
+f_j(\zvec) &\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12(\rvec_j-\Fmat_k\zvec)'\Wmat_k(\rvec_j-\Fmat_k\zvec)\bigr]\\
+&\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12\rvec_j'\Wmat_k\rvec_j-\frac12\zvec'\Bmat_k\zvec+\zvec'\avec_{jk})\bigr]\\
+&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+\exp\bigl[\frac12\avec'_{jk}(\Imat+\Bmat_k)^{-1}\avec_{jk}-\frac12\rvec_j'\Wmat_k\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) \\
+&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+\exp\bigl[\frac12\rvec'_j(\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k-\Wmat_k)\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) \\
+&\propto \sum_{k=1}^K w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
+\exp\bigl[-\frac12\rvec'_j\tilde\Gmat\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) 
+\end{split}
+\end{align} 
+where  
+\begin{align}
+\tilde\Gmat &= \Wmat_k-\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k
+\end{align}
+plays a similar role to $\Gmat$. The (almost ancillary) statistic, $\rvec_j'\tilde\Gmat\rvec_j$ effects a data-dependent modulation of the mixture weights. In fact, if we normalize the modulated weights, they turn out to be the posterior distribution for the component $k$ that was responsible for generating $\rvec_j$, i.e. the distribution $P(k\mid\rvec_j)$.
 
 
 \chapter{Discriminative training}
@@ -1807,6 +1856,19 @@ First pubished in~\cite{Facenet}.\\
 
 
 \appendix
+
+%\chapter{Jan se ellipse}
+%$$
+%\begin{tikzpicture}[xscale=0.5,yscale=0.5]
+%\draw ellipse [x radius=7cm, y radius= 1.5cm];
+%\end{tikzpicture}
+%$$
+%$$
+%\begin{tikzpicture}[xscale=0.5,yscale=0.5]
+%\draw ellipse [x radius=7cm, y radius= 2cm];
+%\end{tikzpicture}
+%$$
+
 
 \chapter{Multidimensional Fourier transform}
 \label{chap:MDFT}
