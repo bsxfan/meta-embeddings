@@ -1715,7 +1715,7 @@ The noise is heavy-tailed in the sense that it is Gaussian with variable precisi
 \begin{align}
 \etavec_j&\sim \ND\bigl(\nulvec,(\frac{\lambda_j}{\nu}\Wmat)^{-1}\bigr) &\text{and} && \lambda_j &\sim \chi_\nu^2
 \end{align}
-where $\Wmat$ is the noise precision, or $\Wmat^{-1}$ is the within-speaker covariance. The expected value of the precision modulation factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
+where $\Wmat$ is $D$-by-$D$ positive definite. The expected value of the precision modulation factor is $\expp{\frac{\lambda_j}{\nu}}=1$. Marginalizing out the hidden $\lambda_j$ gives the likelihood, which is a \emph{t-distribution}:
 \begin{align}
 \label{eq:noise_model}
 \begin{split}
@@ -1727,7 +1727,7 @@ where we have ignored the somewhat complex normalization constant, which is irre
 \begin{align}
 f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)}{\nu}\Bigr]^{-\frac{\nu+D}{2}}
 \end{align}
-But if $\Fmat'\Wmat\Fmat$ is invertible,\footnote{For that we need $\text{rank}(\Fmat)=d$, for which it is necessary that $D\ge d$.} for better insight, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
+But if $D\ge d$ and $\Fmat'\Wmat\Fmat$ is invertible, we can conveniently rearrange this into a t-distribution for $\zvec$. To do this, (dropping subscripts for now) we define: 
 \begin{align}
 \label{eq:defBmuG}
 \Bmat &= \Fmat'\Wmat\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\Wmat\rvec& \text{and} && \Gmat &= \Wmat-\Wmat\Fmat\Bmat^{-1}\Fmat'\Wmat 
@@ -1744,16 +1744,17 @@ Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\\
 &= E + Q_{\zvec\mid\rvec}
 \end{split}
 \end{align}
-Reintroducing the subscript $j$, let's reassemble our t-distribution likelihood:
+Reintroducing the subscript $j$, and defining $\nu'=\nu+D-d$, let's reassemble our t-distribution likelihood:
 \begin{align}
 \label{eq:TME}
 \begin{split}
 f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&= \Bigl[1+\frac{E_j + Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&= \Bigl[\frac{\nu+E_j}{\nu} + \frac{Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&\propto \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})Q_{\zvec\mid\rvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&= \Bigl[1 + \frac{(\frac{\nu}{\nu+E_j})(\zvec-\muvec_j)'\Bmat(\zvec-\muvec_j)}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
-&\propto\TD(\zvec\mid \muvec_j,(\frac{\nu}{\nu+E_j})\Bmat,\nu)
+&\propto\Bigl[\frac{\nu}{\nu'}+\frac{\nu Q_{\rvec\mid\zvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&= \Bigl[\frac{\nu}{\nu'}+\frac{\nu E_j + \nu Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&= \Bigl[\frac{\nu(1+E_j)}{\nu'} + \frac{\nu Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&\propto \Bigl[1 + \frac{(\frac{\nu'}{1+E_j})Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&= \Bigl[1 + \frac{(\frac{\nu'}{1+E_j})(\zvec-\muvec_j)'\Bmat(\zvec-\muvec_j)}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&\propto\TD(\zvec\mid \muvec_j,(\frac{\nu'}{1+E_j})\Bmat,\nu')
 \end{split}
 \end{align}
 where
@@ -1813,7 +1814,7 @@ f_j(\zvec)&\propto P(\rvec_j\mid\zvec) = \sum_{k=1}^K w_k\, \ND(\rvec_j \mid \Fm
 \end{align}
 We shall express the likelihood as a mixture of normalized GMEs of the form: 
 \begin{align}
-\normal{g_{jk}}(\zvec) &= \frac{\detm{\Imat+\Bmat_k}^\frac12}{\exp[\frac12\avec'(\Imat+\Bmat_k)\avec]}\exp[\zvec'\avec_{jk}-\frac12\zvec'\Bmat_k\zvec]
+\normal{g_{jk}}(\zvec) &= \frac{\detm{\Imat+\Bmat_k}^\frac12}{\exp[\frac12\avec'_{jk}(\Imat+\Bmat_k)\avec_{jk}]}\exp[\zvec'\avec_{jk}-\frac12\zvec'\Bmat_k\zvec]
 \end{align}
 with parameters of the form:
 \begin{align}
@@ -1833,12 +1834,12 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12(\rv
 \exp\bigl[-\frac12\rvec'_j\tilde\Gmat_k\rvec_j\bigr]\,\normal{g_{jk}}(\zvec) 
 \end{split}
 \end{align} 
-We can simplify $\tilde\Gmat_k$ by applying the Woodbury identity:\footnote{\url{http://en.wikipedia.org/wiki/Woodbury_matrix_identity}} 
+where $\tilde\Gmat_k$ is defined below and simplified with the Woodbury identity:\footnote{\url{http://en.wikipedia.org/wiki/Woodbury_matrix_identity}} 
 \begin{align}
 \tilde\Gmat_k &= \Wmat_k-\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k
 = (\Wmat^{-1}+\Fmat\Fmat')^{-1}
 \end{align}
-from which we can see, $\tilde\Gmat_k^{-1}$ is the variance of $\rvec$, which results if we sample: 
+The RHS shows that $\tilde\Gmat_k^{-1}$ is the variance of $\rvec$, when sampled from: 
 \begin{align*}
 \zvec&\sim\ND(\nulvec,\Imat) &\text{and} && \rvec&\sim\ND(\Fmat_k\zvec,\Wmat_k^{-1}) 
 \end{align*}
@@ -1846,20 +1847,13 @@ The matrix determinant lemma\footnote{\url{http://en.wikipedia.org/wiki/Matrix_d
 \begin{align}
 \detm{\tilde\Gmat_k} &= \frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}
 \end{align} 
-so that we can simplify:
+so that we can finally simplify the meta-embedding as:
 \begin{align}
 \begin{split}
 f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1})\, \normal{g_{jk}}(\zvec)  \\
 &\propto \sum_{k=1}^K P(k\mid\rvec_j)\,\normal{g_{jk}}(\zvec)  
 \end{split}
 \end{align} 
-
-plays a similar role to $\Gmat$. The (almost ancillary) statistic, $\rvec_j'\tilde\Gmat\rvec_j$ effects a data-dependent modulation of the mixture weights. In fact, if we normalize the modulated weights, they turn out to be the posterior distribution for the component $k$ that was responsible for generating $\rvec_j$:
-\begin{align}
-P(k\mid\rvec_j) &\propto w_k \sqrt{\frac{\detm{\Wmat_k}}{\detm{\Imat+\Bmat_k}}}
-\exp\bigl[-\frac12\rvec'_j\tilde\Gmat\rvec_j\bigr]
-\end{align}
-
 
 \chapter{Discriminative training}
 \section{Pairs}
