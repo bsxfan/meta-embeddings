@@ -1799,7 +1799,7 @@ Our model can be generalized in the following ways:
 \begin{itemize}
 	\item Our derivation of the t-distribution, with precision scaling factor drawn from $\chi^2_\nu$ is from Wikipedia.\footnote{\url{http://en.wikipedia.org/wiki/Multivariate_t-distribution}.} Noting that $\chi^2_\nu(\lambda)=\GD(\lambda\mid\tfrac{\nu}{2},\tfrac12)$, where $\GD$ is the gamma distribution, we can indeed generalize the model slightly to non-integer degrees of freedom, by drawing $\lambda$ from a Gamma distribution---see Bishop's equation (2.161) in chapter 2 of~\cite{PRML}. 
 %
-	\item Consider making the \emph{whole noise precision matrix} hidden, rather than just a scalar precision modulation factor. That would require a Wishart prior, rather a Gamma prior. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68) from appendix B.
+	\item Consider making the \emph{whole noise precision matrix} hidden, rather than just a scalar precision modulation factor. That would require a Wishart prior, rather a Gamma prior. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68).
 \end{itemize}
 
 \section{LR computation}
@@ -1817,7 +1817,7 @@ F(\avec_i,\avec_j,\beta_i,\beta_j) &\approx F_{ij} + \pd{F_{ij}}{\beta}(\delta_i
 \end{align} 
 where by symmetry $\pd{F_{ij}}{\beta}=\pd{F_{ij}}{\beta_i}=\pd{F_{ij}}{\beta_j}$. The Hessian, $H$, is fixed, because it depends only on $\beta_0$, but fortunately not on $(\avec_i,\avec_j)$.  
 
-Other variants are possible, for example we could let $\beta_i = e^{\gamma_i}$ and do the expansion in terms of $\gamma_i$ instead.
+Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and do the expansion in terms of $\gamma$ instead. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Bmat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+\beta\Bmat}$.
 
 
 %For t-distribution meta-embeddings (TMEs), the expectations do not have closed-form solutions. In two steps, we (i) approximate the TME as a tractable \emph{mixture of Gaussian meta-embeddings} (MoGME), to which we can then (ii) apply the Taylor series approximations of section~\ref{sec:TSapr}. 
