@@ -1525,13 +1525,13 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 
 \chapter{Approximate computation}
-Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be completely intractable, or too slow to be useful in practice. Even the multivariate Gaussian meta-embeddings, which have tractable closed-form calculations are a lot slower than traditional PLDA scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the PLDA scoring function.
+Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be too slow to be useful in practice, unavailable in closed form, and maybe even completely intractable. Even the multivariate Gaussian meta-embeddings, which have tractable closed-form calculations are a lot slower than traditional Gaussian PLDA (GPLDA) scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the GPLDA scoring function.
 
 
-\section{The PLDA score}
-When recordings are represented by i-vectors, which are in turn modelled by Gaussian PLDA, then a Gaussian meta-embedding (GME), with \emph{constant precision}, can be extracted in closed form from every i-vector. The meta-embedding is extracted as a simple function of the i-vector and the PLDA parameters. (This formula is given by ~\eqref{eq:TME} below, by letting $\nu\to\infty$.) No neural net is required to extract the GME. The PLDA parameters can be generatively, or discriminatively trained. 
+\section{The GPLDA score}
+When recordings are represented by i-vectors, which are in turn modelled by Gaussian PLDA, then a Gaussian meta-embedding (GME), with \emph{constant precision}, can be extracted in closed form from every i-vector. The meta-embedding is extracted as a simple function of the i-vector and the GPLDA parameters. (This formula is given by ~\eqref{eq:TME} below, by letting $\nu\to\infty$.) No neural net is required to extract the GME. The GPLDA parameters can be generatively, or discriminatively trained. 
 
-Following the notation of section~\ref{sec:MVG}, the PLDA GMEs have $D=0$, giving constant precision, $\Bmat_j=\Emat_0$. This leads to a fast, quadratic scoring recipe. Let the embeddings $f_i,f_j$ be represented by $\avec_i$ and $\avec_j$, then by~\eqref{eq:LRMVG} the log-LR between them is:
+Following the notation of section~\ref{sec:MVG}, the GPLDA GMEs have $D=0$, giving constant precision, $\Bmat_j=\Emat_0$. This leads to a fast, quadratic scoring recipe. Let the embeddings $f_i,f_j$ be represented by $\avec_i$ and $\avec_j$, then by~\eqref{eq:LRMVG} the log-LR between them is:
 \begin{align}
 \label{eq:PLDAscore}
 \begin{split}
@@ -1547,7 +1547,7 @@ where $C$ is a constant representing the log-determinant terms and
 
 \section{Taylor series approximations}
 \label{sec:TSapr}
-In this section, we assume that we have available a slow, but closed-form scoring recipe (e.g.\ GME) to compute the log-LR, $\log\dotn{f}{g}$. Second-order Taylor series approximations of $\log\dotn{f}{g}$ will give us scoring recipes with the same functional form---and therefore the same speed---as the quadratic PLDA score above. 
+In this section, we assume that we have available a slow, but closed-form scoring recipe (e.g.\ GME) to compute the log-LR, $\log\dotn{f}{g}$. Second-order Taylor series approximations of $\log\dotn{f}{g}$ will give us scoring recipes with the same functional form---and therefore the same speed---as the quadratic GPLDA score above. 
 
 Let $f,g$ be represented respectively by $\xvec,\yvec\in\R^k$ and let the scoring function be denoted: 
 \begin{align}
@@ -1565,7 +1565,7 @@ F(\xvec,\yvec) &\approx F(\xvec_0,\yvec_0) + (\zvec-\zvec_0)'\nabla_\zvec(\xvec_
 \end{align} 
 where $\nabla_\zvec$ and $\Hmat_\zvec$ are gradient and Hessian of $F$, obtained by differentiating w.r.t.\ $\zvec$. Since $\zvec_0$ is fixed, all of $F(\xvec_0,\yvec_0)$, $\nabla_\zvec(\xvec_0,\yvec_0)$ and $\Hmat_\zvec(\xvec_0,\yvec_0)$ can be precomputed before runtime. The storage requirement is $1 + k + k^2$, or a bit smaller if the symmetry of the Hessian is used.
 
-It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the PLDA score exactly. 
+It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the GPLDA score exactly. 
 
 \subsubsection{Implementation}
 In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived second-order differentiation. 
@@ -1696,10 +1696,10 @@ which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the mat
 
 
 \chapter{Application: PLDA with heavy-tailed noise}
-In this chapter, we construct a generative model that is simple enough to allow closed-form derivation of the speaker identity likelihood functions, yet complex enough to demonstrate data-dependent uncertainty.
+In this chapter, we consider a \emph{generative model} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct an approximation that could serve as a practical alternative to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors and GPLDA.  
 
 \section{The generative model}
-Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we allow any $D,d\ge1$, but we get more desirable properties for $D>d$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both of which have heavy-tailed priors. 
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we could allow any $D,d\ge1$, but we get desirable properties for $D-d\gg 1$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both of which have heavy-tailed priors. 
 
 \subsection{Prior}
 The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
@@ -1767,8 +1767,11 @@ E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
 We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu'=\nu+(D-d)$, location parameter $\muvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu'>2$ and is given in this case by $\frac{\nu+E_j}{\nu'-2}\,\Bmat^{-1}$.} $\frac{\nu'}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu'>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
 
-In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian. 
-
+In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian:
+\begin{align}
+f_j{\zvec} &\propto \TD(\zvec\mid \muvec_j,(\frac{\nu'}{\nu+E_j})\Bmat,\nu')
+\approx \ND\bigl(\zvec\mid\muvec_j,(\frac{\nu'}{\nu+E_j}\Bmat)^{-1}\bigr)
+\end{align}
 Nevertheless, the almost-Gaussian TME is \emph{substantially} different from the GME given by Gaussian PLDA. In Gaussian PLDA (with $\nu\to\infty$), the meta-embedding has constant precision, $\Bmat$, while in the case of heavy-tailed noise, the precision is modulated by the data-dependent factor, $\frac{\nu'}{\nu+E_j}$.   
 
 Let us examine $E_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
@@ -1800,19 +1803,36 @@ Our model can be generalized in the following ways:
 \end{itemize}
 
 \section{LR computation}
-For t-distribution meta-embeddings (TMEs), the expectations do not have closed-form solutions. In two steps, we (i) approximate the TME as a tractable \emph{mixture of Gaussian meta-embeddings} (MoGME), to which we can then (ii) apply the Taylor series approximations of section~\ref{sec:TSapr}. 
+\def\pd#1#2{\frac{\partial#1}{\partial#2}}
+%\def\pdd#1#2{\frac{\partial#1}{\partial#2}}
+LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to a GME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the Gaussian approximation. As we already know, GME LRs are tractable, but slower than quadratic GPLDA scoring. We examine the Taylor series approximation for this case in more detail.
 
-To form the MoGME, let us rewrite the TME in a more convenient form. Defining $\beta_j = \frac{\nu}{\nu+E_j}$ and using Bishop's equation (2.161), we rewrite~\eqref{eq:TME} as:
+Let $f_j(\zvec)=\exp[\zvec'\avec_j,\beta_j\Bmat]$. Pooling is done by simple addition of the $\avec$ and $\beta$ parameters and gives a representation in the same form. We can therefore do any LR computation by using identical building blocks, of the form 
 \begin{align}
-\begin{split}
-f_j(\zvec) &\propto \TD(\zvec\mid \muvec_j,(\beta_j\Bmat)^{-1},\nu) \\
-&= \int_0^{\infty} \ND\bigl(\zvec\mid \muvec_j,(\alpha\beta_j\Bmat)^{-1}\bigr)\Gamma(\alpha\mid\nu/2,\nu/2)\,d\alpha\\
-&\approx\sum_{k=1}^K w_k\, \ND\bigl(\zvec\mid \muvec_j,(\alpha_k\beta_j\Bmat)^{-1}\bigr)
-\end{split}
+F(\avec_i,\avec_j,\beta_i,\beta_j) = \log\dotn{f_i}{f_j}
+\end{align}
+Let us approximate this using a variant of the symmetrical Taylor series approximation about some fixed value $\beta_0>0$. Letting $\delta_i=\beta_i-\beta_0$ and $\delta_j=\beta_j-\beta)$ and $F_{ij}=F(\avec_i,\avec_j,\beta_0,\beta_0)$ we do:
+\begin{align}
+F(\avec_i,\avec_j,\beta_i,\beta_j) &\approx F_{ij} + \pd{F_{ij}}{\beta}(\delta_i+\delta_j) +\frac12\bmat{\delta_i&\delta_j}\Hmat\bmat{\delta_i\\ \delta_j} 
 \end{align} 
-where the $w_k$ are mixture weights that sum to $1$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
+where by symmetry $\pd{F_{ij}}{\beta}=\pd{F_{ij}}{\beta_i}=\pd{F_{ij}}{\beta_j}$. The Hessian, $H$, is fixed, because it depends only on $\beta_0$, but fortunately not on $(\avec_i,\avec_j)$.  
 
-As long as $K$ is not too large, MoGME LRs of the form $\dotn{f_i}{f_j}$ remain tractable, requiring $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}. Taylor series approximations can make this fast. 
+Other variants are possible, for example we could let $\beta_i = e^{\gamma_i}$ and do the expansion in terms of $\gamma_i$ instead.
+
+
+%For t-distribution meta-embeddings (TMEs), the expectations do not have closed-form solutions. In two steps, we (i) approximate the TME as a tractable \emph{mixture of Gaussian meta-embeddings} (MoGME), to which we can then (ii) apply the Taylor series approximations of section~\ref{sec:TSapr}. 
+%
+%To form the MoGME, let us rewrite the TME in a more convenient form. Defining $\beta_j = \frac{\nu}{\nu+E_j}$ and using Bishop's equation (2.161), we rewrite~\eqref{eq:TME} as:
+%\begin{align}
+%\begin{split}
+%f_j(\zvec) &\propto \TD(\zvec\mid \muvec_j,(\beta_j\Bmat)^{-1},\nu) \\
+%&= \int_0^{\infty} \ND\bigl(\zvec\mid \muvec_j,(\alpha\beta_j\Bmat)^{-1}\bigr)\Gamma(\alpha\mid\nu/2,\nu/2)\,d\alpha\\
+%&\approx\sum_{k=1}^K w_k\, \ND\bigl(\zvec\mid \muvec_j,(\alpha_k\beta_j\Bmat)^{-1}\bigr)
+%\end{split}
+%\end{align} 
+%where the $w_k$ are mixture weights that sum to $1$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
+%
+%As long as $K$ is not too large, MoGME LRs of the form $\dotn{f_i}{f_j}$ remain tractable, requiring $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}. Taylor series approximations can make this fast. 
 
 \section{Mixture of PLDAs}
 Our PLDA model with heavy-tailed noise makes use of a continuous mixture of Gaussians. The resultant meta-embeddings are t-distributions, which we then resorted to approximate by discrete mixtures of Gaussians. In this section we investigate instead what happens if we start out with a discrete mixture of PLDA models instead. 
