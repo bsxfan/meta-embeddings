@@ -818,6 +818,7 @@ where $f$ and $f'$ are the meta-embeddings extracted from $r$ and $r'$. \\
 
 \noindent For \emph{openset classification}, with enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$ for $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$ and a new test recording, $r'$, we use the meta-embeddings: $\{r_\ell\mapsto f_\ell\}_{\ell=1}^n$ and $r'\mapsto f'$ and we calculate the LR that $r'$ is of speaker $i$, vs that $r'$ is a new speaker, as:
 \begin{align}
+\label{eq:lropenset}
 \begin{split}
 L_i &= \frac{\expv{f'\prod_{\ell\in\Sset_i} f_\ell}{}\prod_{j\ne i} \expv{\prod_{\ell\in\Sset_j} f_\ell}{}}
 {\expv{f'}{}\prod_{j=1}^m \expv{\prod_{\ell\in\Sset_j} f_\ell}{}} \\
@@ -1529,7 +1530,7 @@ Meta-embeddings are more powerful than existing methods and therefore potentiall
 
 
 \section{The GPLDA score}
-When recordings are represented by i-vectors, which are in turn modelled by Gaussian PLDA, then a Gaussian meta-embedding (GME), with \emph{constant precision}, can be extracted in closed form from every i-vector. The meta-embedding is extracted as a simple function of the i-vector and the GPLDA parameters. (This formula is given by ~\eqref{eq:TME} below, by letting $\nu\to\infty$.) No neural net is required to extract the GME. The GPLDA parameters can be generatively, or discriminatively trained. 
+When recordings are represented by i-vectors, which are in turn modelled by Gaussian PLDA, then a Gaussian meta-embedding (GME), with \emph{constant precision}, can be extracted in closed form from every i-vector. In this case, no neural net needs to be trained to extract the meta-embeddings. Each meta-embedding is extracted with a simple function of the i-vector and the GPLDA parameters. (This formula is given by ~\eqref{eq:TME} below, by letting $\nu\to\infty$.) The GPLDA parameters can be generatively, or discriminatively trained. 
 
 Following the notation of section~\ref{sec:MVG}, the GPLDA GMEs have $D=0$, giving constant precision, $\Bmat_j=\Emat_0$. This leads to a fast, quadratic scoring recipe. Let the embeddings $f_i,f_j$ be represented by $\avec_i$ and $\avec_j$, then by~\eqref{eq:LRMVG} the log-LR between them is:
 \begin{align}
@@ -1692,8 +1693,20 @@ In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\n
 which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
-
-
+\section{Multiclass classification}
+Multiclass classification can be scored with~\eqref{eq:lropenset}. That is, the likelihood that the test recording represented by meta-embedding $g$ belongs to class $i$, for which we have as examples a set of meta-embeddings, $\Fset_i$, is: 
+\begin{align}
+L_i &= \dotn{g}{f_i}, & \text{where} && f_i &= \prod_{f\in\Fset_i} f
+\end{align} 
+Here we are interested in the case where for every class $i$, we have available a large set of recordings, so that the uncertainty in $f_i$ becomes very small. For the continuous case, we assume that $\normal{f_i}(\zvec)\approx\delta(\zvec-\hat\zvec_i)$, where $\delta$ denotes the Dirac delta impulse. In this case we have:
+\begin{align}
+\begin{split}
+L_i&\approx \int_\Zset \normal{g}(\zvec)\delta(\zvec-\hat\zvec_i)\pi(\zvec)\,d\zvec \\
+&= \normal{g}(\hat\zvec_i)\pi(\hat\zvec_i) \\
+&= P(\zvec=\hat\zvec_i\mid \Fset_i,\pi)
+\end{split}
+\end{align}
+For discrete $\Zset$ we get the same result, if $f_i$ concentrates at a single element of $\Zset$.
 
 \chapter{Application: PLDA with heavy-tailed noise}
 In this chapter, we consider a \emph{generative model} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct an approximation that could serve as a practical alternative to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors and GPLDA.  
@@ -1765,7 +1778,7 @@ where
 \muvec_j &= \Bmat^{-1}\Fmat'\Wmat\rvec_j &\text{and} &&
 E_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
-We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with degrees of freedom $\nu'=\nu+(D-d)$, location parameter $\muvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu'>2$ and is given in this case by $\frac{\nu+E_j}{\nu'-2}\,\Bmat^{-1}$.} $\frac{\nu'}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu'>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
+We have shown that the meta-embedding, $f_j(\zvec)$ is proportional to a t-distribution, with \emph{increased} degrees of freedom $\nu'=\nu+(D-d)$, location parameter $\muvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu'>2$ and is given in this case by $\frac{\nu+E_j}{\nu'-2}\,\Bmat^{-1}$.} $\frac{\nu'}{\nu+E_j}\,\Bmat$. The mean exists only for $\nu'>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
 
 In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian:
 \begin{align}

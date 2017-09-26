@@ -1,4 +1,4 @@
-function f = equip_metaEmb(f)
+function f = equip_ME(f)
 % Equip an existing meta-embedding implementation with some default derived
 % functionality. Existing function handles are not overwritten. 
     

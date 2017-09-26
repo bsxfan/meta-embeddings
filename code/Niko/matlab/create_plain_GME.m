@@ -1,4 +1,4 @@
-function E = create_plain_metaEmb(a,B,logscale)
+function E = create_plain_GME(a,B,logscale)
 % Creates an object representing a multivariate Gaussian meta-embedding.
 % The Gaussian is represented by its natural parameters, a in R^d 
 % and B, a positve semi-definite matrix. The meta-embedding is: 
@@ -18,7 +18,7 @@ function E = create_plain_metaEmb(a,B,logscale)
     E.raise = @raise;
     E.convolve = @convolve;
     
-    E = equip_metaEmb(E);
+    E = equip_ME(E);
  
     if ~exist('logscale','var')
         logscale = 0;
@@ -39,18 +39,18 @@ function E = create_plain_metaEmb(a,B,logscale)
     % of the two Gaussians.
     function PE = pool(AE)
         [a1,B1,s1] = AE.getNatParams();
-        PE = create_plain_metaEmb(a+a1,B+B1,logscale+s1);
+        PE = create_plain_GME(a+a1,B+B1,logscale+s1);
     end
 
     % Raises meta-embedding to the power s.
     % It scales the natural parameters.
     function PE = raise(e)
-        PE = create_plain_metaEmb(e*a,e*B,e*logscale);
+        PE = create_plain_GME(e*a,e*B,e*logscale);
     end
 
 
     function PE = shiftlogscale(shift)
-        PE = create_plain_metaEmb(a,B,logscale+shift);
+        PE = create_plain_GME(a,B,logscale+shift);
     end
 
 % Computes log E{f(z)}, w.r.t. N(0,I)
@@ -85,7 +85,7 @@ function E = create_plain_metaEmb(a,B,logscale)
         solve = @(rhs) chol12\(chol12.'\rhs); % inv(B1+B2)*rhs
         newB = B1*solve(B2);  %this is inv(inv(B1)+inv(B2))  
         newa = B2*solve(a1) + B1*solve(a2); %newB * (B1\a1 + B2\a2 )
-        CE = create_plain_metaEmb(newa,newB,s1+s2);
+        CE = create_plain_GME(newa,newB,s1+s2);
     end
 
  

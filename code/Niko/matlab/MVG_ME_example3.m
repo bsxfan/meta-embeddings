@@ -12,7 +12,7 @@ function MVG_ME_example3
         else
             B = sigma*eye(dim);
         end
-        E = create_plain_metaEmb(B*mu,B);
+        E = create_plain_GME(B*mu,B);
     end
 
 
