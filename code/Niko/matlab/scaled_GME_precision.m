@@ -32,15 +32,37 @@ function [SGMEP,meand] = scaled_GME_precision(B)
     function [dRHS,dbeta] = back_solve(dY,Y,beta)
         dRHS = solve(dY,beta);
         if nargout >= 2
-          dA = (-dRHS)*Y.';
-          dbeta = sum(sum(dA));
-          %dbeta = -(sum(dRHS,1))*sum(Y,1).';
+          %dA = (-dRHS)*Y.';
+          %dbeta = trace(dA*B.');
+          dbeta = -trace(Y.'*B.'*dRHS);
         end
     end
 
 
 
 end
+
+function [y,back] = logdettestfun(SGMEP,gamma)
+    beta = gamma^2;
+    [y,back1] = SGMEP.logdet(beta);
+    back =@(dy) 2*gamma*back1(dy);
+end
+
+function [Y,back] = solvetestfun(SGMEP,RHS,gamma)
+
+    beta = gamma^2;
+    [Y,back1] = SGMEP.solve(RHS,beta);
+    
+    back =@(dY) back_solvetestfun(dY);
+    
+    function [dRHS,dgamma] = back_solvetestfun(dY)
+        [dRHS,dbeta] = back1(dY);
+        dgamma = 2*gamma*dbeta;
+    end
+end
+
+
+
 
 function test_this()
 
@@ -72,18 +94,18 @@ function test_this()
         plot(log(1/meand+beta),y);
     end
     
-    
+    gamma = rand/rand;
     fprintf('\n\n\nTest logdet backprop (complex step) :\n');
-    testBackprop(SGMEP.logdet,beta);    
+    testBackprop(@(gamma) logdettestfun(SGMEP,gamma),gamma);    
 
     fprintf('\n\n\nTest logdet backprop (real step) :\n');
-    testBackprop_rs(SGMEP.logdet,beta,1e-4);    
+    testBackprop_rs(@(gamma) logdettestfun(SGMEP,gamma),gamma,1e-4);    
 
     fprintf('\n\n\nTest solve backprop (complex step) :\n');
-    testBackprop(SGMEP.solve,{RHS,beta},{1,0});    
-    
+    testBackprop(@(RHS,gamma) solvetestfun(SGMEP,RHS,gamma),{RHS,gamma},{1,1});    
+     
     fprintf('\n\n\nTest solve backprop (real step) :\n');
-    testBackprop_rs(SGMEP.solve,{RHS,beta},1e-4,{1,0});    
+    testBackprop_rs(@(RHS,gamma) solvetestfun(SGMEP,RHS,gamma),{RHS,gamma},1e-4,{1,1});    
     
 end
 
