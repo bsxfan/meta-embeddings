@@ -1805,7 +1805,24 @@ Our model can be generalized in the following ways:
 \section{LR computation}
 \def\pd#1#2{\frac{\partial#1}{\partial#2}}
 %\def\pdd#1#2{\frac{\partial#1}{\partial#2}}
-LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to a GME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the Gaussian approximation. As we already know, GME LRs are tractable, but slower than quadratic GPLDA scoring. We examine the Taylor series approximation for this case in more detail.
+LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to a GME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the Gaussian approximation. As we already know, GME LRs are tractable, but slower than quadratic GPLDA scoring. Fortunately, if precision matrices differ only by a scaling factor, we can find faster recipes than for general GMEs. Below we consider an exact solution and a Taylor series approximation.
+
+\subsection{Exact solution}
+We are interested in matrix factorizations of matrices of the form $\Imat+\beta\Bmat$, where $\beta$ varies but $\Bmat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $\beta$. Since $\Bmat$ is symmetric positive semi-definite, we can factorize it as:
+\begin{align}
+\Bmat = \Vmat\Lambdamat\Vmat'
+\end{align}  
+where $\Vmat$ is an orthonormal matrix having eigenvectors along its columns, while $\Lambdamat$ is a diagonal matrix of real, non-negative eigenvalues. By orthonormality we have $\Imat = \Vmat\Vmat'$, so that:
+\begin{align}
+\Imat+\beta\Bmat &= \Vmat(\Imat+\beta\Lambdamat)\Vmat'
+\end{align}
+for any $\beta\ge0$, the matrix of interest has a factorization of the same form, where we can re-use $\Vmat$. In short, the eigenvectors remain fixed, while if $\lambda$ is an eigenvalue of $\Bmat$, then the corresponding eigenvalue of $\Imat+\beta\Bmat$ is $1+\beta\lambda$.
+
+One way to structure the calculations is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices.  
+
+
+\subsection{Taylor series approximation}
+We examine the Taylor series approximation for this case in more detail.
 
 Let $f_j(\zvec)=\exp[\zvec'\avec_j,\beta_j\Bmat]$. Pooling is done by simple addition of the $\avec$ and $\beta$ parameters and gives a representation in the same form. We can therefore do any LR computation by using identical building blocks, of the form 
 \begin{align}
