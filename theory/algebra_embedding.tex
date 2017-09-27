@@ -501,7 +501,7 @@ The examples below should aid understanding of the meaning and applications of~\
 
 \noindent\textbf{Multi-enroll verification.} Let $\Rset=\{r_1,r_2,r_3\}$, $A:\Sset_1=\{1,2,3\}$ and $B:\Sset'_1=\{1,2\},\Sset'_2=\{3\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the speaker verification LR, with enrollment recordings $r_1,r_2$ and test recording $r_3$.\\
 
-\noindent\textbf{Open set classification.} Let $\Rset=\{r_1,\ldots,r_n\}$ be partitioned into $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$. Let $r'\ne\Rset$ be an additional (test) recording. For $1\le i\le m$, let $A_i$ be the hypothesis that $r'$ is spoken by speaker $i$, as indexed by $\Sset_i$. Let $A_{m+1}$ be the hypothesis that there are $m+1$ speakers: $m$ of them indexed by $\Sset_1,\ldots,\Sset_m$ and $r'$ spoken by a new speaker.  Then we can score the open-set speaker classification problem as follows: For $1\le i\le m+1$, the likelihood\footnote{The numerator of $L_i$ by itself, $P(\Rset,r'\mid A_i)$, could also serve as likelihood for $A_i$. Since the denominator is independent of $i$, the normalized ratio, $L_i$, is still a valid likelihood for $A_i$, with the advantage that the troublesome data-dependent constants cancel.} for $A_i$ is 
+\noindent\textbf{Open-set classification.} Let $\Rset=\{r_1,\ldots,r_n\}$ be partitioned into $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$. Let $r'\ne\Rset$ be an additional (test) recording. For $1\le i\le m$, let $A_i$ be the hypothesis that $r'$ is spoken by speaker $i$, as indexed by $\Sset_i$. Let $A_{m+1}$ be the hypothesis that there are $m+1$ speakers: $m$ of them indexed by $\Sset_1,\ldots,\Sset_m$ and $r'$ spoken by a new speaker.  Then we can score the open-set speaker classification problem as follows: For $1\le i\le m+1$, the likelihood\footnote{The numerator of $L_i$ by itself, $P(\Rset,r'\mid A_i)$, could also serve as likelihood for $A_i$. Since the denominator is independent of $i$, the normalized ratio, $L_i$, is still a valid likelihood for $A_i$, with the advantage that the troublesome data-dependent constants cancel.} for $A_i$ is 
 \begin{align}
 L_i=\frac{P(\Rset,r'\mid A_i)}{P(\Rset,r'\mid A_{m+1})}
 \end{align}
@@ -816,7 +816,7 @@ where $f$ and $f'$ are the meta-embeddings extracted from $r$ and $r'$. \\
 = \dot{\normal{f_1f_2}}{\normal{f_3}}
 \end{align} \\
 
-\noindent For \emph{openset classification}, with enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$ for $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$ and a new test recording, $r'$, we use the meta-embeddings: $\{r_\ell\mapsto f_\ell\}_{\ell=1}^n$ and $r'\mapsto f'$ and we calculate the LR that $r'$ is of speaker $i$, vs that $r'$ is a new speaker, as:
+\noindent For \emph{open-set classification}, with enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$ for $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$ and a new test recording, $r'$, we use the meta-embeddings: $\{r_\ell\mapsto f_\ell\}_{\ell=1}^n$ and $r'\mapsto f'$ and we calculate the LR that $r'$ is of speaker $i$, vs that $r'$ is a new speaker, as:
 \begin{align}
 \label{eq:lropenset}
 \begin{split}
@@ -1694,19 +1694,28 @@ which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the mat
 
 
 \section{Multiclass classification}
-Multiclass classification can be scored with~\eqref{eq:lropenset}. That is, the likelihood that the test recording represented by meta-embedding $g$ belongs to class $i$, for which we have as examples a set of meta-embeddings, $\Fset_i$, is: 
+\label{sec:multiclass_approx}
+Multiclass classification can be scored with~\eqref{eq:lropenset}. The likelihood that a test recording, $r_j$, represented by meta-embedding $f_j$ belongs to class $i$, for which we have as training examples a set of meta-embeddings, $\Fset_i$, is: 
 \begin{align}
-L_i &= \dotn{g}{f_i}, & \text{where} && f_i &= \prod_{f\in\Fset_i} f
+L_{ij} &= \dotn{g_j}{f_i}, & \text{where} && f_i &= \prod_{f\in\Fset_i} f
 \end{align} 
 Here we are interested in the case where for every class $i$, we have available a large set of recordings, so that the uncertainty in $f_i$ becomes very small. For the continuous case, we assume that $\normal{f_i}(\zvec)\approx\delta(\zvec-\hat\zvec_i)$, where $\delta$ denotes the Dirac delta impulse. In this case we have:
 \begin{align}
 \begin{split}
-L_i&\approx \int_\Zset \normal{g}(\zvec)\delta(\zvec-\hat\zvec_i)\pi(\zvec)\,d\zvec \\
-&= \normal{g}(\hat\zvec_i)\pi(\hat\zvec_i) \\
-&= P(\zvec=\hat\zvec_i\mid \Fset_i,\pi)
+L_{ij}&\approx \int_\Zset \normal{f_j}(\zvec)\delta(\zvec-\hat\zvec_i)\pi(\zvec)\,d\zvec \\
+&= \normal{f_j}(\hat\zvec_i)\pi(\hat\zvec_i) \\
+&= P(\zvec=\hat\zvec_i\mid r_j,\pi)
 \end{split}
 \end{align}
 For discrete $\Zset$ we get the same result, if $f_i$ concentrates at a single element of $\Zset$.
+
+\subsection{Open-set vs closed-set}
+For $N$ classes, each of which has a large training set, we can use the above $L_{ij}$ as-is for closed-set classification scores. For open-set classification, all we need is another class with no training data. For that class, say $i=N+1$, we would have $f_{N+1}=\onevec$ and when scored against test $g_j$, we get $L_{(N+1)j}=\dot{\normal{g_j}}{\onevec}=1$. (Note that here we do not use the approximation, because in this case, $f_{N+1}$ does not concentrate to a single element of $\Zset$---in fact, it gives equal likelihood to all elements.)
+
+For the open-set case, since we are comparing all the other likelihoods to $L_{(N+1)j}=1$, the normalization is important, so we need: $L_{ij}\approx \normal{f_j}(\hat\zvec_i)\pi(\hat\zvec_i)$. On the other hand, in the closed-set case, all likelihoods can be scaled by an arbitrary factor dependent on $j$, but independent of $i$. In the closed-set case, we can use $L_{ij}\approx \normal{f_j}(\hat\zvec_i)\pi(\hat\zvec_i) \propto f_j(\hat\zvec_i)\pi(\hat\zvec_i)$ if that turns out to be more convenient.
+
+\subsubsection{Caveat} A caveat is in order. For the open-set score to work properly in practice, we need a good prior, $\pi(\zvec)$. In a PLDA speaker recognizer for $D$-dimensional i-vectors, and $\Zset=\R^d$, where $d<D$, the prior effectively spans a $d$-dimensional subspace which best represents all of the speakers seen in training, where the number of training speakers is always greater than $d$. In spoken language recognition, there are typically very few training languages\cite{LRE_NIST_Odyssey2014}, not enough to span a subspace that would give a good prior for new, unseen languages.   
+
 
 \chapter{Application: PLDA with heavy-tailed noise}
 In this chapter, we consider a \emph{generative model} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct an approximation that could serve as a practical alternative to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors and GPLDA.  
@@ -1863,6 +1872,13 @@ Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and
 %where the $w_k$ are mixture weights that sum to $1$. In the simplest case, we can even choose $K=1$ and use a single Gaussian, with a suitable variance dilation, $\alpha_1<1$ to compensate for the heavy-tailed nature. In our notation we have assumed that the $\{w_k,\alpha_k\}_{k=1}^K$ are independent of the data. It would also be possible to make it data-dependent, in which case variational Bayes might be helpful to determine the values. 
 %
 %As long as $K$ is not too large, MoGME LRs of the form $\dotn{f_i}{f_j}$ remain tractable, requiring $K^2$ Gaussian calculations of the form~\eqref{eq:LRMVG}. Taylor series approximations can make this fast. 
+
+
+
+\section{Multiclass classification}
+For multiclass classification, with large amounts of training data for each class, we can apply the scoring approximation of section~\ref{sec:multiclass_approx} to this model. We assume that the normalized distribution (product of t-distributions) that represents the training data for every class $i$, concentrates to a Dirac delta at $\hat\zvec_i$. As explained above, we can plug these values into the normalized approximate GMEs that represent the test recordings.   
+
+
 
 \section{Mixture of PLDAs}
 Our PLDA model with heavy-tailed noise makes use of a continuous mixture of Gaussians. The resultant meta-embeddings are t-distributions, which we then resorted to approximate by discrete mixtures of Gaussians. In this section we investigate instead what happens if we start out with a discrete mixture of PLDA models instead. 
