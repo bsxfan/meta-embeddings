@@ -1875,6 +1875,8 @@ Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and
 \section{Multiclass classification}
 For multiclass classification, with large amounts of training data for each class, we can apply the scoring approximation of section~\ref{sec:multiclass_approx} to this model. We assume that the normalized distribution (product of t-distributions) that represents the training data for every class $i$, concentrates to a Dirac delta at $\hat\zvec_i$. As explained above, for runtime scoring, we can simply plug these values into the meta-embeddings that represent the test recordings.   
 
+
+\subsection{Training}
 Let class $i$ have training data, $\Rset_i=\{\rvec_{ij}\}_{j=1}^{N_i}$, represented by the approximate Gaussian meta-embeddings:
 \begin{align}
 f_{ij}(\zvec) &= \ND\bigr(\zvec\mid\muvec_{ij},(\beta_{ij}\Bmat)^{-1}\bigl)
@@ -1901,6 +1903,29 @@ and
 \end{align}
 Notice that the class representative, $\hat\zvec_i$ is formed via a weighted combination of the data for that class. The weights are inversely proportional to the estimated noise variances. If we have enough data, so that $\bar\Bmat_i\gg\Imat$, then we can approximate: 
 $$\pi(\zvec)\normal{f_i}\approx \delta(\zvec-\hat\zvec_i)$$
+
+
+\subsection{Scoring}
+At runtime, given a test recording, $r_j$, represented by the approximate Gaussian meta-embedding:
+\begin{align}
+g_j(\zvec) &= \exp[\avec_j'\zvec-\frac{\beta_j}{2}\zvec'\Bmat\zvec]
+\end{align}
+we can compute the log-likelihood for each class $i$ as:
+\begin{align}
+\begin{split}
+\log L_{ij} &= \log g_j(\hat\zvec_i) - \log\expp{g_j} \\
+&= \avec_j'\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Bmat)^{-1}\avec_j -\frac12\log\detm{\Bmat} -\frac{d}{2}\log{\beta_j}
+\end{split}
+\end{align}
+For the open-set case, we can omit the constant $\frac12\log\detm{\Bmat}$, while for the \emph{closed-set} case, we can omit all terms independent of $i$, to give:
+\begin{align}
+\log L_{ij} &= \avec_j'\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i + \const
+\end{align}
+This can be arranged into a $(d+1)$-dimensional dot-product for computational convenience. 
+
+
+
+
 
 
 \section{Mixture of PLDAs}
