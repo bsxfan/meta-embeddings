@@ -341,7 +341,7 @@ Embeddings are becoming popular also in speech and speaker recognition. In Inter
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. Embeddings extracted from the input patterns live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
-At the Johns Hopkins HLTCOE SCALE 2017 Workshop\footnote{\url{http://hltcoe.jhu.edu/research/scale/scale-2017}} one of the topics of interest was embeddings for speaker recognition. During the workshop, the idea to generalize to \emph{meta-embeddings} was conceived. At the time of the writing of this document, we are still developing the theory and no code has been written, nor have any experiments been performed. This document describes the theory.    
+At the Johns Hopkins HLTCOE SCALE 2017 Workshop\footnote{\url{http://hltcoe.jhu.edu/research/scale/scale-2017}} one of the topics of interest was embeddings for speaker recognition. During the workshop, the idea to generalize to \emph{meta-embeddings} was conceived. At the time of the writing of this document, we are still developing the theory and very little coding and experiments have been done.\footnote{This document and some code to produce some of the examples in it can be found at \url{https://github.com/bsxfan/meta-embeddings}.} This document describes the theory.    
 
 We envisage that meta-embeddings could be widely applicable to a variety of machine learning or pattern recognition problems, but we shall make our discussion concrete by using the language of automatic speaker verification/recognition. To interpret everything (say) as face recognition, just do \emph{recording}$\,\mapsto\,$\emph{image} and \emph{speaker}$\,\mapsto\,$\emph{face}, and so on \ldots.
 
@@ -1693,6 +1693,24 @@ In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\n
 which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
+\section{Laplace approximation for pooling}
+\label{sec:Laplace}
+Here we show how the \emph{Laplace approximation}~\cite{ITILA,PRML} can be applied to continuous unimodal meta-embeddings, where closed-form pooling is unavailable, but where we can afford an iterative calculation to find an approximate pooled meta-embedding. An example would be the t-distribution meta-embeddings which will be discussed in section~\ref{sec:TPLDA} below. 
+
+For meta-embeddings, $f_1,\ldots,f_n$, that we want to pool, define the function:
+\begin{align}
+F(\zvec) &= -\sum_{i=1}^n \log f_i(\zvec)
+\end{align}
+Use numerical optimization to find $\hat\zvec=\argmin F(\zvec)$. Find the Hessian, $\Hmat$, at $\hat\zvec$. The gradient should be zero, so that the second-order Taylor-series approximation about $\hat\zvec$ is:
+\begin{align}
+F(\zvec) &\approx F(\hat\zvec) + \frac12(\zvec-\hat\zvec)'\Hmat(\zvec-\hat\zvec)
+\end{align}   
+Exponentiating this gives a Gaussian, which is the Laplace approximation to the pooled meta-embedding:
+\begin{align}
+e^{-F(\zvec)} &\approx \exp[-\frac12(\zvec-\hat\zvec)'\Hmat(\zvec-\hat\zvec) + \const]
+\end{align}
+
+
 \section{Multiclass classification}
 \label{sec:multiclass_approx}
 Multiclass classification can be scored with~\eqref{eq:lropenset}. The likelihood that a test recording, $r_j$, represented by meta-embedding $f_j$ belongs to class $i$, for which we have as training examples a set of meta-embeddings, $\Fset_i$, is: 
@@ -1701,6 +1719,7 @@ L_{ij} &= \dotn{g_j}{f_i}, & \text{where} && f_i &= \prod_{f\in\Fset_i} f
 \end{align} 
 Here we are interested in the case where for every class $i$, we have available a large set of recordings, so that the uncertainty in $f_i$ becomes very small. For the continuous case, we assume that $\normal{f_i}(\zvec)\pi(\zvec)\approx\delta(\zvec-\hat\zvec_i)$, where $\delta$ denotes the Dirac delta impulse. In this case we have:
 \begin{align}
+\label{eq:Dirac_scoring}
 L_{ij}&\approx \int_\Zset \normal{f_j}(\zvec)\delta(\zvec-\hat\zvec_i)\,d\zvec = \normal{f_j}(\hat\zvec_i)
 \end{align}
 For discrete $\Zset$ we get the same result, if $f_i$ concentrates at a single element of $\Zset$.
@@ -1713,11 +1732,13 @@ For the open-set case, since we are comparing all the other likelihoods to $L_{(
 \subsubsection{Caveat} A caveat is in order. For the open-set score to work properly in practice, we need a good prior, $\pi(\zvec)$. In a PLDA speaker recognizer for $D$-dimensional i-vectors, and $\Zset=\R^d$, where $d<D$, the prior effectively spans a $d$-dimensional subspace which best represents all of the speakers seen in training, where the number of training speakers is always greater than $d$. In spoken language recognition, there are typically very few training languages\cite{LRE_NIST_Odyssey2014}, not enough to span a subspace that would give a good prior for new, unseen languages.   
 
 
-\chapter{Application: PLDA with heavy-tailed noise}
-In this chapter, we consider a \emph{generative model} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct an approximation that could serve as a practical alternative to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors and GPLDA.  
+\chapter{Meta-embeddings derived from generative models}
 
-\section{The generative model}
-Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we could allow any $D,d\ge1$, but we get desirable properties for $D-d\gg 1$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both of which have heavy-tailed priors. 
+\section{PLDA with heavy-tailed noise}
+\label{sec:TPLDA}
+In this section, we analyze a variant of heavy-tailed PLDA~\cite{ht-plda} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct approximations that could serve as practical alternatives to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors with Gaussian PLDA.  
+
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we could allow any $D,d\ge1$, but we get desirable properties for $D-d\gg 1$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both with heavy-tailed priors. 
 
 \subsection{Prior}
 The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
@@ -1747,7 +1768,7 @@ f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)
 \end{align}
 But if $D\ge d$ and $\Fmat'\Wmat\Fmat$ is invertible, we can conveniently rearrange this into a t-distribution for $\zvec$.
 
-\subsubsection{TME: T-distribution meta-embedding}
+\subsection{TME: T-distribution meta-embedding}
 To see that $f_j(\zvec)$ is a t-distrition, we define (dropping subscripts for now): 
 \begin{align}
 \label{eq:defBmuG}
@@ -1788,6 +1809,7 @@ We have shown that the meta-embedding, $f_j(\zvec)$, is proportional to a t-dist
 
 In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian:
 \begin{align}
+\label{eq:TMEvsGME}
 f_j{\zvec} &\propto \TD(\zvec\mid \muvec_j,\beta_j\Bmat,\nu')
 \approx \ND\bigl(\zvec\mid\muvec_j,(\beta_j\Bmat)^{-1}\bigr)
 \end{align}
@@ -1812,7 +1834,7 @@ $$\beta_j=\frac{\nu'}{\nu+E_j}=\frac{\nu+(D-d)}{\nu+E_j}$$
 forms a regularized estimate of the hidden noise precision modulation factor $\frac{\nu}{\lambda_j}$. The scale of $E_j$ is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. The scale of $E_j$ is however independent of $\nu$, so that for Gaussian noise, where $\nu\to\infty$ and $\frac{\nu}{\lambda_j}\to1$, we also have $\frac{\nu'}{\nu+E_j}\to1$. 
 
 
-\section{Generalizations}
+\subsection{Generalizations}
 \def\GD{\mathcal{G}}
 Our model can be generalized in the following ways:
 \begin{itemize}
@@ -1821,17 +1843,17 @@ Our model can be generalized in the following ways:
 	\item Consider making the \emph{whole noise precision matrix} hidden, rather than just a scalar precision modulation factor. That would require a Wishart prior, rather a Gamma prior. Surprisingly, this does \emph{not} lead to a generalization. When this matrix is marginalized out, we get exactly the \emph{same} t-distribution likelihood. Compare for example Bishop's equations (2.161) and (B.68).
 \end{itemize}
 
-\section{LR computation}
+\subsection{LR computation}
 \def\pd#1#2{\frac{\partial#1}{\partial#2}}
 %\def\pdd#1#2{\frac{\partial#1}{\partial#2}}
 LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to a GME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the Gaussian approximation. As we already know, GME LRs are tractable, but slower than quadratic GPLDA scoring. Fortunately, if precision matrices differ only by a scaling factor, we can find faster recipes than for general GMEs. Below we consider an exact solution and a Taylor series approximation.
 
-\subsection{Exact solution}
+\subsubsection{Exact GME scoring}
 We are interested in matrix factorizations of matrices of the form $\Imat+\beta\Bmat$, where $\beta$ varies but $\Bmat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $\beta$. Since $\Bmat$ is symmetric positive semi-definite, we can factorize it as:
 \begin{align}
 \Bmat = \Vmat\Lambdamat\Vmat'
 \end{align}  
-where $\Vmat$ is an orthonormal matrix having eigenvectors along its columns, while $\Lambdamat$ is a diagonal matrix of real, non-negative eigenvalues. By orthonormality we have $\Imat = \Vmat\Vmat'$, so that:
+where $\Vmat$ is an orthonormal matrix having the eigenvectors along its columns, while $\Lambdamat$ is a diagonal matrix of real, non-negative eigenvalues. By orthonormality we have $\Imat = \Vmat\Vmat'$, so that:
 \begin{align}
 \Imat+\beta\Bmat &= \Vmat(\Imat+\beta\Lambdamat)\Vmat'
 \end{align}
@@ -1840,7 +1862,7 @@ for any $\beta\ge0$, the matrix of interest has a factorization of the same form
 One way to structure the calculations is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices.  
 
 
-\subsection{Taylor series approximation}
+\subsubsection{Taylor series approximation}
 We examine the Taylor series approximation for this case in more detail.
 
 Let $f_j(\zvec)=\exp[\zvec'\avec_j,\beta_j\Bmat]$. Pooling is done by simple addition of the $\avec$ and $\beta$ parameters and gives a representation in the same form. We can therefore do any LR computation by using identical building blocks, of the form 
@@ -1872,12 +1894,12 @@ Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and
 
 
 
-\section{Multiclass classification}
+\subsection{Multiclass classification}
 For multiclass classification, with large amounts of training data for each class, we can apply the scoring approximation of section~\ref{sec:multiclass_approx} to this model. We assume that the normalized distribution (product of t-distributions) that represents the training data for every class $i$, concentrates to a Dirac delta at $\hat\zvec_i$. As explained above, for runtime scoring, we can simply plug these values into the meta-embeddings that represent the test recordings.   
 
 
-\subsection{Training}
-Let class $i$ have training data, $\Rset_i=\{\rvec_{ij}\}_{j=1}^{N_i}$, represented by the approximate Gaussian meta-embeddings:
+\subsubsection{Training}
+Let class $i$ have a set of training data, $\Rset_i=\{\rvec_{ij}\}_{j=1}^{N_i}$, where each $\rvec_{ij}$ is represented by~\eqref{eq:TMEvsGME} as the approximate Gaussian meta-embedding:
 \begin{align}
 f_{ij}(\zvec) &= \ND\bigr(\zvec\mid\muvec_{ij},(\beta_{ij}\Bmat)^{-1}\bigl)
 \end{align}  
@@ -1901,29 +1923,41 @@ and
 = \bar\Bmat^{-1}\Bmat\Fmat'\Wmat\sum_j  \beta_j\rvec_{ij}
 \end{split}
 \end{align}
-Notice that the class representative, $\hat\zvec_i$ is formed via a weighted combination of the data for that class. The weights are inversely proportional to the estimated noise variances. If we have enough data, so that $\bar\Bmat_i\gg\Imat$, then we can approximate: 
+Notice that the class representative, $\hat\zvec_i$, is formed via a weighted combination of the data for that class. The weights are inversely proportional to the estimated noise variances. If we have enough data, so that $\bar\Bmat_i\gg\Imat$, then we can approximate: 
 $$\pi(\zvec)\normal{f_i}\approx \delta(\zvec-\hat\zvec_i)$$
 
 
-\subsection{Scoring}
+\subsubsection{Scoring}
 At runtime, given a test recording, $r_j$, represented by the approximate Gaussian meta-embedding:
 \begin{align}
 g_j(\zvec) &= \exp[\avec_j'\zvec-\frac{\beta_j}{2}\zvec'\Bmat\zvec]
 \end{align}
-we can compute the log-likelihood for each class $i$ as:
+we can use~\eqref{eq:Dirac_scoring} to approximate the log-likelihood for each class $i$ as:
 \begin{align}
 \begin{split}
-\log L_{ij} &= \log g_j(\hat\zvec_i) - \log\expp{g_j} \\
+\log L_{ij} &\approx \log g_j(\hat\zvec_i) - \log\expp{g_j} \\
 &= \avec_j'\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Bmat)^{-1}\avec_j -\frac12\log\detm{\Bmat} -\frac{d}{2}\log{\beta_j}
 \end{split}
 \end{align}
 For the open-set case, we can omit the constant $\frac12\log\detm{\Bmat}$, while for the \emph{closed-set} case, we can omit all terms independent of $i$, to give:
 \begin{align}
-\log L_{ij} &= \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i + \const
+\label{eq:TPLDA_delta_score}
+\log L_{ij} &\approx \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i + \const
 \end{align}
 This can be arranged into a $(d+1)$-dimensional dot-product for computational convenience. 
 
+Intuitively it would be satisfying for the the score to be modulated by $\beta_j$, so that score magnitudes become smaller for noisier data. This is true for the second term in~\eqref{eq:TPLDA_delta_score}, but what about the first term? We can make the the dependence on $\beta_j$ clear by considering $\muvec_j=(\Imat+\beta_j\Bmat)^{-1}\avec_j$, which is the mean of the Gaussian approximation to $P(\zvec\mid \rvec_j,\pi)$. Recall that similarly, $\hat\zvec_i$ is the mean of the Gaussian approximation to $P(\zvec\mid\Rset_i,\pi)$. The first term can now be rewritten as:
+$$\avec_j'\hat\zvec_i = \muvec'_i(\Imat+\beta_j\Bmat)\hat\zvec_i$$
+where the role of $\beta_j$ becomes clear.
 
+As a sanity check, let's derive this scoring recipe directly from~\eqref{eq:LRMVG}:
+\begin{align}
+\lim_{\beta_i\to\infty} \log E(\avec_i+\avec_j,(\beta_i+\beta_j)\Bmat) - \log E(\avec_j,\beta_i\Bmat)
+\end{align}
+
+
+\subsubsection{Doing it without Gaussians}
+As an alternative (perhaps a good idea when $D-d$ is small), both training and scoring can be done without Gaussian approximations. For training, the class representatives, $\hat\zvec_i$, can be found by numerical maximization of the product of t-distributions. If in doubt about the sharpness of the peaks at the maxima, we could verify this by using the Laplace approximation as explained in section~\ref{sec:Laplace}. If all peaks are indeed sharp, we can score closed-set multiclass likelihoods by plugging the $\hat\zvec_i$ into the t-distribution meta-embeddings of the test segments, as in~\eqref{eq:Dirac_scoring}.
 
 
 
@@ -1978,7 +2012,7 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1}
 \end{split}
 \end{align} 
 
-\chapter{Discriminative training}
+\chapter{Discriminative meta-embeddings}
 \section{Pairs}
 
 \section{Triplet loss}
