@@ -356,12 +356,20 @@ The idea to represent the uncertainty is not novel. Indeed, it is \emph{obvious}
 \begin{itemize}
 	\item Part of the problem is computational. For example, a point estimate for an identity variable in $\R^d$ can be represented as a $d$-dimensional vector. But for a multivariate normal meta-embedding, the covariance is a $d$-by-$d$ matrix, which is more expensive to store and manipulate. 
 	\item Then there is the added complication that covariance matrices have to be positive definite. If we use a neural net to compute our uncertainty for us, we have to specially structure the neural net to respect this requirement. 
-	\item But the problem has another facet---if a neural net manufactures meta-embeddings for us, how do we know that the uncertainty thus represented is reasonable? Given meta-embeddings extracted from some supervised database, what criterion can we apply to measure the goodness of the information and the uncertainty they contain? Such criteria are important, because we need them for discriminative training of our neural nets.
+	\item But the problem has another facet---if a neural net manufactures meta-embeddings for us, how do we know that the uncertainty thus represented is reasonable? Given meta-embeddings extracted from some supervised database, what criterion can we apply to measure the goodness of the information and the uncertainty they contain? Such criteria are important, because we need them not only to measure performance, but could also be used for discriminative training of neural nets to extract meta-embeddings.
 \end{itemize}
 This document will provide some suggestions for tackling the above problems.\\ 
 
 \noindent The main purpose of the document is however to show that the meta-embeddings are themselves embeddings in the sense that they live in a vector space, equipped with geometric and algebraic structure that can be employed to compute probabilistic recognition scores (likelihood ratios). The hope is that the theoretical part of this document will help to provide the structure to guide further research into finding better solutions for the practical problems of working with this kind of uncertainty.    
 
+\section{Applications}
+In this section, we briefly sketch how meta-embeddings might be applied. Obvious applications are speaker recognition, face recognition, fingerprint comparison and so on---we do not attempt to list all possible applications here. Rather, we are interested in the mechanisms whereby meta-embeddings are extracted and then used. 
+
+The first part of the document, chapters~\ref{chap:fp} to~\ref{chap:approx}, describes the nature of meta-embeddings and how to use them to recognize speakers, faces and so on. The next obvious question is how to extract meta-embeddings from the input data (voice recordings, images, etc.). Since meta-embeddings are probabilistic, they will be extracted using probabilistic models, which can be either generative or discriminative. 
+
+PLDA is a good example of a generative model that naturally extracts us meta-embeddings. The PLDA model can be trained either with maximum likelihood (the classical generative training criterion)~\cite{ht-plda,SPP}, or with discriminative methods~\cite{Sandro_pairs,Sandro_PSVM}. Once the PLDA model has been trained, extraction of meta-embeddings can be done in closed form, as will be explained in chapter~\ref{chap:generative}. More sophisticated deep generative models could also be used to extract meta-embeddings, but in those cases, we envisage the extraction would be done with a trainable neural network component, similar to that in variational autoencoders~\cite{VAE}.
+
+Meta-embeddings can also be extracted purely discriminatively, without also training a generative model. For classical embeddings, this is the usual strategy, see for example~\cite{Facenet,end2end,DSIS17,Voxceleb,LIMSI_Language_embedding}. In chapter~\ref{chap:discrim} we generalize existing discriminative training strategies to be applicable to meta-embeddings. 
 
 
 \section{Prior work}
@@ -1151,7 +1159,9 @@ Figure~\ref{fig:pool} shows what happens when we know that $r_1$ and $r_2$ are o
 
 
 \chapter{Practical meta-embeddings}
-We have thus far developed a theoretical idea of the nature of meta-embeddings. We are now ready to explore a few proposals of how to practically represent meta-embeddings. The end-goal is to train a neural net that takes voice recordings as input and outputs  representations for the corresponding meta-embeddings. We shall discuss training criteria for the neural net later. Here we are interested in the form that practical meta-embedding representations might take and we shall explore several possibilities. \\
+We have thus far developed a theoretical idea of the nature of meta-embeddings. We are now ready to explore a few proposals of how to practically represent meta-embeddings. 
+
+As mentioned in the introduction, meta-embeddings can be naturally extracted from generative models, or can be extracted by purely discriminative means. In chapters~\ref{chap:generative} and~\ref{chap:discrim} below we shall take a closer look at generative and discriminative meta-embedding extraction. Here we are interested in the form that practical meta-embedding representations might take and we shall explore several possibilities. \\
 
 \noindent Before proceeding to these possibilities, let us consider in general, some desirable properties of our representations. Ideally, we need all of the following properties for our meta-embeddings:
 \begin{itemize}
@@ -1172,7 +1182,7 @@ The first two proposals below, based on exponential family distributions, meet a
 \def\dvec{\mathbf{d}}
 An obvious candidate for a practical meta-embedding is the multivariate Gaussian. A big advantage of this representation is that everything can be computed in closed form and that makes it an important building block in everything that follows. We shall refer to \emph{Gaussian meta-embeddings} with the acronym GME.
 
-This representation supposes a continuous speaker identity variable, $\zvec\in\R^d$. A trainable neural net processes each recording, $r_j$, and outputs the corresponding meta-embedding, $f_j$, in the form of a $(d+D)$-dimensional representation:
+This representation supposes a continuous speaker identity variable, $\zvec\in\R^d$. For each recording, $r_j$, the corresponding meta-embedding, $f_j$, takes the form of a $(d+D)$-dimensional representation:
 $$r_j\mapsto\evec_j=(\avec_j,\bvec_j)$$
 where $\avec\in\R^d$ and $\bvec_j=(b_{1j},\ldots,b_{Dj})\in\R_+^D$, where $D\ge0$ and the $b_{ij}\ge0$. (We allow the degenerate case, $D=0$ to include also PLDA, where meta-embedding precisions are constant.) While the representation, $\evec_j$, is finite-dimensional, it parametrizes the \emph{infinite-dimensional} meta-embedding, $f_j$, defined as:
 \begin{align}
@@ -1184,7 +1194,7 @@ where $\Bmat_j$ is a $d$-by-$d$, positive semi-definite precision matrix, compos
 \label{eq:Bmat}
 \Bmat_j &= \Emat_0 + \sum_{i=1}^D b_{ij} \Emat_i
 \end{align}
-where $\{\Emat_i\}_{i=0}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with the parameters of the neural net that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
+where $\{\Emat_i\}_{i=0}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with any parameters of the model that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
 
 Since $\zvec\in\R^d$ is hidden, we are free to choose the dimensionality, $d$. Experience with PLDA suggests $100\le d\le200$ is a good choice. This can also be compared to the Facenet embeddings, which are 120-dimensional. The size, $D$, of the precision parametrization can be used to trade off computational complexity vs capacity. To keep the complexity significantly less than that which would be needed for fully specified precision matrices, we probably want to constrain $D\ll\frac{d(d+1)}{2}$. 
 
@@ -1526,6 +1536,7 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 
 \chapter{Approximate computation}
+\label{chap:approx}
 Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be too slow to be useful in practice, unavailable in closed form, and maybe even completely intractable. Even the multivariate Gaussian meta-embeddings, which have tractable closed-form calculations are a lot slower than traditional Gaussian PLDA (GPLDA) scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the GPLDA scoring function.
 
 
@@ -1732,7 +1743,10 @@ For the open-set case, since we are comparing all the other likelihoods to $L_{(
 \subsubsection{Caveat} A caveat is in order. For the open-set score to work properly in practice, we need a good prior, $\pi(\zvec)$. In a PLDA speaker recognizer for $D$-dimensional i-vectors, and $\Zset=\R^d$, where $d<D$, the prior effectively spans a $d$-dimensional subspace which best represents all of the speakers seen in training, where the number of training speakers is always greater than $d$. In spoken language recognition, there are typically very few training languages\cite{LRE_NIST_Odyssey2014}, not enough to span a subspace that would give a good prior for new, unseen languages.   
 
 
-\chapter{Meta-embeddings derived from generative models}
+\chapter{Generative meta-embeddings}
+\label{chap:generative}
+In this chapter we analyze a few simple generative models that give closed-form meta-embeddings. Although simple, these models could have practical benefit, for example as i-vector scoring backends. Moreover, the material in this chapter forms a tutorial to help us better understand meta-embeddings before venturing into the novel domain of discriminative meta-embeddings in the next chapter.
+
 
 \section{PLDA with heavy-tailed noise}
 \label{sec:TPLDA}
@@ -1932,14 +1946,14 @@ At runtime, given a test recording, $r_j$, represented by the approximate Gaussi
 \begin{align}
 g_j(\zvec) &= \exp[\avec_j'\zvec-\frac{\beta_j}{2}\zvec'\Bmat\zvec]
 \end{align}
-we can use~\eqref{eq:Dirac_scoring} to approximate the log-likelihood for each class $i$ as:
+we can use~\eqref{eq:Dirac_scoring} to approximate the log-likelihood for each class $i$ as:\footnote{As a sanity check, we can derive the same result, without makes use of the Dirac delta, by directly taking the limit of~\eqref{eq:LRMVG} when taking the precision of one of the Gaussians to infinity.}
 \begin{align}
 \begin{split}
 \log L_{ij} &\approx \log g_j(\hat\zvec_i) - \log\expp{g_j} \\
-&= \avec_j'\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Bmat)^{-1}\avec_j -\frac12\log\detm{\Bmat} -\frac{d}{2}\log{\beta_j}
+&= \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Bmat)^{-1}\avec_j +\frac12\log\detm{\Imat+\beta_j\Bmat}
 \end{split}
 \end{align}
-For the open-set case, we can omit the constant $\frac12\log\detm{\Bmat}$, while for the \emph{closed-set} case, we can omit all terms independent of $i$, to give:
+This can be used for open-set case, while for the \emph{closed-set} case, we can omit all terms independent of $i$, to give:
 \begin{align}
 \label{eq:TPLDA_delta_score}
 \log L_{ij} &\approx \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i + \const
@@ -1950,14 +1964,8 @@ Intuitively it would be satisfying for the the score to be modulated by $\beta_j
 $$\avec_j'\hat\zvec_i = \muvec'_i(\Imat+\beta_j\Bmat)\hat\zvec_i$$
 where the role of $\beta_j$ becomes clear.
 
-As a sanity check, let's derive this scoring recipe directly from~\eqref{eq:LRMVG}:
-\begin{align}
-\lim_{\beta_i\to\infty} \log E(\avec_i+\avec_j,(\beta_i+\beta_j)\Bmat) - \log E(\avec_j,\beta_i\Bmat)
-\end{align}
-
-
 \subsubsection{Doing it without Gaussians}
-As an alternative (perhaps a good idea when $D-d$ is small), both training and scoring can be done without Gaussian approximations. For training, the class representatives, $\hat\zvec_i$, can be found by numerical maximization of the product of t-distributions. If in doubt about the sharpness of the peaks at the maxima, we could verify this by using the Laplace approximation as explained in section~\ref{sec:Laplace}. If all peaks are indeed sharp, we can score closed-set multiclass likelihoods by plugging the $\hat\zvec_i$ into the t-distribution meta-embeddings of the test segments, as in~\eqref{eq:Dirac_scoring}.
+As an alternative (perhaps a good idea when $D-d$ is small), both training and scoring can be done without Gaussian approximations. For training, the class representative, $\hat\zvec_i$, can be found by numerical maximization of the product of t-distributions. If in doubt about the sharpness of the peaks at the maxima, we could verify this by using the Laplace approximation as explained in section~\ref{sec:Laplace}. If all peaks are indeed sharp, we can score closed-set multiclass likelihoods by plugging the $\hat\zvec_i$ into the t-distribution meta-embeddings of the test segments, as in~\eqref{eq:Dirac_scoring}.
 
 
 
@@ -2013,6 +2021,8 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1}
 \end{align} 
 
 \chapter{Discriminative meta-embeddings}
+\label{chap:discrim}
+
 \section{Pairs}
 
 \section{Triplet loss}
