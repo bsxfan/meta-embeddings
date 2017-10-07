@@ -982,7 +982,7 @@ Which primitive building blocks do we need to compute general LRs of the form~\e
 Alternatively, as we have shown in this section, we can compute arbitrary LRs if we can
 \begin{itemize}
 	\item pool and
-	\item compute arbitrary normalized inner products.
+	\item compute arbitrary normalized inner products.\footnote{The combination of pooling and inner products happens every day when we see. A light source has a spectrum, which is a function from $\R$ to $\R$. Every time the lights reflects off a surface, the modified spectrum of the relected light is the product of the incoming spectrum and a similar function that represents the properties of the reflecting surface. Finally, each colour receptor in the eye has a similar function. Inner products between the light that reaches the retina and the receptors determine how much of each colour we see.}
 \end{itemize}
 We can however somewhat restrict the requirement on normalized inner products. We can get away with inner products where \emph{one of the arguments is always a single (unpooled) meta-embedding}. To do normalization, we need $\dot{f}{\onevec}$, which respects this restriction. To further enforce this restriction, look again at the lattice in figure~\ref{fig:lattice} and convince yourself that you can traverse between any two nodes by always adding or removing but a single element of some subset in the partition. For example, the red path does not respect this restriction, but the blue and green ones do. For such paths, all the inner product factors will have at least one unpooled argument.
 
