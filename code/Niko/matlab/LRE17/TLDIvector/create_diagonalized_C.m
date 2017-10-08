@@ -47,19 +47,24 @@ function C = create_diagonalized_C(B,R,RM,Ra,W,M,a)
     %C.slow_xCx = @slow_xCx;
     
     
-    function lambda = lambda_by_root(nu,lambda)
-        f = @(lambda) lambda - (dim+nu)/(nu+quad(lambda)+traceCW(lambda));
-        lambda = fzero(f,lambda);
+    function lambda = lambda_by_root(nu,log_lambda,ell)
+        f = @(log_lambda) log_lambda - log((nu+dim)/(nu+energy(log_lambda,ell)));
+        lambda = fzero(f,log_lambda);
     end
     
     
-    function lambda = lambda_by_min(nu,lambda)
-        f = @(lambda) (nu+dim)*log(lambda) + lambda*(quad(lambda)+...
-                      traceCW(lambda)) - logdetCW(lambda);
-        lambda = fminsearch(f,lambda);          
+    function lambda = lambda_by_min(nu,log_lambda)
+        f = @(log_lambda) (log_lambda - log((nu+dim)/(nu+energy(log_lambda))))^2;
+        lambda = fminsearch(f,log_lambda);          
     end
 
     
+    function y = energy(log_lambda,ell)
+        lambda = exp(log_lambda);
+        y = quad(lambda) + traceCW(lambda);
+        y = y(ell);
+    end
+
     
     function y = quad(lambda)
         s = lambda + e;
@@ -154,11 +159,11 @@ function test_this()
     %x = randn(dim,1);
     %[C.xCx(lambda,x),C.slow_xCx(lambda,x)]
     
-    tic;C.quad(lambda);toc
-    tic;C.slowQuad(lambda);toc
+    %tic;C.quad(lambda);toc
+    %tic;C.slowQuad(lambda);toc
 
-    C.quad(lambda)
-    C.slowQuad(lambda)
+    %C.quad(lambda)
+    %C.slowQuad(lambda)
     
     %[C.traceCW(lambda),C.slow_traceCW(lambda)]
     %[C.logdetCW(lambda),C.slow_logdetCW(lambda)]
@@ -166,12 +171,22 @@ function test_this()
     %[C.xCWCx(lambda,x),C.slow_xCWCx(lambda,x)]
     
 
-    C.lambda_by_root(0.1,1)
+    C.lambda_by_root(1,1)
     C.lambda_by_root(1,10)
-    C.lambda_by_root(100000000,0.1)
+    C.lambda_by_root(1,0.1)
     
-    %C.lambda_by_min(1,1)
+    C.lambda_by_min(1,1)
+    C.lambda_by_min(1,10)
+    C.lambda_by_min(1,0.1)
     
-
+    a = a*0;
+    B = B*0;
+    C = create_diagonalized_C(B,R,R*M,(R')\a,W,M,a);
+    
+    C.lambda_by_root(0.1,0.01)
+    C.lambda_by_root(1,10)
+    C.lambda_by_root(10,0.1)
+    
+    C.lambda_by_min(1,10)
 end
 
