@@ -40,6 +40,7 @@ function C = create_diagonalized_C(B,R,RM,Ra,W,M,a)
     
     C.lambda_by_root = @lambda_by_root;
     C.lambda_by_min = @lambda_by_min;
+    C.lambda_by_fixed_point = @lambda_by_fixed_point;
     
     %C.slow_xCWCx = @slow_xCWCx;
     %C.xCWCx = @xCWCx;
@@ -47,31 +48,40 @@ function C = create_diagonalized_C(B,R,RM,Ra,W,M,a)
     %C.slow_xCx = @slow_xCx;
     
     
-    function lambda = lambda_by_root(nu,log_lambda,ell)
+    function log_lambda = lambda_by_root(nu,log_lambda,ell)
         f = @(log_lambda) log_lambda - log((nu+dim)/(nu+energy(log_lambda,ell)));
-        lambda = fzero(f,log_lambda);
+        log_lambda = fzero(f,log_lambda);
     end
     
+    function log_lambda = lambda_by_fixed_point(nu,log_lambda,ell,niters)
+        f = @(log_lambda) log((nu+dim)/(nu+energy(log_lambda,ell)));
+        for i=1:niters
+            log_lambda = f(log_lambda);
+        end
+    end
     
-    function lambda = lambda_by_min(nu,log_lambda)
+    function log_lambda = lambda_by_min(nu,log_lambda)
         f = @(log_lambda) (log_lambda - log((nu+dim)/(nu+energy(log_lambda))))^2;
-        lambda = fminsearch(f,log_lambda);          
+        log_lambda = fminsearch(f,log_lambda);          
     end
 
     
     function y = energy(log_lambda,ell)
         lambda = exp(log_lambda);
-        y = quad(lambda) + traceCW(lambda);
-        y = y(ell);
+        y = quad(lambda,ell) + traceCW(lambda);
+        %fprintf('%i: energy = %g\n%',ell,y);
     end
 
     
-    function y = quad(lambda)
+    function y = quad(lambda,ell)
         s = lambda + e;
         ss = s.^2;
-        mWmu = sum(bsxfun(@rdivide, lambda*VRMVRM + VRMVRa, s),1);
-        muWmu = sum(bsxfun(@rdivide,bsxfun(@plus,lambda^2*VRMVRM + (2*lambda)*VRMVRa, VRaVRa), ss),1);
-        y = mWm + muWmu -2*mWmu;
+        mWmu = sum(bsxfun(@rdivide, lambda*VRMVRM(:,ell) + VRMVRa(:,ell), s),1);
+        muWmu = sum(bsxfun(@rdivide,bsxfun(@plus,...
+                                                 lambda^2*VRMVRM(:,ell) + ...
+                                                 (2*lambda)*VRMVRa(:,ell), ...
+                                                 VRaVRa), ss),1);
+        y = mWm(ell) + muWmu -2*mWmu;
     end
     
 

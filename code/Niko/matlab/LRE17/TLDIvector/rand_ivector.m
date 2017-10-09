@@ -1,4 +1,4 @@
-function [F,Z,labels,X,lambda] = rand_ivector(M,nu,W,alpha,K,T,minDur,maxDur,N)
+function [F,Z,labels,X,lambda,dur] = rand_ivector(M,nu,W,alpha,K,T,minDur,maxDur,N)
 % Inputs:
 %   M: dim-by-L i-vector means for L languages
 %   nu: degrees of freedom for i-vector t-distribution
@@ -28,13 +28,15 @@ function [F,Z,labels,X,lambda] = rand_ivector(M,nu,W,alpha,K,T,minDur,maxDur,N)
     
     F = zeros(S,N);
     Z = zeros(K,N);
+    tocs = zeros(4,1);
     for i=1:N
-        resp = randDirichlet(alpha,K,dur(i));
-        phi = randn(fdim,dur(i));
+        tic;resp = randDirichlet(alpha,K,dur(i));tocs(1) = tocs(1) + toc;
+        tic;phi = randn(fdim,dur(i));tocs(2) = tocs(2) + toc;
         Z(:,i) = sum(resp,2);
-        Fi = bsxfun(@times,reshape(T*X(:,i),fdim,K),Z(:,i));
-        F(:,i) = reshape(Fi + phi*resp.',S,1);
+        tic;Fi = bsxfun(@times,reshape(T*X(:,i),fdim,K),Z(:,i).');tocs(3) = tocs(3) + toc;
+        tic;F(:,i) = reshape(Fi + phi*resp.',S,1);tocs(4) = tocs(4) + toc;
     end
+    tocs,
 
 
 end
