@@ -30,7 +30,7 @@ function [F,Z,labels,X,lambda,dur] = rand_ivector(M,nu,W,alpha,K,T,minDur,maxDur
     Z = zeros(K,N);
     tocs = zeros(4,1);
     for i=1:N
-        tic;resp = randDirichlet(alpha,K,dur(i));tocs(1) = tocs(1) + toc;
+        tic;resp = rand_fake_Dirichlet(alpha,K,dur(i));tocs(1) = tocs(1) + toc;
         tic;phi = randn(fdim,dur(i));tocs(2) = tocs(2) + toc;
         Z(:,i) = sum(resp,2);
         tic;Fi = bsxfun(@times,reshape(T*X(:,i),fdim,K),Z(:,i).');tocs(3) = tocs(3) + toc;

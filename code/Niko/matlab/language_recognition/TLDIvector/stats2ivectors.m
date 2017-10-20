@@ -1,6 +1,6 @@
-function ivectors = stats2ivectors(F,N,T,TT)
+function [ivectors,TT,A,B] = stats2ivectors(F,Z,T,TT)
 % F: dm-by-n first-order stats
-% N: m-by-n zero order stats
+% Z: m-by-n zero order stats
 % T: dm-by-k factor loading matrix
 % W: k-by-k within class precision
 % Mu: k-by-L language means
@@ -14,7 +14,7 @@ function ivectors = stats2ivectors(F,N,T,TT)
         TT = [];
     end
     
-    [A,B,k,n] = getPosteriorNatParams(F,N,T,TT);
+    [A,B,k,n,TT] = getPosteriorNatParams(F,Z,T,TT);
    
     I = eye(k);
     ivectors= zeros(k,n);

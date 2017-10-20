@@ -1,4 +1,4 @@
-function R = randDirichlet(alpha,m,n)
+function R = rand_fake_Dirichlet(alpha,m,n)
 % This is no longer Dirichlet. I replaced it with a faster ad-hoc
 % distribution.
 %
@@ -17,6 +17,15 @@ function R = randDirichlet(alpha,m,n)
 
 end
 
+
+function E = app_exp(X)
+  XX = X.^2/2;
+  XXX = XX.*X/3;
+  XXXX = XXX.*X/4;
+  E = XXXX+ XXX + XX + X+1;
+    
+end
+
 function test_this()
 
     close all;
@@ -25,7 +34,7 @@ function test_this()
     alpha = 2;
     
     n = 5000;
-    R = randDirichlet(alpha,m,n);
+    R = rand_fake_Dirichlet(alpha,m,n);
     maxR = max(R,[],1);
     hist(maxR,100);
 

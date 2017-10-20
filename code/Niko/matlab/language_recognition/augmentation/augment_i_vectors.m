@@ -37,20 +37,21 @@ function X = augment_i_vectors(T,K,Mu,C,X,Z)
     
     [dim,L] = size(Mu);
     dim2 = dim^2;
+    fdim = size(T,1)/K;
     
-    TT = zeros(dim2,m);
-    ii = 1:d;
-    for k=1:m
-        Tk = R'\T(ii,:);
+    TT = zeros(dim2,K);
+    ii = 1:fdim;
+    for k=1:K
+        Tk = T(ii,:)/R;
         TT(:,k) = (dim/(dim-L))*reshape(Tk.'*Tk,dim2,1);
-        ii = ii + d;
+        ii = ii + fdim;
     end
 
     
     Mu = R'\Mu;
 
     Q = orth(Mu);
-    Nap = eye(size(Q)) - Q*Q.';
+    Nap = eye(dim) - Q*Q.';
     
     if ~exist('X','var') || isempty(X)
         X = @augment;

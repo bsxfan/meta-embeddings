@@ -262,7 +262,7 @@
 
 
 \title{Meta-embeddings: a probabilistic generalization of embeddings in machine learning}
-\author{Niko Br\"ummer\footnote{Corresponding author: \url{niko.brummer@gmail.com}. The other authors are in alphabetical order.}~, Luk\'{a}\v{s} Burget, Paola Garcia, \\ Old\v{r}ich Plchot, Johan Rohdin, Daniel Romero,\\ David Snyder, Themos Stafylakis, Jes\'us Villalba}
+\author{Niko Br\"ummer\footnote{Corresponding author: \url{niko.brummer@gmail.com}. The other authors are in alphabetical order.}~, Luk\'{a}\v{s} Burget, Paola Garcia, Old\v{r}ich Plchot, \\Johan Rohdin, Daniel Romero, David Snyder, \\Themos Stafylakis, Albert Swart, Jes\'us Villalba}
 \date{JHU HLTCOE 2017 SCALE Workshop}
 
 \titlepic{
@@ -339,7 +339,7 @@
 
 Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}. A new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
  
-Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. Embeddings extracted from the input patterns live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
+Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. The idea with embeddings is that they represent such complex input patterns, but that they live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
 At the Johns Hopkins HLTCOE SCALE 2017 Workshop\footnote{\url{http://hltcoe.jhu.edu/research/scale/scale-2017}} one of the topics of interest was embeddings for speaker recognition. During the workshop, the idea to generalize to \emph{meta-embeddings} was conceived. At the time of the writing of this document, we are still developing the theory and very little coding and experiments have been done.\footnote{This document and some code to produce some of the examples in it can be found at \url{https://github.com/bsxfan/meta-embeddings}.} This document describes the theory.    
 
@@ -367,7 +367,7 @@ In this section, we briefly sketch how meta-embeddings might be applied. Obvious
 
 The first part of the document, chapters~\ref{chap:fp} to~\ref{chap:approx}, describes the nature of meta-embeddings and how to use them to recognize speakers, faces and so on. The next obvious question is how to extract meta-embeddings from the input data (voice recordings, images, etc.). Since meta-embeddings are probabilistic, they will be extracted using probabilistic models, which can be either generative or discriminative. 
 
-PLDA is a good example of a generative model that naturally extracts us meta-embeddings. The PLDA model can be trained either with maximum likelihood (the classical generative training criterion)~\cite{ht-plda,SPP}, or with discriminative methods~\cite{Sandro_pairs,Sandro_PSVM}. Once the PLDA model has been trained, extraction of meta-embeddings can be done in closed form, as will be explained in chapter~\ref{chap:generative}. More sophisticated deep generative models could also be used to extract meta-embeddings, but in those cases, we envisage the extraction would be done with a trainable neural network component, similar to that in variational autoencoders~\cite{VAE}.
+PLDA is a good example of a generative model that naturally extracts meta-embeddings. The PLDA model can be trained either with maximum likelihood (the classical generative training criterion)~\cite{ht-plda,SPP}, or with discriminative methods~\cite{Sandro_pairs,Sandro_PSVM}. Once the PLDA model has been trained, extraction of meta-embeddings can be done in closed form, as will be explained in chapter~\ref{chap:generative}. More sophisticated deep generative models could also be used to extract meta-embeddings, but in those cases, we envisage the extraction would be done with a trainable neural network component, similar to that in variational autoencoders~\cite{VAE}.
 
 Meta-embeddings can also be extracted purely discriminatively, without also training a generative model. For classical embeddings, this is the usual strategy, see for example~\cite{Facenet,end2end,DSIS17,Voxceleb,LIMSI_Language_embedding}. In chapter~\ref{chap:discrim} we generalize existing discriminative training strategies to be applicable to meta-embeddings. 
 
@@ -1883,7 +1883,7 @@ Let $f_j(\zvec)=\exp[\zvec'\avec_j,\beta_j\Bmat]$. Pooling is done by simple add
 \begin{align}
 F(\avec_i,\avec_j,\beta_i,\beta_j) = \log\dotn{f_i}{f_j}
 \end{align}
-Let us approximate this using a variant of the symmetrical Taylor series approximation about some fixed value $\beta_0>0$. Letting $\delta_i=\beta_i-\beta_0$ and $\delta_j=\beta_j-\beta)$ and $F_{ij}=F(\avec_i,\avec_j,\beta_0,\beta_0)$ we do:
+Let us approximate this using a variant of the symmetrical Taylor series approximation about some fixed value $\beta_0>0$. Letting $\delta_i=\beta_i-\beta_0$ and $\delta_j=\beta_j-\beta$ and $F_{ij}=F(\avec_i,\avec_j,\beta_0,\beta_0)$ we do:
 \begin{align}
 F(\avec_i,\avec_j,\beta_i,\beta_j) &\approx F_{ij} + \pd{F_{ij}}{\beta}(\delta_i+\delta_j) +\frac12\bmat{\delta_i&\delta_j}\Hmat\bmat{\delta_i\\ \delta_j} 
 \end{align} 
