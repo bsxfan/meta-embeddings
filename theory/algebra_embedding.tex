@@ -403,7 +403,7 @@ Almost all current probabilistic solutions in speaker recognition---also PLDA---
 \end{itemize}
 As long as we understand the limitations imposed by our assumptions, we can proceed.  \\
 
-\noindent In what follows, we use the notation $H_1$ for the hypothesis that the set of recordings of interest, $\Rset=\{r_1,\ldots,r_n\}$, were all spoken by the same (one) speaker. For the hypothesis that they were spoken by $m$ different speakers, we use $H_m$. Exchangeability means:
+\noindent In what follows, we use the notation, $H_1$, for the hypothesis that the set of recordings of interest, $\Rset=\{r_1,\ldots,r_n\}$, were all spoken by the same (one) speaker. More generally, for the hypothesis that they were spoken by $m$ different speakers, we use $H_m$. Exchangeability means:
 \begin{align*}
 P(\Rset\mid H_1) &= P(r_1,r_2\ldots,r_n\mid H_1) = P(r_2,r_1,\ldots,r_n\mid H_1) = \cdots
 \end{align*}
@@ -412,7 +412,7 @@ where the joint probability does not depend on the order of the recordings. Acco
 \label{eq:exch}
 P(\Rset\mid H_1) &= \expv{\prod_{i=1}^n P(r_i\mid \zvec)}{\zvec\sim\pi}
 \end{align}
-where the angle brackets denote expectation---for continuous $\zvec$, this could be written as an integral and for discrete $\zvec$ as a summation. By this marginalization, we are inducing dependence between recordings of the same speaker, while retaining exchangeability. \emph{We do need this dependence, otherwise speaker recognition would be impossible!}\\
+where the angle brackets denote expectation---for continuous $\zvec$, this could be written as an integral and for discrete $\zvec$ as a summation. This marginalization is the model's mechanism for inducing dependence between recordings of the same speaker, while retaining exchangeability. \emph{We do need this dependence, otherwise speaker recognition would be impossible!}\\
 
 \noindent Let $\Rset_1,\Rset_2,\ldots,\Rset_m$ be a number of non-overlapping sets of recordings, spoken respectively by $m$ different speakers. The between-speaker independence assumption gives:
 \begin{align}
@@ -492,7 +492,7 @@ Any kind of speaker recognition problem that can be expressed in terms of partit
 \end{quote}
 To better appreciate this generality, we shall present some examples in the next section.
 
-Again, for readers that are comfortable with the idea that probability distributions convey information~\cite{PTLOS}, the speaker identity likelihood functions are closely associated with posteriors for $\zvec$. Any such posterior, conditioned on a number of recordings of a speaker indexed by $\Sset$, can be computed as:
+Again, for readers that are comfortable with the idea that probability distributions convey information~\cite{PTLOS}, the speaker identity likelihood functions are closely associated with posteriors for $\zvec$. Any such posterior, conditioned on a number of recordings of a speaker, where these recordings indexed by $\Sset$, can be computed as:
 \begin{align}
 P(\zvec\mid \Rset,\Sset,H_1,\pi) &=\frac{\pi(\zvec)\prod_{j\in\Sset}f_j(\zvec)}{\expvb{\prod_{j\in\Sset}f_j(\zvec')}{\zvec'\sim\pi}}
 \end{align}
@@ -507,9 +507,9 @@ The examples below should aid understanding of the meaning and applications of~\
 
 \noindent\textbf{Simple verification.} Let $\Rset=\{r_1,r_2\}$, $A:\Sset_1=\{1,2\}$ and $B:\Sset'_1=\{1\},\Sset'_2=\{2\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the canonical (single-enroll) speaker verification LR.\\
 
-\noindent\textbf{Multi-enroll verification.} Let $\Rset=\{r_1,r_2,r_3\}$, $A:\Sset_1=\{1,2,3\}$ and $B:\Sset'_1=\{1,2\},\Sset'_2=\{3\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the speaker verification LR, with enrollment recordings $r_1,r_2$ and test recording $r_3$.\\
+\noindent\textbf{Multi-enroll verification.} Let $\Rset=\{r_1,r_2,r_3\}$, $A:\Sset_1=\{1,2,3\}$ and $B:\Sset'_1=\{1,2\},\Sset'_2=\{3\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the speaker verification LR, with enrollment recordings $r_1,r_2$ and test recording $r_3$. This generalizes in the obvious way to more than two enrollments.\\
 
-\noindent\textbf{Open-set classification.} Let $\Rset=\{r_1,\ldots,r_n\}$ be partitioned into $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$. Let $r'\ne\Rset$ be an additional (test) recording. For $1\le i\le m$, let $A_i$ be the hypothesis that $r'$ is spoken by speaker $i$, as indexed by $\Sset_i$. Let $A_{m+1}$ be the hypothesis that there are $m+1$ speakers: $m$ of them indexed by $\Sset_1,\ldots,\Sset_m$ and $r'$ spoken by a new speaker.  Then we can score the open-set speaker classification problem as follows: For $1\le i\le m+1$, the likelihood\footnote{The numerator of $L_i$ by itself, $P(\Rset,r'\mid A_i)$, could also serve as likelihood for $A_i$. Since the denominator is independent of $i$, the normalized ratio, $L_i$, is still a valid likelihood for $A_i$, with the advantage that the troublesome data-dependent constants cancel.} for $A_i$ is 
+\noindent\textbf{Open-set classification.} Let a set of enrollment recordings, $\Rset=\{r_1,\ldots,r_n\}$, be partitioned into $m$ speakers, indexed by $\Sset_1,\ldots,\Sset_m\subseteq\{1,\ldots,n\}$. Let $r'\not\in\Rset$ be an additional (test) recording. For $1\le i\le m$, let $A_i$ be the hypothesis that $r'$ is spoken by speaker $i$, as indexed by $\Sset_i$. Let $A_{m+1}$ be the hypothesis that there are $m+1$ speakers: $m$ of them indexed by $\Sset_1,\ldots,\Sset_m$ and $r'$ spoken by a new speaker.  Then we can score the open-set speaker classification problem as follows: For $1\le i\le m+1$, the likelihood\footnote{The numerator of $L_i$ by itself, $P(\Rset,r'\mid A_i)$, could also serve as likelihood for $A_i$. Since the denominator is independent of $i$, the normalized ratio, $L_i$, is still a valid likelihood for $A_i$, with the advantage that the troublesome data-dependent constants cancel.} for $A_i$ is 
 \begin{align}
 L_i=\frac{P(\Rset,r'\mid A_i)}{P(\Rset,r'\mid A_{m+1})}
 \end{align}
@@ -646,7 +646,7 @@ The interested reader is encouraged to read both~\cite{random} and~\cite{ouwehan
 \section{Algebraic properties}
 Having described the inner-product space, we now enrich our meta-embedding space with the elementwise multiplicative operation. This operation combines in useful ways with the other operations to enable us to do the calculations we need for our ultimate goal of computing the likelihood ratios of the form~\eqref{eq:generalLR}.
 
-Alert readers may notice that our addition operator does not seem to play any useful, practical role in all of this. First, the fact that addition between meta-embeddings is possible helps to establish that we have a vector space. Once this is established, all of the well-known properties of vector spaces become available to us. (For example, to derive the basic property of distance, we need subtraction, which in turn is defined by scalar multiplication and addition.) Moreover, in the next chapter, we do find a practical application for addition, in the form of mixture distributions.  
+Alert readers may notice that our addition operator does not seem to play any useful, practical role in all of this. First, the fact that addition between meta-embeddings is possible helps to establish that we have a vector space. Once this is established, all of the well-known properties of vector spaces become available to us. (For example, to derive the basic property of distance, we need subtraction, which in turn is defined by scalar multiplication and addition.) Moreover, in later chapters, we do find a practical application for addition, in the form of mixture distributions.  
 
 
 \subsection{Elementwise product}
@@ -797,7 +797,7 @@ In what follows, we shall interchangeably use the notations with or without comm
 
 
 \chapter{Likelihood-ratios}
-We are now ready to demonstrate the utility of our meta-embeddings operators. We show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
+We are now ready to demonstrate the utility of our meta-embedding operators. We show how they can be used to express the LR formulas of chapter~\ref{chap:fp}. 
 
 We start with \emph{simple LRs}, which can be used to compare any two hypotheses for the partitioning of a set of recordings according to speaker, where the partitions differ by splitting or combining a single subset. Then we treat the general case, where we compute LRs that compare arbitrary hypotheses. The chapter concludes with a graphical toy example to aid understanding.
 
@@ -936,7 +936,7 @@ If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we
 \end{align} 
 We have achieved this re-arrangement by observing that we can get from $A$ to $B$ via the auxiliary hypothesis $C:13|24$, where $C$ is reached from $A$ by joining $\{1\}\{3\}$ and $B$ is reached from $C$ by splitting $\{2,4\}$. The join contributes a normalized inner product factor below the line and the split contributes another above the line.
 
-In general, the partitions of a set form a \emph{partial order}, where $A<C$ is defined as: $C$ \emph{is finer than} $A$. In our example, we have both $A<C$ and $B<C$, but $A$ and $B$ are \emph{not directly comparable}. If two hypotheses \emph{are} directly comparable (if they differ by joining or splitting a single subset), then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}. 
+In general, the partitions of a set form a \emph{partial order}, where $A<C$ is defined as: $A$ \emph{is finer than} $C$. In our example, we have both $A<C$ and $B<C$, but $A$ and $B$ are \emph{not directly comparable}. If two hypotheses \emph{are} directly comparable (if they differ by joining or splitting a single subset), then their LR can be expressed as a single normalized inner product, as we have seen in section~\ref{sec:simpleLR}. 
 
 More can be said about this partial order. It is in fact a \emph{lattice}, where every pair of partitions has a unique supremum (least upper bound) and a unique infimum (greatest lower bound). Figure~\ref{fig:lattice} shows the Hasse diagram representing the lattice of four recordings. Every arc in the Hasse diagram corresponds to splitting or joining a single subset. As we shall see, there is a simple LR associated with every arc. 
 
@@ -1006,9 +1006,9 @@ The difference is the use of L1 vs L2 normalization.
 
 In the literature, there are many examples where embeddings are L2-normalized before computing dot products or distances. In speaker recognition, the first i-vector scoring recipe used cosine-similarity~\cite{ivector-Brighton}, and indeed in current PLDA scoring recipes, it is still standard practice to use L2-normalized i-vectors~\cite{Dani_length_norm}. In face recognition, Facenet uses cosine similarity to compare embeddings~\cite{Facenet}, although subsequently~\cite{Defense_Triplet} advises against such normalization. In~\cite{LIMSI_Language_embedding}, the embeddings for language recognition are compared with cosine similarity.
 
-Notice that by~\eqref{eq:sqdist}, if embeddings have unit L2 norm, then there is no essential difference (other than the sign) between cosine similarity (inner product) and squared distance. By the Cauchy-Schwartz inequality~\eqref{eq:CSI}, inner products between L2-normalized embeddings are limited to the range $[-1,1]$, where $-1$ corresponds to embeddings on opposite sides of the unit hypersphere (maximum distance) and $1$ to embeddings that coincide (zero distance). 
+Notice that by~\eqref{eq:sqdist}, if embeddings have unit L2 norm, then there is no essential difference (other than the sign) between cosine similarity (inner product) and squared distance. By the Cauchy-Schwartz inequality~\eqref{eq:CSI}, inner products between L2-normalized embeddings are limited to the range $[-1,1]$, where $-1$ corresponds to embeddings on opposite sides of the unit hypersphere (maximum distance) and where $1$ corresponds to embeddings that coincide (zero distance). 
 
-In speaker recognition, cosine similarity between embeddings in Euclidean space is regarded as an uncalibrated form of \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratio magnitudes are \emph{not} limited to be at most unity.   
+In speaker recognition, cosine similarity between embeddings in Euclidean space plays the role of uncalibrated \emph{log} likelihood-ratio. (The cosine similarity is signed, just like the log likelihood-ratio.) In contrast, our inner products between L1-normalized meta-embeddings give non-negative \emph{likelihood-ratios}. Notice also that by~\eqref{eq:L1vsL2}, our likelihood-ratio magnitudes are \emph{not} limited to be at most unity.   
 
 
 
@@ -1184,7 +1184,7 @@ An obvious candidate for a practical meta-embedding is the multivariate Gaussian
 
 This representation supposes a continuous speaker identity variable, $\zvec\in\R^d$. For each recording, $r_j$, the corresponding meta-embedding, $f_j$, takes the form of a $(d+D)$-dimensional representation:
 $$r_j\mapsto\evec_j=(\avec_j,\bvec_j)$$
-where $\avec\in\R^d$ and $\bvec_j=(b_{1j},\ldots,b_{Dj})\in\R_+^D$, where $D\ge0$ and the $b_{ij}\ge0$. (We allow the degenerate case, $D=0$ to include also PLDA, where meta-embedding precisions are constant.) While the representation, $\evec_j$, is finite-dimensional, it parametrizes the \emph{infinite-dimensional} meta-embedding, $f_j$, defined as:
+where $\avec_j\in\R^d$ and $\bvec_j=(b_{1j},\ldots,b_{Dj})\in\R_+^D$, where $D\ge0$ and the $b_{ij}\ge0$. (We allow the degenerate case, $D=0$ to include also PLDA, where meta-embedding precisions are constant.) While the representation, $\evec_j$, is finite-dimensional, it parametrizes the \emph{infinite-dimensional} meta-embedding, $f_j$, defined as:
 \begin{align}
 \label{eq:gaussembed}
 f_j(\zvec) &= \exp\bigl[\avec_j'\zvec -\frac12\zvec'\Bmat_j\zvec]
@@ -1194,7 +1194,7 @@ where $\Bmat_j$ is a $d$-by-$d$, positive semi-definite precision matrix, compos
 \label{eq:Bmat}
 \Bmat_j &= \Emat_0 + \sum_{i=1}^D b_{ij} \Emat_i
 \end{align}
-where $\{\Emat_i\}_{i=0}^D$ are fixed, $d$-by-$d$, positive semi-definite definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with any parameters of the model that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
+where $\{\Emat_i\}_{i=0}^D$ are fixed, $d$-by-$d$, positive semi-definite matrices---they are fixed in the sense of being independent of the input data (recordings), but the elements of these matrices are still trainable, together with any parameters of the model that extracts the $\evec_j$. These matrices can be full, low rank, diagonal, etc. 
 
 Since $\zvec\in\R^d$ is hidden, we are free to choose the dimensionality, $d$. Experience with PLDA suggests $100\le d\le200$ is a good choice. This can also be compared to the Facenet embeddings, which are 120-dimensional. The size, $D$, of the precision parametrization can be used to trade off computational complexity vs capacity. To keep the complexity significantly less than that which would be needed for fully specified precision matrices, we probably want to constrain $D\ll\frac{d(d+1)}{2}$. 
 
@@ -1430,7 +1430,7 @@ Let $\nGME_{jk}$ denote a \emph{normalized} Gaussian meta-embedding,\footnote{Re
 \begin{align}
 f_j(\zvec) &= \sum_{k=1}^K w_{jk} \nGME_{jk}(\zvec)
 \end{align} 
-where every $w_{jk}>0$. As with any meta-embedding, the scaling is unimportant, so we do not insist that $\sum_{k=1}^Kw_{jk}=1$. However, the \emph{relative} scaling of the components \emph{is} important, so we do insist on having normalized components. Normalization of the whole MogME is done by weight normalization:
+where every $w_{jk}>0$. As with any meta-embedding, the scaling is unimportant, so we do not insist that $\sum_{k=1}^Kw_{jk}=1$. However, the \emph{relative} scaling of the components \emph{is} important, so we do insist on having normalized components. Normalization of the whole MoGME is done by weight normalization:
 \begin{align}
 \normal{f_j} &= \frac{f_j}{\sum_{k=1}^Kw_{jk}}
 \end{align}
@@ -1580,7 +1580,7 @@ where $\nabla_\zvec$ and $\Hmat_\zvec$ are gradient and Hessian of $F$, obtained
 It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the GPLDA score exactly. 
 
 \subsubsection{Implementation}
-In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived second-order differentiation. 
+In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived and hand-coded second-order differentiation. 
 
 
 \subsection{Asymmetric Taylor series approximation}
