@@ -1158,7 +1158,8 @@ Figure~\ref{fig:pool} shows what happens when we know that $r_1$ and $r_2$ are o
 
 
 
-\chapter{Practical meta-embeddings}
+\chapter{Practical meta-embedding representations}
+\label{chap:representations}
 We have thus far developed a theoretical idea of the nature of meta-embeddings. We are now ready to explore a few proposals of how to practically represent meta-embeddings. 
 
 As mentioned in the introduction, meta-embeddings can be naturally extracted from generative models, or can be extracted by purely discriminative means. In chapters~\ref{chap:generative} and~\ref{chap:discrim} below we shall take a closer look at generative and discriminative meta-embedding extraction. Here we are interested in the form that practical meta-embedding representations might take and we shall explore several possibilities. \\
@@ -1568,16 +1569,17 @@ F(\xvec,\yvec) &= \log\dotn{f}{g}
 We assume that $F$ can be evaluated and differentiated at least twice. There are at least two ways to form second-order Taylor series approximations. We consider symmetric and asymmetric variants.
 
 \subsection{Symmetric Taylor series approximation}
-Define $\zvec$ as the stacked vector containing both sides: $\zvec=\bmat{\xvec'&\yvec'}'$. We do the second-order expansion about some convenient, fixed value $\zvec_0=\bmat{\xvec_0'&\yvec_0'}'$. The approximation is:
+\def\tvec{\mathbf{t}}
+Define $\tvec$ as the stacked vector containing both sides: $\tvec=\bmat{\xvec'&\yvec'}'$. We do the second-order expansion about some convenient, fixed value $\tvec_0=\bmat{\xvec_0'&\yvec_0'}'$. The approximation is:
 \begin{align}
 \begin{split}
-F(\xvec,\yvec) &\approx F(\xvec_0,\yvec_0) + (\zvec-\zvec_0)'\nabla_\zvec(\xvec_0,\yvec_0)\\ 
-&+ \frac12(\zvec-\zvec_0)'\Hmat_\zvec(\xvec_0,\yvec_0)(\zvec-\zvec_0)
+F(\xvec,\yvec) &\approx F(\xvec_0,\yvec_0) + (\tvec-\tvec_0)'\nabla_\tvec(\xvec_0,\yvec_0)\\ 
+&+ \frac12(\tvec-\tvec_0)'\Hmat_\tvec(\xvec_0,\yvec_0)(\tvec-\tvec_0)
 \end{split}
 \end{align} 
-where $\nabla_\zvec$ and $\Hmat_\zvec$ are gradient and Hessian of $F$, obtained by differentiating w.r.t.\ $\zvec$. Since $\zvec_0$ is fixed, all of $F(\xvec_0,\yvec_0)$, $\nabla_\zvec(\xvec_0,\yvec_0)$ and $\Hmat_\zvec(\xvec_0,\yvec_0)$ can be precomputed before runtime. The storage requirement is $1 + k + k^2$, or a bit smaller if the symmetry of the Hessian is used.
+where $\nabla_\tvec$ and $\Hmat_\tvec$ are gradient and Hessian of $F$, obtained by differentiating w.r.t.\ $\tvec$. Since $\tvec_0$ is fixed, all of $F(\xvec_0,\yvec_0)$, $\nabla_\tvec(\xvec_0,\yvec_0)$ and $\Hmat_\tvec(\xvec_0,\yvec_0)$ can be precomputed before runtime. The storage requirement is quadratic in the size of $\tvec$.
 
-It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\zvec_0=\nulvec$, we recover the GPLDA score exactly. 
+It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\tvec_0=\nulvec$, we recover the GPLDA score exactly. 
 
 \subsubsection{Implementation}
 In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived and hand-coded second-order differentiation. 
@@ -1731,16 +1733,16 @@ L_{ij} &= \dotn{g_j}{f_i}, & \text{where} && f_i &= \prod_{f\in\Fset_i} f
 Here we are interested in the case where for every class $i$, we have available a large set of recordings, so that the uncertainty in $f_i$ becomes very small. For the continuous case, we assume that $\normal{f_i}(\zvec)\pi(\zvec)\approx\delta(\zvec-\hat\zvec_i)$, where $\delta$ denotes the Dirac delta impulse. In this case we have:
 \begin{align}
 \label{eq:Dirac_scoring}
-L_{ij}&\approx \int_\Zset \normal{f_j}(\zvec)\delta(\zvec-\hat\zvec_i)\,d\zvec = \normal{f_j}(\hat\zvec_i)
+L_{ij}&\approx \int_\Zset \normal{g_j}(\zvec)\delta(\zvec-\hat\zvec_i)\,d\zvec = \normal{g_j}(\hat\zvec_i)
 \end{align}
 For discrete $\Zset$ we get the same result, if $f_i$ concentrates at a single element of $\Zset$.
 
 \subsection{Open-set vs closed-set}
 For $N$ classes, each of which has a large training set, we can use the above $L_{ij}$ as-is for closed-set classification scores. For open-set classification, all we need is another class with no training data. For that class, say $i=N+1$, we would have $f_{N+1}=\onevec$ and when scored against test $g_j$, we get $L_{(N+1)j}=\dot{\normal{g_j}}{\onevec}=1$. (Note that here we do not use the approximation, because in this case, $f_{N+1}$ does not concentrate---in fact, it gives equal likelihood to all elements.)
 
-For the open-set case, since we are comparing all the other likelihoods to $L_{(N+1)j}=1$, the normalization is important, so we need: $L_{ij}\approx \normal{f_j}(\hat\zvec_i)$. On the other hand, in the closed-set case, all likelihoods can be scaled by an arbitrary factor dependent on $j$, but independent of $i$. In the closed-set case, we can use $L_{ij}\approx \normal{f_j}(\hat\zvec_i)\propto f_j(\hat\zvec_i)$ if that turns out to be more convenient.
+For the open-set case, since we are comparing all the other likelihoods to $L_{(N+1)j}=1$, the normalization is important, so we need: $L_{ij}\approx \normal{g_j}(\hat\zvec_i)$. On the other hand, in the closed-set case, all likelihoods can be scaled by an arbitrary factor dependent on $j$, but independent of $i$. In the closed-set case, we can use $L_{ij}\approx \normal{g_j}(\hat\zvec_i)\propto g_j(\hat\zvec_i)$ if that turns out to be more convenient.
 
-\subsubsection{Caveat} A caveat is in order. For the open-set score to work properly in practice, we need a good prior, $\pi(\zvec)$. In a PLDA speaker recognizer for $D$-dimensional i-vectors, and $\Zset=\R^d$, where $d<D$, the prior effectively spans a $d$-dimensional subspace which best represents all of the speakers seen in training, where the number of training speakers is always greater than $d$. In spoken language recognition, there are typically very few training languages\cite{LRE_NIST_Odyssey2014}, not enough to span a subspace that would give a good prior for new, unseen languages.   
+\subsubsection{Caveat} A caveat is in order. For the open-set score to work properly in practice, we need a good prior, $\pi(\zvec)$. In a PLDA speaker recognizer for $D$-dimensional i-vectors, and $\Zset=\R^d$, where $d<D$, the prior effectively spans a $d$-dimensional subspace which best represents all of the speakers seen in training, where the number of training speakers is always greater than $d$. In spoken language recognition, there are typically very few training languages~\cite{LRE_NIST_Odyssey2014}, not enough to span a subspace that would give a good prior for new, unseen languages.   
 
 
 \chapter{Generative meta-embeddings}
@@ -1752,7 +1754,7 @@ In this chapter we analyze a few simple generative models that give closed-form 
 \label{sec:TPLDA}
 In this section, we analyze a variant of heavy-tailed PLDA~\cite{ht-plda} that is simple enough to allow closed-form derivation of the meta-embeddings, yet complex enough to demonstrate data-dependent uncertainty. Although these meta-embeddings have a closed form, the LRs computed from them do not. However, we show how to construct approximations that could serve as practical alternatives to the popular combination~\cite{Dani_length_norm} of length-normalized i-vectors with Gaussian PLDA.  
 
-Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vector-like and live in $\R^D$. In general, we could allow any $D,d\ge1$, but we get desirable properties for $D-d\gg 1$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both with heavy-tailed priors. 
+Our hidden speaker identity variables live in $\Zset=\R^d$. The observed data (representations of the recordings) are i-vectors or similar and live in $\R^D$. In general, we could allow any $D,d\ge1$, but we get desirable properties for $D-d\gg 1$. The model described here is somewhat simpler than Kenny's heavy-tailed PLDA of~\cite{ht-plda}, which has hidden speaker and channel factors, both with heavy-tailed priors. 
 
 \subsection{Prior}
 The identity variable for speaker $i$ is denoted $\zvec_i\in\R^d$ and they are drawn independently from $N(\nulvec,\Imat)$. 
@@ -2020,13 +2022,48 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1}
 \end{split}
 \end{align} 
 
-\chapter{Discriminative meta-embeddings}
+\chapter{Objective functions for discriminative training}
 \label{chap:discrim}
+In this chapter, we explore ways to discriminatively train meta-embedding extractors. To design a discriminative recipe, we need to make choices for the following main ingredients:
+\begin{itemize}
+	\item The meta-embedding representation
+	\item The training objective function
+	\item The optimizer
+\end{itemize}
+The choices for representation and objective function are mostly orthogonal. As long as we can backpropagate derivatives through the calculations required by a given representation, we can in principle match such a representation to any of the objective functions to be discussed below. Since representations have already been treated in chapter~\ref{chap:representations}, we concentrate in this chapter on objective functions. 
+
+The optimizer could be a full batch optimizer such as L-BFGS, or some variant of stochastic gradient descent, with mini-batches. The choice of optimizer is also to some extent independent of the other choices, although large optimization problems will tend to favour stochastic mini-batch methods. Moreover, as mentioned in chapter~\ref{chap:approx}, approximate stochastic expectations can play well with stochastic optimization.
+
+\section{The intractable, ideal objective}
+In supervised training for generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
+$$\argmax_\theta P(\text{data}\mid\text{labels},\theta)$$
+where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood} (MCL):
+$$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
+In our case, MCL is given by:
+\begin{align}
+\begin{split}
+&\argmax_\theta P(h^*\mid\Rset,\theta)\\
+=&\argmax_\theta \frac{P(h^*) P(\Rset\mid h^*,\theta)}{\sum_h P(h) P(\Rset\mid h,\theta)}
+\end{split}
+\end{align}
+Where $\Rset=\{r_1,\ldots,r_n\}$ is a set of recordings and $h^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. The summation in the denominator is over all possible ways to partition a set of $n$ elements, where $h$ is one such partition. We have also introduced $P(h)$, a prior probability distribution over partitions. By defining the likelihood-ratio:
+\begin{align}
+L(h,h^*;\theta) &= \frac{P(\Rset\mid h,\theta)}{P(\Rset\mid h^*,\theta)}
+\end{align}
+We can rewrite the label posterior as:
+\begin{align}
+P(h^*\mid\Rset,\theta) &= \frac{P(h^*)}{\sum_h P(h) L(h,h^*;\theta)}
+\end{align}
+If we are given a meta-embedding for every $r_j$, and if arbitrary pooling and expectations (or inner products) are tractable, then we also have that $L(h,h^*;\theta)$ is tractable for any $h,h^*$. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. (A speaker recognizer is typically trained with $n$ in the thousands.)
+
+\section{Proper scoring rules}
+
+
 
 \section{Pairs}
 
 \section{Triplet loss}
-First pubished in~\cite{Facenet}.\\
+First published in~\cite{Facenet}.\\
 
 \noindent Good paper:~\cite{Defense_Triplet}: explains original triplet loss, variants for hinge vs softplus loss and gives nice recipe for mining moderately hard triplets,
 
