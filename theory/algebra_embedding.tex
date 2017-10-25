@@ -346,7 +346,7 @@ At the Johns Hopkins HLTCOE SCALE 2017 Workshop\footnote{\url{http://hltcoe.jhu.
 We envisage that meta-embeddings could be widely applicable to a variety of machine learning or pattern recognition problems, but we shall make our discussion concrete by using the language of automatic speaker verification/recognition. To interpret everything (say) as face recognition, just do \emph{recording}$\,\mapsto\,$\emph{image} and \emph{speaker}$\,\mapsto\,$\emph{face}, and so on \ldots.
 
 \section{Meta-embeddings}
-An important concept used throughout this document is that of the \emph{hidden identity variable}---a hypothetical, multidimensional variable that ideally contains all of the information that distinguishes one speaker/face/individual from others. In speaker recognition, the hidden \emph{speaker identity variable} is well known from the work of Patrick Kenny in JFA~\cite{JFA} and PLDA~\cite{HTPLDA}. Similar identity variables appeared in earlier appilcations of PLDA to face recognition~\cite{PLDA-IOFFE, PLDA-Prince, PLDA-Li}.
+An important concept used throughout this document is that of the \emph{hidden identity variable}---a hypothetical, multidimensional variable that ideally contains all of the information that distinguishes one speaker/face/individual from others. In speaker recognition, the hidden \emph{speaker identity variable} is well known from the work of Patrick Kenny in JFA~\cite{JFA} and PLDA~\cite{HTPLDA}. Similar identity variables appeared in earlier applications of PLDA to face recognition~\cite{PLDA-IOFFE, PLDA-Prince, PLDA-Li}.
 
 We argue that the way embeddings are currently treated, essentially makes them \emph{point estimates of hidden variables}. We propose instead to let the identity variables---and therefore the embeddings---remain hidden and to instead extract \emph{meta-embeddings}, which are probabilistic representations of what the values of the hidden variables might be. For example, if the embedding lives in $\R^d$, then the meta-embedding could be in the form of a multivariate normal distribution, where the mean could act as point estimate, but where there is also a covariance matrix that quantifies the uncertainty around the mean. 
 
@@ -2034,11 +2034,40 @@ The choices for representation and objective function are mostly orthogonal. As 
 
 The optimizer could be a full batch optimizer such as L-BFGS, or some variant of stochastic gradient descent, with mini-batches. The choice of optimizer is also to some extent independent of the other choices, although large optimization problems will tend to favour stochastic mini-batch methods. Moreover, as mentioned in chapter~\ref{chap:approx}, approximate stochastic expectations can play well with stochastic optimization.
 
-\section{The intractable, ideal objective}
+\section{Proper scoring rules}
+\def\Dset{\mathcal{D}}
+In the introduction, we have already mentioned that since meta-embeddings quantify uncertainty, we need objective functions that properly evaluate the goodness of the uncertainty. The goodness of uncertainty expressed in a probabilistic framework, as we do here, can be evaluated via \emph{proper scoring rules}~\cite{Gneiting_Raftery_PSR}. If a proper scoring rule is used as training criterion, it is known as \emph{minimum scoring rule inference}~\cite{Dawid_MinScoringRuleInference}. Well known training criteria, such as maximum likelihood, maximum conditional likelihood and minimum cross-entropy are all special cases of minimum scoring rule inference.
+
+There are two equivalent ways to define proper scoring rules. The first (more well-known) works like this. Let $P$ and $Q$ be probability distributions to predict an event $e\in\Eset$. A proper scoring rule is a real-valued function $S(Q,e)$, with the property:
+\begin{align}
+\label{eq:psr1}
+\expv{S(P,e)}{e\sim P} &\le \expv{S(Q,e)}{e\sim P} 
+\end{align}
+In other words, the expected value, w.r.t.\ $P$ is minimized at $Q=P$. The canonical proper scoring rule is the \emph{logarithmic scoring rule}, defined as:
+\begin{align}
+S(Q,e) = -\log Q(e)
+\end{align}
+With the logarithmic rule (depending on the context), minimum scoring rule inference becomes maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
+
+The other way to define proper scoring rules works like this. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is to be made when $Q$ is given while $e$ is still unknown. Let $C(d,e)$ be a real-valued function, known as \emph{cost function} that quantifies the goodness of decision $d$, when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a \emph{Bayes decision}, with the property:
+\begin{align}
+\expv{C(d^*,e)}{e\sim Q} \le \expv{C(d,e)}{e\sim Q}
+\end{align} 
+for any $d\in\Dset$. Then 
+\begin{align}
+\label{eq:psr2}
+S(Q,e) &= C(d^*_Q,e)
+\end{align}
+is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqref{eq:psr1}, but the converse is also true. If we let $\Dset=\Eset$, then the decision can be seen as an attempt to infer the best (lowest expected cost) prediction for $e$. But $\Bset$ can be much more general, so that proper scoring rules are also very flexible.   
+
+
+\section{The intractable MCL objective}
 In supervised training for generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
 $$\argmax_\theta P(\text{data}\mid\text{labels},\theta)$$
-where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood} (MCL):
+where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood}\footnote{Why is $P(\text{labels}\mid\text{data})$ termed conditional, while $P(\text{data}\mid\text{labels})$ is not? In the former case, $P(data)$ is not used: everything is conditional on the data, which is given. In the latter case, $P(\text{labels})$ could be used, but often $P(\text{labels})$ is so trivial that it is ignored.} (MCL):
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
+In the case of supervised training of a (multiclass) classifier, with independent training examples, MCL is just the well-known (multiclass) cross-entropy objective:
+$$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmax_\theta \sum_i \log P(\text{label}_i\mid\text{datum}_i,\theta)$$
 In our case, MCL is given by:
 \begin{align}
 \begin{split}
@@ -2055,8 +2084,6 @@ We can rewrite the label posterior as:
 P(h^*\mid\Rset,\theta) &= \frac{P(h^*)}{\sum_h P(h) L(h,h^*;\theta)}
 \end{align}
 If we are given a meta-embedding for every $r_j$, and if arbitrary pooling and expectations (or inner products) are tractable, then we also have that $L(h,h^*;\theta)$ is tractable for any $h,h^*$. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. (A speaker recognizer is typically trained with $n$ in the thousands.)
-
-\section{Proper scoring rules}
 
 
 
