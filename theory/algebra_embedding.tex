@@ -333,6 +333,8 @@
 \tableofcontents
 \listoffigures
 
+
+
 \chapter{Introduction}
 
 \emph{Embeddings} are familiar in modern machine learning. Neural nets to extract word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
@@ -2032,24 +2034,24 @@ In this chapter, we explore ways to discriminatively train meta-embedding extrac
 \end{itemize}
 The choices for representation and objective function are mostly orthogonal. As long as we can backpropagate derivatives through the calculations required by a given representation, we can in principle match such a representation to any of the objective functions to be discussed below. Since representations have already been treated in chapter~\ref{chap:representations}, we concentrate in this chapter on objective functions. 
 
-The optimizer could be a full batch optimizer such as L-BFGS, or some variant of stochastic gradient descent, with mini-batches. The choice of optimizer is also to some extent independent of the other choices, although large optimization problems will tend to favour stochastic mini-batch methods. Moreover, as mentioned in chapter~\ref{chap:approx}, approximate stochastic expectations can play well with stochastic optimization.
+The optimizer could be a full batch optimizer such as L-BFGS~\cite{Nocedal}, or some variant of stochastic gradient descent, with mini-batches. The choice of optimizer is also to some extent independent of the other choices, although large optimization problems will tend to favour stochastic mini-batch methods. Moreover, as mentioned in chapter~\ref{chap:approx}, approximate stochastic expectations can play well with stochastic optimization.
 
 \section{Proper scoring rules}
 \def\Dset{\mathcal{D}}
-In the introduction, we have already mentioned that since meta-embeddings quantify uncertainty, we need objective functions that properly evaluate the goodness of the uncertainty. The goodness of uncertainty expressed in a probabilistic framework, as we do here, can be evaluated via \emph{proper scoring rules}~\cite{Gneiting_Raftery_PSR}. If a proper scoring rule is used as training criterion, it is known as \emph{minimum scoring rule inference}~\cite{Dawid_MinScoringRuleInference}. Well known training criteria, such as maximum likelihood, maximum conditional likelihood and minimum cross-entropy are all special cases of minimum scoring rule inference.
+In the introduction we have already mentioned that, since meta-embeddings quantify uncertainty, we need objective functions that properly evaluate the goodness of the uncertainty. Since our uncertainty is expressed in a probabilistic framework, its goodness can be evaluated via \emph{proper scoring rules}~\cite{Gneiting_Raftery_PSR}. If a proper scoring rule is used as training criterion, this is known as \emph{minimum scoring rule inference}~\cite{Dawid_MinScoringRuleInference}. Well known training criteria, such as maximum likelihood, maximum conditional likelihood and minimum cross-entropy are all special cases of minimum scoring rule inference.
 
 There are two equivalent ways to define proper scoring rules. The first (more well-known) works like this. Let $P$ and $Q$ be probability distributions to predict an event $e\in\Eset$. A proper scoring rule is a real-valued function $S(Q,e)$, with the property:
 \begin{align}
 \label{eq:psr1}
 \expv{S(P,e)}{e\sim P} &\le \expv{S(Q,e)}{e\sim P} 
 \end{align}
-In other words, the expected value, w.r.t.\ $P$ is minimized at $Q=P$. The canonical proper scoring rule is the \emph{logarithmic scoring rule}, defined as:
+In other words, the expected value w.r.t.\ $P$ is minimized at $Q=P$. The rule is termed \emph{strictly} proper if the minimum is unique. The canonical proper scoring rule is the \emph{logarithmic scoring rule}, defined as:
 \begin{align}
 S(Q,e) = -\log Q(e)
 \end{align}
-With the logarithmic rule (depending on the context), minimum scoring rule inference becomes maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
+With the logarithmic rule, inference based on scoring rule minimization is just (depending on the context) maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
 
-The other way to define proper scoring rules works like this. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is to be made when $Q$ is given while $e$ is still unknown. Let $C(d,e)$ be a real-valued function, known as \emph{cost function} that quantifies the goodness of decision $d$, when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a \emph{Bayes decision}, with the property:
+The other way to define proper scoring rules works like this~\cite{DeGroot}. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is made given $Q$ (while $e$ is still unknown). Let $C(d,e)$ be a real-valued function, known as \emph{cost function} that quantifies the goodness of decision $d$, when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a minimum-expected-cost \emph{Bayes decision}, with the property:
 \begin{align}
 \expv{C(d^*,e)}{e\sim Q} \le \expv{C(d,e)}{e\sim Q}
 \end{align} 
@@ -2058,16 +2060,72 @@ for any $d\in\Dset$. Then
 \label{eq:psr2}
 S(Q,e) &= C(d^*_Q,e)
 \end{align}
-is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqref{eq:psr1}, but the converse is also true. If we let $\Dset=\Eset$, then the decision can be seen as an attempt to infer the best (lowest expected cost) prediction for $e$. But $\Bset$ can be much more general, so that proper scoring rules are also very flexible.   
+is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqref{eq:psr1}, but the converse is also true~\cite{PhD}. If we let $\Dset=\Eset$, then the decision, $d$, can be interpreted as a prediction for $e$. But the decision space, $\Dset$, and the cost function, $C(d,e)$ can be much more general. This gives much flexibility in designing scoring rules---see for example~\cite{Degrees_of_boosting,PhD,PW_PSR}. As we shall see below, maximum conditional likelihood is intractable for our problem, but we shall make use of the flexibility of proper scoring rules to find other tractable solutions, similar to the ones in~\cite{Dawid_Musio_ThApp_PSR_2014,Dawid_Musio_PSR_ModelSelec_2015}. 
+
+Why are proper scoring rules good for training? 
+
+
+\section{The CRP partition prior}
+\def\Li{\Lset_{\setminus i}}
+\def\Iset{\mathcal{I}}
+In this chapter we are concerned with probability distributions over all possible ways to partition a set of $n$ recordings. Specifically, for discriminative training, we need to work with posterior distributions. To compute posteriors, we first need a prior. 
+
+A convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of $n$ recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the recordings, expressed, as before, in terms of index subsets. The CRP gives:  
+\begin{align}
+P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
+\end{align}
+where the choice of $i$ is arbitrary and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results from removing recording $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. The categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ denotes the subset (speaker) to which $i$ belongs. If $\ell_i=k'+1$, then a new subset (speaker) is implied. This definition is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Lset_i$ is the trivial partition of a set with one element. To compute the probability for a given $\Lset$, the recursion can be done from large to small, or from small to large. The small to large direction can also be used as a generative method to sample from this prior.
+
+For $\Li$ of size $m$, the recursion step is defined as:
+\begin{align}
+P(\ell_i=j\mid \Li) &= \begin{cases}
+\frac{\lvert\Sset'_j\rvert-\beta}{m+\alpha}, &\text{for $1\le j\le k'$}\\
+\frac{k'\beta+\alpha}{m+\alpha}, &\text{for $j=k'+1$}
+\end{cases}
+\end{align}
+where $\lvert\Sset'_j\rvert$ is the number of elements in the subset. The CRP is parametrized by $\alpha\ge0$ (concentration) and $0\le\beta<1$ (discount).\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} The expected number of speakers is:
+\begin{align}
+\label{eq:CRP_ev}
+\expp{k}{} &= \begin{cases}
+1& \text{for $\alpha=\beta=0$},\\
+\alpha(\psi(n+\alpha)-\psi(\alpha))&   \text{for $\alpha>0, \beta=0$}, \\
+\frac{\Gamma(\alpha+\beta+n)\Gamma(\alpha+1)}{\beta\Gamma(\alpha+n)\Gamma(\alpha+\beta)}-\frac{\alpha}{\beta}&   \text{for $\alpha>0, \beta>0$}
+\end{cases}
+\end{align}
+where $\Gamma$ and $\psi$ the gamma and digamma functions. Notice that $1\le\expp{k}<n$, where the upper limit is reached at $\alpha\to\infty$, or $\beta\to1$. 
+
+\subsection{Example}
+We let the number of recordings be $n=20$. For each of four different choices of the CRP parameters, $\alpha,\beta$, we draw $1000$ random partitions. For each of the four cases, we draw a histogram of $k$, the number of speakers:
+$$
+\begin{tikzpicture}[ycomb,xscale = 0.1,yscale = 10]
+\draw[color=red,line width=3pt] plot coordinates{(1,0.0260) (3,0.0340) (5,0.0470) (7,0.0460) (9,0.0490) (11,0.0450) (13,0.0620) (15,0.0500) (17,0.0820) (19,0.0820) (21,0.0700) (23,0.0720) (25,0.0600) (27,0.0740) (29,0.0660) (31,0.0450) (33,0.0480) (35,0.0280) (37,0.0090) (39,0.0050)  };
+\draw[color=blue,line width=3pt] plot coordinates{(2,0.0000) (4,0.0000) (6,0.0000) (8,0.0010) (10,0.0080) (12,0.0270) (14,0.0850) (16,0.1240) (18,0.1610) (20,0.1900) (22,0.1750) (24,0.1110) (26,0.0750) (28,0.0320) (30,0.0090) (32,0.0010) (34,0.0010) (36,0.0000) (38,0.0000) (40,0.0000) };
+\node[align=left,red] at(20,0.3){$\alpha=0,\beta=0.74,\expp{k}=10$};
+\node[align=left,blue] at(19,0.24){$\alpha=7.3,\beta=0,\expp{k}=10$};
+\end{tikzpicture}
+\;\;\;\;\;\;\;\;\;\;
+\begin{tikzpicture}[ycomb,xscale = 0.1,yscale = 10]
+\draw[color=red,line width=3pt] plot coordinates{(1,0.0040) (3,0.0050) (5,0.0110) (7,0.0080) (9,0.0150) (11,0.0170) (13,0.0140) (15,0.0090) (17,0.0220) (19,0.0120) (21,0.0290) (23,0.0360) (25,0.0360) (27,0.0500) (29,0.0640) (31,0.0680) (33,0.0890) (35,0.1470) (37,0.1640) (39,0.2000)  };
+\draw[color=blue,line width=3pt] plot coordinates{(2,0.1230) (4,0.2880) (6,0.3130) (8,0.1770) (10,0.0590) (12,0.0340) (14,0.0060) (16,0.0000) (18,0.0000) (20,0.0000) (22,0.0000) (24,0.0000) (26,0.0000) (28,0.0000) (30,0.0000) (32,0.0000) (34,0.0000) (36,0.0000) (38,0.0000) (40,0.0000)  };
+\node[align=left,red] at(33,0.3){$\alpha=0,\beta=0.91,\expp{k}=16$};
+\node[align=left,blue] at(32,0.24){$\alpha=0.72,\beta=0,\expp{k}=3$};
+\end{tikzpicture}
+$$
+As can be seen, the distribution for $k$ can be controlled by appropriate parameter choices. We can control the expected number of speakers, $\expp{k}$ using~\eqref{eq:CRP_ev} and iterative root-finding.\footnote{See our code example, \texttt{create\_PYCRP.m} at \url{http://github.com/bsxfan/meta-embeddings}.} We can also control the width of the distribution---in particular, setting $\alpha=0$ gives wide distributions.
+
+ 
+
+
+\section{The partition posterior}
 
 
 \section{The intractable MCL objective}
-In supervised training for generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
+In supervised training of generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
 $$\argmax_\theta P(\text{data}\mid\text{labels},\theta)$$
 where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood}\footnote{Why is $P(\text{labels}\mid\text{data})$ termed conditional, while $P(\text{data}\mid\text{labels})$ is not? In the former case, $P(data)$ is not used: everything is conditional on the data, which is given. In the latter case, $P(\text{labels})$ could be used, but often $P(\text{labels})$ is so trivial that it is ignored.} (MCL):
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
 In the case of supervised training of a (multiclass) classifier, with independent training examples, MCL is just the well-known (multiclass) cross-entropy objective:
-$$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmax_\theta \sum_i \log P(\text{label}_i\mid\text{datum}_i,\theta)$$
+$$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmin_\theta \sum_i -\log P(\text{label}_i\mid\text{datum}_i,\theta)$$
 In our case, MCL is given by:
 \begin{align}
 \begin{split}
@@ -2075,7 +2133,8 @@ In our case, MCL is given by:
 =&\argmax_\theta \frac{P(h^*) P(\Rset\mid h^*,\theta)}{\sum_h P(h) P(\Rset\mid h,\theta)}
 \end{split}
 \end{align}
-Where $\Rset=\{r_1,\ldots,r_n\}$ is a set of recordings and $h^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. The summation in the denominator is over all possible ways to partition a set of $n$ elements, where $h$ is one such partition. We have also introduced $P(h)$, a prior probability distribution over partitions. By defining the likelihood-ratio:
+Where $\Rset=\{r_1,\ldots,r_n\}$ is a set of recordings and $h^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. The summation in the denominator is over all possible ways to partition a set of $n$ elements, where $h$ is one such partition.\footnote{Do not confuse partition with subset. For $n$ recordings, a
+partition is a collection of non-overlapping, non-empty index subsets, whose union is $\{1,\ldots,n\}$.} We have also introduced $P(h)$, a prior probability distribution over partitions. By defining the likelihood-ratio:
 \begin{align}
 L(h,h^*;\theta) &= \frac{P(\Rset\mid h,\theta)}{P(\Rset\mid h^*,\theta)}
 \end{align}
@@ -2083,7 +2142,20 @@ We can rewrite the label posterior as:
 \begin{align}
 P(h^*\mid\Rset,\theta) &= \frac{P(h^*)}{\sum_h P(h) L(h,h^*;\theta)}
 \end{align}
-If we are given a meta-embedding for every $r_j$, and if arbitrary pooling and expectations (or inner products) are tractable, then we also have that $L(h,h^*;\theta)$ is tractable for any $h,h^*$. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. (A speaker recognizer is typically trained with $n$ in the thousands.)
+If we are given a meta-embedding for every $r_j$, and if arbitrary pooling and expectations (or inner products) are tractable, then we also have that $L(h,h^*;\theta)$ is tractable for any $h,h^*$. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. A speaker recognizer is typically trained with $n$ in the thousands, but for $n=75$, we already have that the Bell number exceeds $10^{80}$, the estimated number of atoms in the observable universe!
+
+\subsection{Is one label enough?}
+The MCL objective is very different from the familiar cross-entropy objective, in the sense that it has but a single label, while cross-entropy is usually applied to a training database with very many independent, labelled examples. One answer is that this single label does contain many bits of information. Using an approximate expression for the log Bell number,\footnote{See: \url{http://en.wikipedia.org/wiki/Bell_number}.} the number of bits we need to uniquely specify a partition of $n$ recordings is about:
+$$
+\begin{tabular}{l | r r r r r}
+$n$  & $10$ & $100$ & $10^3$ & $10^4$ & $10^5$ \\
+\hline
+bits & $17$ & $380$ & $6400$ & $92000$ & $1200000$
+\end{tabular} 
+$$
+
+
+\section{Spherical score}
 
 
 
@@ -2096,7 +2168,13 @@ First published in~\cite{Facenet}.\\
 
 \section{Multiclass classification}
 \cite{DSIS17,LIMSI_Language_embedding}
+
+
 \section{Pseudolikelihood}
+\cite{Dawid_Musio_ThApp_PSR_2014,Dawid_discrete_PSR,Besag_pseudolikelihood}
+
+
+
 %\subsection{Agglomerative clustering}
 %\subsection{Agglomerative clustering}
 
