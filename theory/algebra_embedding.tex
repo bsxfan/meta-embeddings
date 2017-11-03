@@ -863,6 +863,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 
 
 \section{The general case}
+\label{sec:generalLR}
 \begin{figure}[htb!]
 \centering
 \begin{tikzpicture}[xscale=1,yscale=1]
@@ -2049,53 +2050,55 @@ In other words, the expected value w.r.t.\ $P$ is minimized at $Q=P$. The rule i
 \begin{align}
 S(Q,e) = -\log Q(e)
 \end{align}
-With the logarithmic rule, inference based on scoring rule minimization is just (depending on the context) maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
+With the logarithmic rule, training based on scoring rule minimization is just (depending on the context) maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
 
-The other way to define proper scoring rules works like this~\cite{DeGroot}. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is made given $Q$ (while $e$ is still unknown). Let $C(d,e)$ be a real-valued function, known as \emph{cost function} that quantifies the goodness of decision $d$, when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a minimum-expected-cost \emph{Bayes decision}, with the property:
+The other way to define proper scoring rules works like this~\cite{DeGroot}. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is made given $Q$ (while $e$ is still unknown). Let $C(d,e)$ be a real-valued function, known as a \emph{cost function}, that quantifies the goodness of decision $d$ when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a minimum-expected-cost \emph{Bayes decision}, with the property:
 \begin{align}
-\expv{C(d^*,e)}{e\sim Q} \le \expv{C(d,e)}{e\sim Q}
+\expv{C(d^*_Q,e)}{e\sim Q} \le \expv{C(d,e)}{e\sim Q} \;\;\;\;\forall d\in\Dset
 \end{align} 
-for any $d\in\Dset$. Then 
+Then 
 \begin{align}
 \label{eq:psr2}
 S(Q,e) &= C(d^*_Q,e)
 \end{align}
 is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqref{eq:psr1}, but the converse is also true~\cite{PhD}. If we let $\Dset=\Eset$, then the decision, $d$, can be interpreted as a prediction for $e$. But the decision space, $\Dset$, and the cost function, $C(d,e)$ can be much more general. This gives much flexibility in designing scoring rules---see for example~\cite{Degrees_of_boosting,PhD,PW_PSR}. As we shall see below, maximum conditional likelihood is intractable for our problem, but we shall make use of the flexibility of proper scoring rules to find other tractable solutions, similar to the ones in~\cite{Dawid_Musio_ThApp_PSR_2014,Dawid_Musio_PSR_ModelSelec_2015}. 
 
-Why are proper scoring rules good for training? 
+\subsection{Why are proper scoring rules good for training? }
 
 
 \section{The CRP partition prior}
+\label{sec:CRP}
 \def\Li{\Lset_{\setminus i}}
 \def\Iset{\mathcal{I}}
-In this chapter we are concerned with probability distributions over all possible ways to partition a set of $n$ recordings. Specifically, for discriminative training, we need to work with posterior distributions. To compute posteriors, we first need a prior. 
+To do discriminative training with proper scoring rules as objective functions, those proper scoring rules need to be applied to posterior distributions. Here we are concerned with probability distributions over all possible ways to partition a set of $n$ recordings. Since our meta-embeddings provide likelihoods we also need some \emph{prior} distribution over partitions in order to compute posteriors. 
 
-A convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of $n$ recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the recordings, expressed, as before, in terms of index subsets. The CRP gives:  
+For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of $n$ recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the recordings, expressed as before in terms of index subsets. The CRP gives:  
 \begin{align}
 P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
 \end{align}
-where the choice of $i$ is arbitrary and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results from removing recording $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. The categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ denotes the subset (speaker) to which $i$ belongs. If $\ell_i=k'+1$, then a new subset (speaker) is implied. This definition is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Lset_i$ is the trivial partition of a set with one element. To compute the probability for a given $\Lset$, the recursion can be done from large to small, or from small to large. The small to large direction can also be used as a generative method to sample from this prior.
+where the choice of $i$ is arbitrary and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results from removing recording $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. The categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ denotes the subset (speaker) to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. This definition is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Lset_i$ is the trivial partition of a set with one element. To compute the probability for a given $\Lset$, the recursion can be done from large to small, or from small to large. The small to large direction can also be used as a generative method to sample from this prior.
 
-For $\Li$ of size $m$, the recursion step is defined as:
+Let the number of speakers given by $\Li$ be denoted by $m$, then the recursion step is defined as:
 \begin{align}
+\label{eq:CRP_recur}
 P(\ell_i=j\mid \Li) &= \begin{cases}
 \frac{\lvert\Sset'_j\rvert-\beta}{m+\alpha}, &\text{for $1\le j\le k'$}\\
 \frac{k'\beta+\alpha}{m+\alpha}, &\text{for $j=k'+1$}
 \end{cases}
 \end{align}
-where $\lvert\Sset'_j\rvert$ is the number of elements in the subset. The CRP is parametrized by $\alpha\ge0$ (concentration) and $0\le\beta<1$ (discount).\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} The expected number of speakers is:
+where $\lvert\Sset'_j\rvert$ is the number of elements in subset $\Sset'_j$. The CRP is parametrized by $\alpha\ge0$ (concentration) and $0\le\beta<1$ (discount).\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} The expected number of speakers is:
 \begin{align}
 \label{eq:CRP_ev}
 \expp{k}{} &= \begin{cases}
 1& \text{for $\alpha=\beta=0$},\\
 \alpha(\psi(n+\alpha)-\psi(\alpha))&   \text{for $\alpha>0, \beta=0$}, \\
-\frac{\Gamma(\alpha+\beta+n)\Gamma(\alpha+1)}{\beta\Gamma(\alpha+n)\Gamma(\alpha+\beta)}-\frac{\alpha}{\beta}&   \text{for $\alpha>0, \beta>0$}
+\frac{\Gamma(\alpha+\beta+n)\Gamma(\alpha+1)}{\beta\Gamma(\alpha+n)\Gamma(\alpha+\beta)}-\frac{\alpha}{\beta}&   \text{for $\alpha\ge0, \beta>0$}
 \end{cases}
 \end{align}
-where $\Gamma$ and $\psi$ the gamma and digamma functions. Notice that $1\le\expp{k}<n$, where the upper limit is reached at $\alpha\to\infty$, or $\beta\to1$. 
+where $\Gamma$ and $\psi$ denote the gamma and digamma functions. Notice that $1\le\expp{k}<n$, where the upper limit is reached at $\alpha\to\infty$, or $\beta\to1$. 
 
 \subsection{Example}
-We let the number of recordings be $n=20$. For each of four different choices of the CRP parameters, $\alpha,\beta$, we draw $1000$ random partitions. For each of the four cases, we draw a histogram of $k$, the number of speakers:
+We let the number of recordings be $n=20$. For each of four different choices of the CRP parameters, $\alpha,\beta$, we generate $1000$ random partitions using~\eqref{eq:CRP_recur}. The histograms below are for the distribution of $k$ (number of speakers) in these random partitions. The four different CRP parameter choices and their histograms are shown below for each of  $\{\text{left},\text{right}\}\times\{\text{red},\text{blue}\}$:\footnote{Each histogram has $20$ bins, for the 20 possible values that $k$ can have. For visibility, the blue bins are staggered towards the right relative to the red bins.}
 $$
 \begin{tikzpicture}[ycomb,xscale = 0.1,yscale = 10]
 \draw[color=red,line width=3pt] plot coordinates{(1,0.0260) (3,0.0340) (5,0.0470) (7,0.0460) (9,0.0490) (11,0.0450) (13,0.0620) (15,0.0500) (17,0.0820) (19,0.0820) (21,0.0700) (23,0.0720) (25,0.0600) (27,0.0740) (29,0.0660) (31,0.0450) (33,0.0480) (35,0.0280) (37,0.0090) (39,0.0050)  };
@@ -2114,10 +2117,17 @@ $$
 As can be seen, the distribution for $k$ can be controlled by appropriate parameter choices. We can control the expected number of speakers, $\expp{k}$ using~\eqref{eq:CRP_ev} and iterative root-finding.\footnote{See our code example, \texttt{create\_PYCRP.m} at \url{http://github.com/bsxfan/meta-embeddings}.} We can also control the width of the distribution---in particular, setting $\alpha=0$ gives wide distributions.
 
  
+\section{The intractable partition posterior}
+Let $\Lset_0$ represent some convenient, fixed partition hypothesis. Possible choices include the finest, or the coarsest partitions, i.e.\ the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken respectively by $n$ different speakers, or a by a single speaker. The partition posterior can be expressed in terms of a prior, $P(\Lset)$, and likelihood-ratios:
+\begin{align}
+\begin{split}
+P(\Lset\mid\Rset) &= \frac{P(\Lset)P(\Rset\mid\Lset)}{\sum_{\Lset'} P(\Lset')P(\Rset\mid\Lset')}\\
+&= \frac{P(\Lset)\frac{P(\Rset\mid\Lset)}{P(\Rset\mid\Lset_0)}}{\sum_{\Lset'} P(\Lset')\frac{P(\Rset\mid\Lset')}{P(\Rset\mid\Lset_0)}}
+\end{split}
+\end{align} 
+where the summation is over all possible partitions. If we are given a meta-embedding for every recording, and if arbitrary pooling and expectations (or inner products) of meta-embeddings are tractable, then we also have that the likelihood-ratio, $\frac{P(\Rset\mid\Lset)}{P(\Rset\mid\Lset_0)}$, is tractable via the methods of section~\ref{sec:generalLR}. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. A speaker recognizer is typically trained with $n$ in the thousands, but for $n=75$, we already have that the Bell number exceeds $10^{80}$, the estimated number of atoms in the observable universe!
 
-
-\section{The partition posterior}
-
+Although the posterior is intractable to evaluate, we \emph{can} sample from it, for example with Gibbs sampling, which we discuss below in section~\ref{sec:Gibbs}.
 
 \section{The intractable MCL objective}
 In supervised training of generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
@@ -2126,38 +2136,70 @@ where $\theta$ are the model parameters. For discriminative training, the natura
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
 In the case of supervised training of a (multiclass) classifier, with independent training examples, MCL is just the well-known (multiclass) cross-entropy objective:
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmin_\theta \sum_i -\log P(\text{label}_i\mid\text{datum}_i,\theta)$$
-In our case, MCL is given by:
+In our case, MCL (or the logarithmic proper scoring rule) is given by the partition posterior: 
 \begin{align}
-\begin{split}
-&\argmax_\theta P(h^*\mid\Rset,\theta)\\
-=&\argmax_\theta \frac{P(h^*) P(\Rset\mid h^*,\theta)}{\sum_h P(h) P(\Rset\mid h,\theta)}
-\end{split}
+\label{eq:MCL}
+\argmax_\theta P(\Lset^*\mid\Rset,\theta)=\argmin_\theta -\log P(\Lset^*\mid\Rset,\theta)
 \end{align}
-Where $\Rset=\{r_1,\ldots,r_n\}$ is a set of recordings and $h^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. The summation in the denominator is over all possible ways to partition a set of $n$ elements, where $h$ is one such partition.\footnote{Do not confuse partition with subset. For $n$ recordings, a
-partition is a collection of non-overlapping, non-empty index subsets, whose union is $\{1,\ldots,n\}$.} We have also introduced $P(h)$, a prior probability distribution over partitions. By defining the likelihood-ratio:
-\begin{align}
-L(h,h^*;\theta) &= \frac{P(\Rset\mid h,\theta)}{P(\Rset\mid h^*,\theta)}
-\end{align}
-We can rewrite the label posterior as:
-\begin{align}
-P(h^*\mid\Rset,\theta) &= \frac{P(h^*)}{\sum_h P(h) L(h,h^*;\theta)}
-\end{align}
-If we are given a meta-embedding for every $r_j$, and if arbitrary pooling and expectations (or inner products) are tractable, then we also have that $L(h,h^*;\theta)$ is tractable for any $h,h^*$. The problem is that the number of terms in the denominator (the Bell number) is hopelessly intractable, except for very small $n$. A speaker recognizer is typically trained with $n$ in the thousands, but for $n=75$, we already have that the Bell number exceeds $10^{80}$, the estimated number of atoms in the observable universe!
+where we now make the to-be-trained parameters, $\theta$ explicit; where $\Rset$ is the set of recordings in the training data; and where $\Lset^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. As discussed above, the normalization constant of this posterior is intractable. Since the normalization constant is a function of $\theta$, MCL cannot be applied directly and we shall need to consider alternatives. Such alternatives include solutions based on sampling from the posterior (e.g.\ contrastive divergence) and also alternative scoring rules, which can be evaluated without needing the normalization constant (e.g.\ pseudolikelihood). 
 
 \subsection{Is one label enough?}
-The MCL objective is very different from the familiar cross-entropy objective, in the sense that it has but a single label, while cross-entropy is usually applied to a training database with very many independent, labelled examples. One answer is that this single label does contain many bits of information. Using an approximate expression for the log Bell number,\footnote{See: \url{http://en.wikipedia.org/wiki/Bell_number}.} the number of bits we need to uniquely specify a partition of $n$ recordings is about:
+The MCL objective of~\eqref{eq:MCL} is very different from the familiar cross-entropy objective: cross-entropy is usually applied to a training database with very many independent, labelled examples, while~\eqref{eq:MCL} has but a single `label'. Is this one label enough?
+
+One answer is that this single label does contain many bits of information. We use an approximate expression for the log Bell number,\footnote{See: \url{http://en.wikipedia.org/wiki/Bell_number}.} to show that the number of bits needed to uniquely specify a partition of $n$ recordings is roughly:
 $$
-\begin{tabular}{l | r r r r r}
-$n$  & $10$ & $100$ & $10^3$ & $10^4$ & $10^5$ \\
+\begin{tabular}{l | r  r r r r}
+$n$  & $10$ & $100$ & $1000$ & $10000$ & $100000$ \\
 \hline
 bits & $17$ & $380$ & $6400$ & $92000$ & $1200000$
 \end{tabular} 
 $$
 
+\section{Contrastive divergence}
+One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution, so that the unnormalized partition posterior is:
+\begin{align}
+\tilde P(\Lset\mid\Rset,\theta) \propto P(\Lset\mid\Rset,\theta) 
+\end{align}
+where the constant of proportionality is dependent on $\theta$ and $\Rset$, but not on $\Lset$. In CD we do approximate gradient ascent on the MCL objective, $\log P(\Lset^*\mid\Rset,\theta)$, where $\Lset^*$ is the true partition of $\Rset$ w.r.t.\ speaker. We make use of the fact that the required gradient can be expressed as an expectation w.r.t.\ the posterior:
+\begin{align}
+\begin{split}
+\nabla_\theta \log P(\Lset^*\mid\Rset,\theta) &= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+- \expv{\log\tilde P(\Lset\mid\Rset,\theta)}{P(\Lset\mid\Rset,\theta)} \\
+&\approx \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+- \frac1K\sum_{\Lset} \log\tilde P(\Lset\mid\Rset,\theta)\end{split}
+\end{align}
+where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The samples can be drawn by a Monte Carlo procedure, for example Gibbs sampling. The CD recipe involves (approximate) gradient descent updates to $\theta$, interleaved with sampling at a fixed $\theta$. For details, see for example~\cite{pcd}.
 
-\section{Spherical score}
+
+% Aargh! The spherical score doesn't work out in terms of an expectation
+%\subsection{Spherical score}
+%We can sidestep the intractable posterior normalization constant by using a \emph{homogeneous} scoring rule, which can be evaluated without that constant. An example is the spherical scoring rule~\cite{Gneiting_Raftery_PSR}:
+%\begin{align}
+%\begin{split}
+%S(P(\Lset\mid\Rset,\theta),\Lset^*) &= \frac{P(\Lset^*\mid\Rset,\theta)}{\sqrt{\sum_{\Lset} P(\Lset\mid\Rset,\theta)^2}} \\
+%&= \frac{P(\Lset^*\mid\Rset,\theta)}{\sqrt{\expv{P(\Lset\mid\Rset,\theta)}{P(\Lset\mid\Rset,\theta)}} }
+%\end{split}
+%\end{align}
 
 
+
+\subsection{Gibbs sampling}
+\label{sec:Gibbs}
+If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs sampler for the posterior $P(\Lset\mid\Rset)$ can be constructed as follows. Let $n$ be the number of recordings. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select $i\in\{1,\ldots,n\}$, randomly, or in round-robin fashion.
+	\item Obtain $\Li$ by removing index $i$ from $\Lset$, as explained in section~\ref{sec:CRP}.
+	\item Sample a new `speaker label', $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
+	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
+\end{enumerate}
+In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$. We have:
+\begin{align}
+\begin{split}
+P(\ell_i\mid\Li,\Rset) &\propto P(\ell_i\mid\Li) P(\Rset\mid\ell_i,\Li) \\
+&\propto P(\ell_i\mid\Li) \frac{P(\Rset\mid\ell_i,\Li)}{P(\Rset\mid\Lset_0)} 
+\end{split}
+\end{align}  
+where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second (likelihood-ratio) can be computed with the methods of section~\ref{sec:generalLR}.
 
 \section{Pairs}
 
