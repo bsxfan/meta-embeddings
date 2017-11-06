@@ -985,7 +985,7 @@ Which primitive building blocks do we need to compute general LRs of the form~\e
 Alternatively, as we have shown in this section, we can compute arbitrary LRs if we can
 \begin{itemize}
 	\item pool and
-	\item compute arbitrary normalized inner products.\footnote{The combination of pooling and inner products happens every day when we see. A light source has a spectrum, which is a function from $\R$ to $\R$. Every time the lights reflects off a surface, the modified spectrum of the relected light is the product of the incoming spectrum and a similar function that represents the properties of the reflecting surface. Finally, each colour receptor in the eye has a similar function. Inner products between the light that reaches the retina and the receptors determine how much of each colour we see.}
+	\item compute arbitrary normalized inner products.\footnote{The combination of pooling and inner products happens every day in our own vision. A light source has a spectrum, which is a function from $\R$ to $\R$. Every time the light reflects off a surface, the modified spectrum of the relected light is the product of the incoming spectrum and a similar function that represents the properties of the reflecting surface. Finally, each colour receptor in the eye has a similar function. Inner products between the light that reaches the retina and the receptors determine how much of each colour we see.}
 \end{itemize}
 We can however somewhat restrict the requirement on normalized inner products. We can get away with inner products where \emph{one of the arguments is always a single (unpooled) meta-embedding}. To do normalization, we need $\dot{f}{\onevec}$, which respects this restriction. To further enforce this restriction, look again at the lattice in figure~\ref{fig:lattice} and convince yourself that you can traverse between any two nodes by always adding or removing but a single element of some subset in the partition. For example, the red path does not respect this restriction, but the blue and green ones do. For such paths, all the inner product factors will have at least one unpooled argument.
 
@@ -2158,15 +2158,25 @@ $$
 \section{Contrastive divergence}
 One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution, so that the unnormalized partition posterior is:
 \begin{align}
-\tilde P(\Lset\mid\Rset,\theta) \propto P(\Lset\mid\Rset,\theta) 
+\tilde P(\Lset\mid\Rset,\theta) = Z(\Rset,\theta)  P(\Lset\mid\Rset,\theta) 
 \end{align}
-where the constant of proportionality is dependent on $\theta$ and $\Rset$, but not on $\Lset$. In CD we do approximate gradient ascent on the MCL objective, $\log P(\Lset^*\mid\Rset,\theta)$, where $\Lset^*$ is the true partition of $\Rset$ w.r.t.\ speaker. We make use of the fact that the required gradient can be expressed as an expectation w.r.t.\ the posterior:
+where $Z(\Rset,\theta)$ is the troublesome normalization constant. In CD we do approximate gradient ascent on the MCL objective, $\log P(\Lset^*\mid\Rset,\theta)$, where $\Lset^*$ is the true partition of $\Rset$ w.r.t.\ speaker. We make use of the fact that the required gradient can be expressed, without needing $Z(\Rset,\theta)$, as an expectation w.r.t.\ the posterior:
 \begin{align}
 \begin{split}
-\nabla_\theta \log P(\Lset^*\mid\Rset,\theta) &= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
-- \expv{\log\tilde P(\Lset\mid\Rset,\theta)}{P(\Lset\mid\Rset,\theta)} \\
+&\nabla_\theta \log P(\Lset^*\mid\Rset,\theta) \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta) - \nabla_\theta Z(\Rset,\theta) \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+- \nabla_\theta \log \sum_\Lset \tilde P(\Lset\mid\Rset,\theta) \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+-  \sum_\Lset \frac{\nabla_\theta\tilde P(\Lset\mid\Rset,\theta)}{Z(\Rset,\theta)} \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+-  \sum_\Lset \frac{\tilde P(\Lset\mid\Rset,\theta)\nabla_\theta\log\tilde P(\Lset\mid\Rset,\theta)}{Z(\Rset,\theta)} \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+-  \sum_\Lset P(\Lset\mid\Rset,\theta)\nabla_\theta\log\tilde P(\Lset\mid\Rset,\theta) \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
+- \expv{\nabla_\theta\log\tilde P(\Lset\mid\Rset,\theta)}{P(\Lset\mid\Rset,\theta)} \\
 &\approx \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
-- \frac1K\sum_{\Lset} \log\tilde P(\Lset\mid\Rset,\theta)\end{split}
+- \frac1K\sum_{\Lset} \nabla_\theta\log\tilde P(\Lset\mid\Rset,\theta)\end{split}
 \end{align}
 where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The samples can be drawn by a Monte Carlo procedure, for example Gibbs sampling. The CD recipe involves (approximate) gradient descent updates to $\theta$, interleaved with sampling at a fixed $\theta$. For details, see for example~\cite{pcd}.
 
@@ -2184,6 +2194,7 @@ where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The sa
 
 
 \subsection{Gibbs sampling}
+\def\LI{\Lset_{\setminus\Iset}}
 \label{sec:Gibbs}
 If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs sampler for the posterior $P(\Lset\mid\Rset)$ can be constructed as follows. Let $n$ be the number of recordings. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
 \begin{enumerate}
@@ -2199,7 +2210,33 @@ P(\ell_i\mid\Li,\Rset) &\propto P(\ell_i\mid\Li) P(\Rset\mid\ell_i,\Li) \\
 &\propto P(\ell_i\mid\Li) \frac{P(\Rset\mid\ell_i,\Li)}{P(\Rset\mid\Lset_0)} 
 \end{split}
 \end{align}  
-where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second (likelihood-ratio) can be computed with the methods of section~\ref{sec:generalLR}.
+where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second RHS factor (likelihood-ratio) can be computed with the methods of section~\ref{sec:generalLR}.
+
+To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one `speaker label' has to change for this move. 
+
+Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
+
+\subsubsection{Generalized Gibbs sampler}
+Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m\le n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select an index subset, $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$.
+	\item Sample a set of $m$ new speaker labels denoted $\Lset_\Iset$, from  $P(\Lset_\Iset\mid\LI,\Rset)$.
+	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
+\end{enumerate}
+Let us examine the case $m=2$. Let the number of speakers hypothesized by $\LI$ be $k'$. The number of possibilities for $\Lset_\Iset$ is $(k'+1)^2+1$. (Each of the two recordings can belong independently to one of $k'$ speakers, or be a new speaker, giving $(k'+1)^2$ possibilities, but there is another possibility that both recordings belong to the same new speaker.) In the general case, all partition possibilities having up to $m$ new speakers, must be included. We cannot make $m$ too large in this Gibbs sampler. 
+
+\subsubsection{Approximate Gibbs sampler}
+For computational efficiency, we could construct an approximate Gibbs sampler and use that as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. Denote the number of speakers in $\Li$ by $k'$.
+	\item Sample the $m$ new speaker labels independently (and therefore efficiently), as if this were an open-set speaker recognition problem, with $k'$ enrolled speakers. This gives anywhere from $0$ to $m$ new speakers, say $k''$ of them.
+	\item If $k''>0$, sample a partition for this set of $k''$ recordings. (If this is done by some flavour of Markov chain Monte Carlo, some thought will have to be given to which initial state to use.)
+	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
+	\item Apply the Metropolis-Hastings acceptance criterion to the new partition $\Lset$. For details, see for example~\cite{PRML}, chapter 11, and references therein. 
+\end{enumerate}
+
 
 \section{Pairs}
 
