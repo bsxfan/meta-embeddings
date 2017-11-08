@@ -2071,23 +2071,38 @@ is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqre
 \label{sec:CRP}
 \def\Li{\Lset_{\setminus i}}
 \def\Iset{\mathcal{I}}
-To do discriminative training with proper scoring rules as objective functions, those proper scoring rules need to be applied to posterior distributions. Here we are concerned with probability distributions over all possible ways to partition a set of $n$ recordings. Since our meta-embeddings provide likelihoods we also need some \emph{prior} distribution over partitions in order to compute posteriors. 
+To do discriminative training with proper scoring rules as objective functions, those proper scoring rules need to be applied to posterior distributions. We will need to wwork with posterior probability distributions over all possible ways to partition a set of $n$ recordings. Since our meta-embeddings provide likelihoods rather than posteriors, we additionally need some \emph{prior} distribution over partitions in order to form posteriors. 
 
-For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of $n$ recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the recordings, expressed as before in terms of index subsets. The CRP gives:  
+For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of  recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets. The CRP probability distribution can be defined as:  
 \begin{align}
+\label{eq:CRPdef}
 P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
 \end{align}
-where the choice of $i$ is arbitrary and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results from removing recording $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. The categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ denotes the subset (speaker) to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. This definition is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Lset_i$ is the trivial partition of a set with one element. To compute the probability for a given $\Lset$, the recursion can be done from large to small, or from small to large. The small to large direction can also be used as a generative method to sample from this prior.
-
-Let the number of speakers given by $\Li$ be denoted by $m$, then the recursion step is defined as:
+which is invariant to the choice of $i$. The conditional factor is given by:
 \begin{align}
 \label{eq:CRP_recur}
 P(\ell_i=j\mid \Li) &= \begin{cases}
-\frac{\lvert\Sset'_j\rvert-\beta}{m+\alpha}, &\text{for $1\le j\le k'$}\\
-\frac{k'\beta+\alpha}{m+\alpha}, &\text{for $j=k'+1$}
+\frac{\lvert\Sset'_j\rvert-\beta}{n-1+\alpha}, &\text{for $1\le j\le k'$}\\
+\frac{k'\beta+\alpha}{n-1+\alpha}, &\text{for $j=k'+1$}
 \end{cases}
 \end{align}
-where $\lvert\Sset'_j\rvert$ is the number of elements in subset $\Sset'_j$. The CRP is parametrized by $\alpha\ge0$ (concentration) and $0\le\beta<1$ (discount).\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} The expected number of speakers is:
+where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. For convenience below in the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
+
+We refer to the categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ as the \emph{speaker label}. Its value identifies the subset to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. 
+
+The definition~\eqref{eq:CRPdef} is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Li$ is empty. The CRP is parametrized by the parameters $\alpha$ (concentration) and $\beta$ (discount), where $\alpha\ge0$ and $0\le\beta<1$.\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} 
+
+The CRP distribution is \emph{exchangeable}, meaning we can arbitrarily shuffle the labels without affecting the value of $P(\Lset)$. To compute the probability for a given $\Lset$, the recursion can be done for example from large to small, or from small to large. The small-to-large direction can also be used as a generative method to sample from this prior. In that case, we can rewrite the distribution in \emph{autoregressive} form as follows:
+\begin{align}
+\label{eq:CRP_AR}
+P(\Lset) &= \prod_{i=1}^n P(\ell_i\mid\Lset_{<i})
+\end{align}
+where $\Lset{<i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and discarding the rest. (For $i=1$, we have $\ell_1=1$.) The conditional factors, $P(\ell_i\mid\Lset_{<i})$ are given by using $\Lset_{<i}=\Li$ and $n=i$ in~\eqref{eq:CRP_recur}.  This form illustrates the Chinese restaurant analogy, where customers (recordings) arrive one by one and are randomly seated at either occupied or new  tables (speakers).   
+
+
+
+\subsubsection{Expected number of speakers}
+For a CRP parametrized with $\alpha,\beta$, the expected number of speakers in $n$ recordings is:
 \begin{align}
 \label{eq:CRP_ev}
 \expp{k}{} &= \begin{cases}
@@ -2099,7 +2114,7 @@ where $\lvert\Sset'_j\rvert$ is the number of elements in subset $\Sset'_j$. The
 where $\Gamma$ and $\psi$ denote the gamma and digamma functions. Notice that $1\le\expp{k}<n$, where the upper limit is reached at $\alpha\to\infty$, or $\beta\to1$. 
 
 \subsection{Example}
-We let the number of recordings be $n=20$. For each of four different choices of the CRP parameters, $\alpha,\beta$, we generate $1000$ random partitions using~\eqref{eq:CRP_recur}. The histograms below are for the distribution of $k$ (number of speakers) in these random partitions. The four different CRP parameter choices and their histograms are shown below for each of  $\{\text{left},\text{right}\}\times\{\text{red},\text{blue}\}$:\footnote{Each histogram has $20$ bins, for the 20 possible values that $k$ can have. For visibility, the blue bins are staggered towards the right relative to the red bins.}
+We let the number of recordings be $n=20$. For each of four different choices of the CRP parameters, $\alpha,\beta$, we generate $1000$ random partitions using~\eqref{eq:CRP_AR}. The histograms below are for the distribution of $k$ (number of speakers) in these random partitions. The four different CRP parameter choices and their histograms are shown below for each of  $\{\text{left},\text{right}\}\times\{\text{red},\text{blue}\}$:\footnote{Each histogram has $20$ bins, for the 20 possible values that $k$ can have. For visibility, the blue bins are staggered towards the right relative to the red bins.}
 $$
 \begin{tikzpicture}[ycomb,xscale = 0.1,yscale = 10]
 \draw[color=red,line width=3pt] plot coordinates{(1,0.0260) (3,0.0340) (5,0.0470) (7,0.0460) (9,0.0490) (11,0.0450) (13,0.0620) (15,0.0500) (17,0.0820) (19,0.0820) (21,0.0700) (23,0.0720) (25,0.0600) (27,0.0740) (29,0.0660) (31,0.0450) (33,0.0480) (35,0.0280) (37,0.0090) (39,0.0050)  };
@@ -2119,7 +2134,7 @@ As can be seen, the distribution for $k$ can be controlled by appropriate parame
 
  
 \section{The intractable partition posterior}
-Let $\Lset_0$ represent some convenient, fixed partition hypothesis. Possible choices include the finest, or the coarsest partitions, i.e.\ the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken respectively by $n$ different speakers, or a by a single speaker. The partition posterior can be expressed in terms of a prior, $P(\Lset)$, and likelihood-ratios:
+Let $\Lset_0$ represent some convenient, fixed partition hypothesis---for example the finest, or the coarsest partition.\footnote{The finest partition is the the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken $n$ different speakers, while te coarsest partition has a single speaker.} The partition posterior can be expressed in terms of prior and likelihoods, or likelihood-ratios, as follows:
 \begin{align}
 \begin{split}
 P(\Lset\mid\Rset) &= \frac{P(\Lset)P(\Rset\mid\Lset)}{\sum_{\Lset'} P(\Lset')P(\Rset\mid\Lset')}\\
@@ -2133,7 +2148,7 @@ Although the posterior is intractable to evaluate, we \emph{can} sample from it,
 \section{The intractable MCL objective}
 In supervised training of generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
 $$\argmax_\theta P(\text{data}\mid\text{labels},\theta)$$
-where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood}\footnote{Why is $P(\text{labels}\mid\text{data})$ termed conditional, while $P(\text{data}\mid\text{labels})$ is not? In the former case, $P(data)$ is not used: everything is conditional on the data, which is given. In the latter case, $P(\text{labels})$ could be used, but often $P(\text{labels})$ is so trivial that it is ignored.} (MCL):
+where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood}\footnote{Why is $P(\text{labels}\mid\text{data})$ termed \emph{conditional}, while $P(\text{data}\mid\text{labels})$ is not? In the former case, $P(\text{data})$ is not used: everything is conditional on the data, which is given. In the latter case, $P(\text{labels})$ could be used, but often $P(\text{labels})$ is so trivial that it is ignored.} (MCL):
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
 In the case of supervised training of a (multiclass) classifier, with independent training examples, MCL is just the well-known (multiclass) cross-entropy objective:
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmin_\theta \sum_i -\log P(\text{label}_i\mid\text{datum}_i,\theta)$$
@@ -2201,7 +2216,7 @@ If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs samp
 \begin{enumerate}
 	\item Select $i\in\{1,\ldots,n\}$, randomly, or in round-robin fashion.
 	\item Obtain $\Li$ by removing index $i$ from $\Lset$, as explained in section~\ref{sec:CRP}.
-	\item Sample a new `speaker label', $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
+	\item Sample a new speaker label, $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
 	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
 \end{enumerate}
 In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$. We have:
@@ -2214,7 +2229,7 @@ P(\ell_i\mid\Li,\Rset) &\propto P(\ell_i\mid\Li) P(\Rset\mid\ell_i,\Li) \\
 \end{align}  
 where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second RHS factor (likelihood-ratio) can be computed with the methods of section~\ref{sec:generalLR}.
 
-To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one `speaker label' has to change for this move. 
+To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one speaker label has to change for this move. 
 
 Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
 
@@ -2243,35 +2258,43 @@ For computational efficiency, we could construct an approximate Gibbs sampler an
 \section{Pseudolikelihood}
 Pseudolikelihood as an alternative to intractable likelihood has been around for decades~\cite{Besag_pseudolikelihood}, but it seems it has only very recently been pointed out that pseudolikelihood is also a proper scoring rule~\cite{Dawid_Musio_ThApp_PSR_2014,Dawid_discrete_PSR}. 
 
-Pseudolikelihood plays well with our CRP prior and indeed its calculation has much in common with the above Gibbs sampling procedures. For our problem, given a set, $\Rset$, of $n$ recordings, the pseudolikelihood can be expressed as:
+Pseudolikelihood plays well with our CRP prior and indeed its calculation has much in common with the above Gibbs sampling procedures. For our problem, given a set, $\Rset$, of $n$ recordings, the \emph{pseudolikelihood} can be expressed as:
 \begin{align}
 \label{eq:Psi}
-\Psi(\theta) &= \prod_{i=1}^n P(\ell_i\mid \Li, \Rset,\theta)
+\Psi(\theta,\Lset) &= \prod_{i=1}^n P(\ell_i\mid \Li, \Rset,\theta)
 \end{align} 
-where $\theta$ represents the trainable parameters and where $\ell_i$ and $\Li$ are as defined above. The RHS factors are the same as those required for the Gibbs sampler and can be computed using~\eqref{eq:Gibbsfactor}. To see that the (negative log) pseudolikelihood forms a proper scoring rule, consider:
+where $\theta$ represents the trainable parameters and where $\ell_i$ and $\Li$ are as defined above. The RHS factors are the same as those required for the Gibbs sampler and can be computed using~\eqref{eq:Gibbsfactor}. We define the \emph{pseudoscore} as:
+\begin{align}
+S_\Psi(\theta,\Lset) &= -\log \Psi(\theta,\Lset) = -\sum_{i=1}^n \log P(\ell_i\mid \Li, \Rset,\theta)
+\end{align} 
+To see that the pseudoscore forms a proper scoring rule, consider:
 \begin{align}
 \begin{split}
-&\min_\theta\expv{-\log\Psi(\theta)}{P(\Lset\mid\Rset,\theta^*)}\\
+&\min_\theta\expv{S_\Psi(\theta,\Lset)}{P(\Lset\mid\Rset,\theta^*)}\\
 =& \min_\theta\expv{\sum_i-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\Lset\mid\Rset,\theta^*)}\\
 =& \min_\theta\sum_i\expv{-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\Lset\mid\Rset,\theta^*)}\\
 =& \min_\theta\sum_i\expv{-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\ell_i\mid \Li, \Rset,\theta^*)P(\Li\mid\Rset,\theta^*)}\\
 =& \min_\theta\sum_i\Expv{\expv{-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\ell_i\mid \Li, \Rset,\theta^*)}}{P(\Li\mid\Rset,\theta^*)}\\
 =& \sum_i\Expv{\expv{-\log P(\ell_i\mid \Li, \Rset,\theta^*)}{P(\ell_i\mid \Li, \Rset,\theta^*)}}{P(\Li\mid\Rset,\theta^*)}\\
-=& \expv{-\log\Psi(\theta^*)}{P(\Lset\mid\Rset,\theta^*)}
+=& \expv{S_\Psi(\theta^*)}{P(\Lset\mid\Rset,\theta^*)}
 \end{split}
 \end{align}
-where we have used the fact that the argument of the inner expectation is the logarithmic proper scoring rule, so that the inner expectation is minimized at $\theta^*$, for every $i$ and $\Li$. \\
+where we have used the fact that the argument of the inner expectation is the logarithmic proper scoring rule, so that the inner expectation is minimized at $\theta^*$, for every $i$ and $\Li$. 
 
-\noindent\fbox{Can we show that this is \emph{strictly} proper?}
+It can be shown that the pseudoscore is indeed also \emph{strictly} proper. The pseudoscore is a special case of a \emph{composite score} (to be discussed below). A composite score is strictly proper provided that (i) every term in the composition is strictly proper; and that (ii) the individual terms completely determine the full joint distribution~\cite{Dawid_Musio_ThApp_PSR_2014}. The first condition is met because the pseudoscore is composed of logarithmic scores and the second condition is met thanks to \emph{Brook's lemma}~\cite{Lyu_BrooksLemma,BrooksLemma}.
+
 
 \subsection{Note on autoregressive full conditional likelihood}
 To better understand the relationship between the pseudolikelihood of~\eqref{eq:Psi} and the full (intractable) conditional likelihood, let us rewrite the full conditional likelihood in \emph{autoregressive} form:
 \begin{align}
-P(\Lset \mid \Rset) &= \prod_{i=2}^{n} P(\ell_i\mid\Lset_{< i},\Rset)
+P(\Lset \mid \Rset) &= \prod_{i=1}^{n} P(\ell_i\mid\Lset_{< i},\Rset)
 \end{align} 
-where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. (We omit the first, trivial term, because $\ell_1$ has only one possibility.) The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the $n-i$ missing labels have to be summed out.
+where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the missing labels ($n-i$ of them) have to be summed out.\footnote{$P(\ell_i\mid\Lset_{<i},\Rset_{<i})$ \emph{is} tractable, where $\Rset_{<i}=\{r_1,\ldots,r_{i-1}\}$.}
 
 Finally, note that the CRP prior \emph{is} tractable in autoregressive form, but that is because the CRP distribution is exchangeable.
+
+
+\section{Composite score}
 
 
 \section{Pairs}

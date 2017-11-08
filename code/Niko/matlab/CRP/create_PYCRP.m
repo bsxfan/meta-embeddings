@@ -222,9 +222,10 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         counts(1) = 1;
         for i=2:T
             p = zeros(K+1,1);
-            for k=1:K
-                p(k) = counts(k) - beta;
-            end
+%             for k=1:K
+%                 p(k) = counts(k) - beta;
+%             end
+            p(1:K) = counts(1:K) - beta; 
             p(K+1) = alpha + K*beta;
             [~,k] = max(randgumbel(K+1,1) + log(p));  
             labels(i) = k;
