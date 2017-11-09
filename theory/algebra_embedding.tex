@@ -2071,9 +2071,11 @@ is a proper scoring rule. It is easy to check that~\eqref{eq:psr2} implies~\eqre
 \label{sec:CRP}
 \def\Li{\Lset_{\setminus i}}
 \def\Iset{\mathcal{I}}
-To do discriminative training with proper scoring rules as objective functions, those proper scoring rules need to be applied to posterior distributions. We will need to wwork with posterior probability distributions over all possible ways to partition a set of $n$ recordings. Since our meta-embeddings provide likelihoods rather than posteriors, we additionally need some \emph{prior} distribution over partitions in order to form posteriors. 
+To do discriminative training with proper scoring rules as objective functions, those proper scoring rules need to be applied to posterior probability distributions over all possible ways to partition a set of $n$ recordings. Since our meta-embeddings provide likelihoods rather than posteriors, we additionally need some \emph{prior} distribution over partitions in order to form posteriors. 
 
-For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of  recordings, as follows. Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets. The CRP probability distribution can be defined as:  
+For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of  recordings, as follows. 
+
+Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets, $\Sset_j\subseteq\{1,\ldots,n\}$. The CRP probability distribution can be defined as:  
 \begin{align}
 \label{eq:CRPdef}
 P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
@@ -2086,7 +2088,7 @@ P(\ell_i=j\mid \Li) &= \begin{cases}
 \frac{k'\beta+\alpha}{n-1+\alpha}, &\text{for $j=k'+1$}
 \end{cases}
 \end{align}
-where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. For convenience below in the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
+where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. In the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
 
 We refer to the categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ as the \emph{speaker label}. Its value identifies the subset to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. 
 
@@ -2097,7 +2099,7 @@ The CRP distribution is \emph{exchangeable}, meaning we can arbitrarily shuffle 
 \label{eq:CRP_AR}
 P(\Lset) &= \prod_{i=1}^n P(\ell_i\mid\Lset_{<i})
 \end{align}
-where $\Lset{<i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and discarding the rest. (For $i=1$, we have $\ell_1=1$.) The conditional factors, $P(\ell_i\mid\Lset_{<i})$ are given by using $\Lset_{<i}=\Li$ and $n=i$ in~\eqref{eq:CRP_recur}.  This form illustrates the Chinese restaurant analogy, where customers (recordings) arrive one by one and are randomly seated at either occupied or new  tables (speakers).   
+where $\Lset_{<i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and discarding the rest. (For $i=1$, we have $\ell_1=1$.) The conditional factors, $P(\ell_i\mid\Lset_{<i})$ are given by using $\Lset_{<i}=\Li$ and $n=i$ in~\eqref{eq:CRP_recur}.  This form illustrates the Chinese restaurant analogy, where customers (recordings) arrive one by one and are randomly seated at either occupied or new  tables (speakers).   
 
 
 
@@ -2291,13 +2293,40 @@ P(\Lset \mid \Rset) &= \prod_{i=1}^{n} P(\ell_i\mid\Lset_{< i},\Rset)
 \end{align} 
 where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the missing labels ($n-i$ of them) have to be summed out.\footnote{$P(\ell_i\mid\Lset_{<i},\Rset_{<i})$ \emph{is} tractable, where $\Rset_{<i}=\{r_1,\ldots,r_{i-1}\}$.}
 
-Finally, note that the CRP prior \emph{is} tractable in autoregressive form, but that is because the CRP distribution is exchangeable.
+Finally, recall that the CRP prior \emph{is} tractable in autoregressive form~\eqref{eq:CRP_AR}, but that is because the CRP distribution is exchangeable.
 
 
 \section{Composite score}
+A family of proper scoring rules known as \emph{composite scores}~\cite{Dawid_Musio_ThApp_PSR_2014} can be constructed for our application as follows:
+\begin{align}
+S_C(\theta,\Lset) &= \sum_{i=1}^N S_i(\theta,\Lset)
+\end{align}
+where each $S_i$ is a proper scoring rule operating on a conditional (or marginal) distribution of the form $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$, where $\Lset^{(i)}$ and $\Lset^{[i]}$ are subsets of the full label set, $\Lset$. For example, letting $N=n$, $\Lset^{(i)}=\ell_i$ and $\Lset^{[i]}=\Li$, together with the logarithmic scoring rule, gives the pseudoscore. To see that $S_C$ is proper, consider:
+\begin{align}
+\begin{split}
+&\min_\theta \expv{S_C(\theta,\Lset)}{P(\Lset\mid\Rset,\theta^*)}\\
+=&\min_\theta \sum_{i=1}^N \expv{S_i(\theta,\Lset)}{P(\Lset\mid\Rset,\theta^*)} \\
+=&\min_\theta \sum_{i=1}^N \Expv{\expv{S_i(\theta,\Lset)}{P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta^*)}}{P(\Lset^{[i]}\mid\Rset,\theta^*)} \\
+=&\sum_{i=1}^N \Expv{\expv{S_i(\theta^*,\Lset)}{P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta^*)}}{P(\Lset^{[i]}\mid\Rset,\theta^*)} \\
+=& \expv{S_C(\theta^*,\Lset)}{P(\Lset\mid\Rset,\theta^*)}
+\end{split}
+\end{align}
+where the third line follows because $S_i(\theta,\Lset)$ is independent of any remaining labels in $\Lset$ that are not in $\Lset^{(i)}$ or $\Lset^{[i]}$. As before, the argument of the inner expectation is (by construction) a proper scoring rule, so that each inner expectation---and therefore the whole composition---is minimized at $\theta^*$. As mentioned above, $S_C$ will be \emph{strictly} proper if all the $S_i$ are strictly proper and all the $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ together uniquely determine $P(\Lset\mid\Rset,\theta)$.
 
+\section{Binary cross-entropy}
+Binary cross-entropy, applied to pairs of recordings is a popular discriminative training criterion in speaker recognition~\cite{STBUFusion,Sandro_pairs,calibration_Odyssey14}. Binary cross-entropy can be interpreted as an approximation to a composite score. We choose the composite score as:
+\begin{align}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset)
+\end{align} 
+where $t_i,e_i\in\{1,\ldots,n\}$ are two indices (enroll and test) that select a pair of recordings and $h_i\in\{H_1,H_2\}$ is the (true) hypothesis that states whether this pair was spoken by one or two speakers. We can use all pairs that can be formed from $\Rset$ (where $e_i\ne t_i$), or we can use some subset of pairs chosen via some heuristic. (Given indices $t_i,e_i$, the true $h_i$ can be found from $\Lset$.) Unfortunately, $P(h_i \mid t_i, e_i, \Rset)$ is intractable, because it is conditioned on \emph{all} the recordings in $\Rset$. For a given pair, the rest of $\Rset$ may still contain speech from the same speaker(s) present in the pair, so that we effectively have a large unsupervised dataset, requiring an intractable sum over all the possibilities. If however, the prior $P(\Lset)$ is such that the large majority of the recordings in $\Rset$ do not have a speaker in common with the pair under test, then we could appproximate:
+\begin{align}
+\begin{split}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset) \\
+&\approx \sum_{i=1}^N -\log P(h_i \mid r_{t_i}, r_{e_i})
+\end{split}
+\end{align} 
+where $r_{t_i}, r_{e_i}\in\Rset$ are the test and enroll recordings, so that the RHS is the binary cross-entropy criterion.
 
-\section{Pairs}
 
 \section{Triplet loss}
 First published in~\cite{Facenet}.\\
