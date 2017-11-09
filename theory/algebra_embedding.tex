@@ -2148,6 +2148,7 @@ where the summation is over all possible partitions. If we are given a meta-embe
 Although the posterior is intractable to evaluate, we \emph{can} sample from it, for example with Gibbs sampling, which we discuss below in section~\ref{sec:Gibbs}.
 
 \section{The intractable MCL objective}
+\label{sec:MCL}
 In supervised training of generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
 $$\argmax_\theta P(\text{data}\mid\text{labels},\theta)$$
 where $\theta$ are the model parameters. For discriminative training, the natural criterion is \emph{maximum conditional likelihood}\footnote{Why is $P(\text{labels}\mid\text{data})$ termed \emph{conditional}, while $P(\text{data}\mid\text{labels})$ is not? In the former case, $P(\text{data})$ is not used: everything is conditional on the data, which is given. In the latter case, $P(\text{labels})$ could be used, but often $P(\text{labels})$ is so trivial that it is ignored.} (MCL):
@@ -2301,7 +2302,9 @@ A family of proper scoring rules known as \emph{composite scores}~\cite{Dawid_Mu
 \begin{align}
 S_C(\theta,\Lset) &= \sum_{i=1}^N S_i(\theta,\Lset)
 \end{align}
-where each $S_i$ is a proper scoring rule operating on a conditional (or marginal) distribution of the form $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$, where $\Lset^{(i)}$ and $\Lset^{[i]}$ are subsets of the full label set, $\Lset$. For example, letting $N=n$, $\Lset^{(i)}=\ell_i$ and $\Lset^{[i]}=\Li$, together with the logarithmic scoring rule, gives the pseudoscore. To see that $S_C$ is proper, consider:
+where each $S_i$ is a proper scoring rule operating on a conditional (or marginal) distribution of the form $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$, where $\Lset^{(i)}$ and $\Lset^{[i]}$ are subsets of the full label set, $\Lset$. For example, letting $N=n$, $\Lset^{(i)}=\ell_i$ and $\Lset^{[i]}=\Li$, together with the logarithmic scoring rule, gives the pseudoscore. For later, it is important to note that while each of the $S_i$ operates on some posterior conditioned on a subset of labels, the posterior is also  conditioned on the \emph{full} recording set $\Rset$.   
+
+To see that $S_C$ is proper, consider:
 \begin{align}
 \begin{split}
 &\min_\theta \expv{S_C(\theta,\Lset)}{P(\Lset\mid\Rset,\theta^*)}\\
@@ -2314,11 +2317,11 @@ where each $S_i$ is a proper scoring rule operating on a conditional (or margina
 where the third line follows because $S_i(\theta,\Lset)$ is independent of any remaining labels in $\Lset$ that are not in $\Lset^{(i)}$ or $\Lset^{[i]}$. As before, the argument of the inner expectation is (by construction) a proper scoring rule, so that each inner expectation---and therefore the whole composition---is minimized at $\theta^*$. As mentioned above, $S_C$ will be \emph{strictly} proper if all the $S_i$ are strictly proper and all the $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ together uniquely determine $P(\Lset\mid\Rset,\theta)$.
 
 \section{Binary cross-entropy}
-Binary cross-entropy, applied to pairs of recordings is a popular discriminative training criterion in speaker recognition~\cite{STBUFusion,Sandro_pairs,calibration_Odyssey14}. Binary cross-entropy can be interpreted as an approximation to a composite score. We choose the composite score as:
+Binary cross-entropy, applied to pairs of recordings, is a popular discriminative training criterion in speaker recognition~\cite{STBUFusion,Sandro_pairs,calibration_Odyssey14,end2end_google,end2end}. Binary cross-entropy can be interpreted as an approximation to a composite score. We choose the composite score as:
 \begin{align}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset)
 \end{align} 
-where $t_i,e_i\in\{1,\ldots,n\}$ are two indices (enroll and test) that select a pair of recordings and $h_i\in\{H_1,H_2\}$ is the (true) hypothesis that states whether this pair was spoken by one or two speakers. We can use all pairs that can be formed from $\Rset$ (where $e_i\ne t_i$), or we can use some subset of pairs chosen via some heuristic. (Given indices $t_i,e_i$, the true $h_i$ can be found from $\Lset$.) Unfortunately, $P(h_i \mid t_i, e_i, \Rset)$ is intractable, because it is conditioned on \emph{all} the recordings in $\Rset$. For a given pair, the rest of $\Rset$ may still contain speech from the same speaker(s) present in the pair, so that we effectively have a large unsupervised dataset, requiring an intractable sum over all the possibilities. If however, the prior $P(\Lset)$ is such that the large majority of the recordings in $\Rset$ do not have a speaker in common with the pair under test, then we could appproximate:
+where $t_i,e_i\in\{1,\ldots,n\}$ are two indices (enroll and test) that select a pair of recordings and $h_i\in\{H_1,H_2\}$ is the (true) hypothesis that states whether this pair was spoken by one or two speakers. We can use all pairs that can be formed from $\Rset$ (where $e_i\ne t_i$), or we can use some subset of pairs chosen via some heuristic. (Given indices $t_i,e_i$, the true $h_i$ can be found from $\Lset$.) Unfortunately, $P(h_i \mid t_i, e_i, \Rset)$ is intractable, because it is conditioned on \emph{all} the recordings in $\Rset$. For a given pair, the rest of $\Rset$ may still contain speech from the same speaker(s) present in the pair, so that we effectively have a large unsupervised dataset, requiring an intractable sum over all the possibilities. If however, the prior $P(\Lset)$ is such that the large majority of the recordings in $\Rset$ do not have a speaker in common with the pair under test, then we could approximate:
 \begin{align}
 \begin{split}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset) \\
@@ -2328,10 +2331,30 @@ S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset) \\
 where $r_{t_i}, r_{e_i}\in\Rset$ are the test and enroll recordings, so that the RHS is the binary cross-entropy criterion.
 
 
-\section{Triplet loss}
+\subsection{Note on triplet loss}
 First published in~\cite{Facenet}.\\
 
 \noindent Good paper:~\cite{Defense_Triplet}: explains original triplet loss, variants for hinge vs softplus loss and gives nice recipe for mining moderately hard triplets,
+
+
+\section{Data fragmentation}
+Let us return to the intractable MCL objective of section~\ref{sec:MCL} and play around with the composite score idea to find a tractable alternative. If MCL is applied to a small data-set, let's say never more than 8 recordings, then MCL becomes manageable---the 8-th Bell number is 4140. Can we combine MCL applied to small subsets of the data, such that it forms a proper composite score? 
+
+Let us assemble our composite score using our favourite log score as building block:
+\begin{align}
+\label{eq:df1}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) 
+\end{align} 
+Now define $\Lset^{[i]}$ as follows. Let $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$ be a partition of $\{1,\ldots,n\}$. However, we let each $\Lset^{[i]}$ be strictly coarser than $\Lset$ (the true partition w.r.t. speaker). That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $i$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that $\Lset^{[i]}$ and $\Lset^{(i)}$ recover $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
+\begin{align}
+\label{eq:df2}
+\begin{split}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) \\
+&= \sum_{i=1}^N -\log \prod_{j=1}^{m_i} P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta) \\
+&= \sum_{i=1}^N \sum_{j=1}^{m_i} -\log P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta)
+\end{split}
+\end{align} 
+where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker.
 
 \section{Multiclass classification}
 \cite{DSIS17,LIMSI_Language_embedding}
