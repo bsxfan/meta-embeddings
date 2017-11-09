@@ -2338,14 +2338,14 @@ First published in~\cite{Facenet}.\\
 
 
 \section{Data fragmentation}
-Let us return to the intractable MCL objective of section~\ref{sec:MCL} and play around with the composite score idea to find a tractable alternative. If MCL is applied to a small data-set, let's say never more than 8 recordings, then MCL becomes manageable---the 8-th Bell number is 4140. Can we combine MCL applied to small subsets of the data, such that it forms a proper composite score? 
+Let us return to the intractable MCL objective of section~\ref{sec:MCL} and play around with the composite score idea to find a tractable alternative. If MCL is applied to multiple small data sets rather than one big one, then we can obtain a tractable criterion. Can we combine MCL applied to small subsets of the data, such that it forms a proper composite score? 
 
 Let us assemble our composite score using our favourite log score as building block:
 \begin{align}
 \label{eq:df1}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) 
 \end{align} 
-Now define $\Lset^{[i]}$ as follows. Let $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$ be a partition of $\{1,\ldots,n\}$. However, we let each $\Lset^{[i]}$ be strictly coarser than $\Lset$ (the true partition w.r.t. speaker). That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $i$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that $\Lset^{[i]}$ and $\Lset^{(i)}$ recover $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
+Now define $\Lset^{[i]}$ as follows. Let $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$ be a partition of $\{1,\ldots,n\}$. However, we let each $\Lset^{[i]}$ be strictly coarser than $\Lset$ (the true partition w.r.t. speaker). That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $i$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
 \begin{align}
 \label{eq:df2}
 \begin{split}
@@ -2354,7 +2354,15 @@ S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\thet
 &= \sum_{i=1}^N \sum_{j=1}^{m_i} -\log P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta)
 \end{split}
 \end{align} 
-where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker.
+where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker. 
+
+When $N=1$, we still have a proper scoring rule, but when $N=1$, the trained system never gets to demonstrate that it can differentiate between speakers in different subsets. It would be better to use a smallish $N>1$, or otherwise in a stochastic training setting, we could repeatedly generate $\Lset^{[i]}$ at random.
+
+
+\subsection{The dual}
+In a dual recipe, we can exchange the roles of $\Lset^{(i)}$ and $\Lset^{[i]}$. We can let the conditioning partitions, the $\Lset^{[i]}$, be strictly \emph{finer} than $\Lset$. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. Every subset of $\Lset^{[i]}$ has exactly one speaker, but multiple subsets may index recordings of the same speaker.  
+
+ 
 
 \section{Multiclass classification}
 \cite{DSIS17,LIMSI_Language_embedding}
