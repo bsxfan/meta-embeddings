@@ -472,7 +472,12 @@ P(\zvec\mid r,r',H_1,\pi) &= \frac{\pi(\zvec)f_r(\zvec)f_{r'}(\zvec)}{\expv{f_r(
 
 \section{The general case}
 \label{sec:general}
-Our speaker identity likelihood functions are applicable more generally than just to pairs of recordings. Under the independence assumptions of section~\ref{sec:IS}, speaker identity likelihood functions can be used to answer \emph{any} question that can be formulated in terms of partitioning a set of recordings according to speaker~\cite{SPP}. Let $\Rset=\{r_1,\ldots,r_n\}$ be a set of recordings and let $A: \Sset_1,\Sset_2,\ldots,\Sset_m\subseteq\{1,2,\ldots,n\}$ be a hypothesized partition of $\Rset$ into subsets belonging to $m\ge1$ different hypothesized speakers.\footnote{The subsets are non-empty, non-overlapping and their union equals $\{1,2,\ldots,n\}$. We allow $m=1$, in which case $\Sset_1=\Rset$.} Similarly, let $B: \Sset'_1,\ldots,\Sset'_{m'}$ be a different hypothesized partition, having $m'$ hypothesized speakers. $A$ and $B$ are labels that refer to the two alternate partitioning hypotheses. Using within-speaker exchangeability and between-speaker independence, the LR comparing $A$ to $B$ is:
+\def\Pset{\mathcal{P}}
+Our speaker identity likelihood functions are applicable more generally than just to pairs of recordings. Under the independence assumptions of section~\ref{sec:IS}, speaker identity likelihood functions can be used to answer \emph{any} question that can be formulated in terms of partitioning a set of recordings according to speaker~\cite{SPP}. 
+
+Let $\Rset=\{r_1,\ldots,r_n\}$ be a set of recordings and let $A: \Sset_1,\Sset_2,\ldots,\Sset_m\subseteq\{1,2,\ldots,n\}$ be a hypothesized partition of $\Rset$ into subsets belonging to $m\ge1$ different hypothesized speakers.\footnote{The subsets are non-empty, non-overlapping and their union equals $\{1,\ldots,n\}$. We allow $m=1$, in which case $\Sset_1=\{1,\ldots,n\}$.} Similarly, let $B: \Sset'_1,\ldots,\Sset'_{m'}$ be a different hypothesized partition, having $m'$ hypothesized speakers. $A$ and $B$ are labels that refer to the two alternate partitioning hypotheses. We shall use the notation $A,B\in\Pset_n$, where $\Pset_n$ refers to the set of all partitions of $\{1,\ldots,n\}$. The cardinality of $\Pset_n$ is the $n$-th \emph{Bell number}. Do not confuse partition with subset: a partition is an element of $\Pset_n$, while each partition is composed of one or more index subsets (aka \emph{blocks}). 
+
+Using within-speaker exchangeability and between-speaker independence, the LR comparing $A$ to $B$ is:
 \begin{align}
 \label{eq:generalLR}
 \begin{split}
@@ -922,7 +927,7 @@ L_{ij} &= \frac{\expv{\prod_{\ell\in\Sset_i\cup\Sset_j}f_\ell}{}}{\expv{\prod_{\
 \draw (top) to (n134_2);
 \draw (top) to (n12_34);
 \end{tikzpicture}
-\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc is an an atomic refinement, which splits a single subset. Example 1 is highlighted in blue, example 2a in red and 2b in green.}
+\caption[Hasse diagram of the lattice of partitions]{Hasse diagram of $\Pset_4$, the lattice of partitions of a set of 4 recordings, ordered by `refines'. Every downward arc is an an atomic refinement, which splits a single subset. Example 1 is highlighted in blue, example 2a in red and 2b in green.}
 \label{fig:lattice}
 \end{figure}
 If we consider the most general case of LRs of the form~\eqref{eq:generalLR}, we find that there are cases that cannot be written as a single normalized inner product. But we show that they \emph{can} however be written as products and ratios of such inner products. We start with an example. \\
@@ -2075,7 +2080,7 @@ To do discriminative training with proper scoring rules as objective functions, 
 
 For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of  recordings, as follows. 
 
-Let $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets, $\Sset_j\subseteq\{1,\ldots,n\}$. The CRP probability distribution can be defined as:  
+Let $\Lset\in\Pset_n$, where $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ is a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets, $\Sset_j\subseteq\{1,\ldots,n\}$. The CRP probability distribution can be defined as:  
 \begin{align}
 \label{eq:CRPdef}
 P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
@@ -2088,7 +2093,7 @@ P(\ell_i=j\mid \Li) &= \begin{cases}
 \frac{k'\beta+\alpha}{n-1+\alpha}, &\text{for $j=k'+1$}
 \end{cases}
 \end{align}
-where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li$ is obtained from $\Lset$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. In the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
+where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li\in\Pset_{n-1}$ is also a partition, obtained from $\Lset\in\Pset_n$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. In the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
 
 We refer to the categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ as the \emph{speaker label}. Its value identifies the subset to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. 
 
@@ -2099,7 +2104,7 @@ The CRP distribution is \emph{exchangeable}, meaning we can arbitrarily shuffle 
 \label{eq:CRP_AR}
 P(\Lset) &= \prod_{i=1}^n P(\ell_i\mid\Lset_{<i})
 \end{align}
-where $\Lset_{<i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and discarding the rest. (For $i=1$, we have $\ell_1=1$.) The conditional factors, $P(\ell_i\mid\Lset_{<i})$ are given by using $\Lset_{<i}=\Li$ and $n=i$ in~\eqref{eq:CRP_recur}.  This form illustrates the Chinese restaurant analogy, where customers (recordings) arrive one by one and are randomly seated at either occupied or new  tables (speakers).   
+where $\Lset_{<i}\in\Pset_{i-1}$ is obtained from $\Lset\in\Pset_n$ by retaining all indices less than $i$ and discarding the rest. (For $i=1$, we have $\ell_1=1$.) The conditional factors, $P(\ell_i\mid\Lset_{<i})$ are given by using $\Lset_{<i}=\Li$ and $n=i$ in~\eqref{eq:CRP_recur}.  This form illustrates the Chinese restaurant analogy, where customers (recordings) arrive one by one and are randomly seated at either occupied or new  tables (speakers).   
 
 
 
@@ -2136,7 +2141,7 @@ As can be seen, the distribution for $k$ can be controlled by appropriate parame
 
  
 \section{The intractable partition posterior}
-Let $\Lset_0$ represent some convenient, fixed partition hypothesis---for example the finest, or the coarsest partition.\footnote{The finest partition is the the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken $n$ different speakers, while te coarsest partition has a single speaker.} The partition posterior can be expressed in terms of prior and likelihoods, or likelihood-ratios, as follows:
+Let $\Lset_0\in\Pset_n$ represent some convenient, fixed partition hypothesis---for example the finest, or the coarsest partition.\footnote{The finest partition is the the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken $n$ different speakers, while the coarsest partition has a single speaker.} The partition posterior can be expressed in terms of prior and likelihoods, or likelihood-ratios, as follows:
 \begin{align}
 \begin{split}
 P(\Lset\mid\Rset) &= \frac{P(\Lset)P(\Rset\mid\Lset)}{\sum_{\Lset'} P(\Lset')P(\Rset\mid\Lset')}\\
@@ -2160,7 +2165,7 @@ In our case, MCL (or the logarithmic proper scoring rule) is given by the partit
 \label{eq:MCL}
 \argmax_\theta P(\Lset^*\mid\Rset,\theta)=\argmin_\theta -\log P(\Lset^*\mid\Rset,\theta)
 \end{align}
-where we now make the to-be-trained parameters, $\theta$ explicit; where $\Rset$ is the set of recordings in the training data; and where $\Lset^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. As discussed above, the normalization constant of this posterior is intractable. Since the normalization constant is a function of $\theta$, MCL cannot be applied directly and we shall need to consider alternatives. Such alternatives include solutions based on sampling from the posterior (e.g.\ contrastive divergence) and also alternative scoring rules, which can be evaluated without needing the normalization constant (e.g.\ pseudolikelihood). 
+where we now make the to-be-trained parameters, $\theta$ explicit; where $\Rset$ is the set of recordings in the training data; and where $\Lset^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. As discussed above, the normalization constant of this posterior is intractable. Since the normalization constant is a function of $\theta$, MCL cannot be applied directly and we shall need to consider alternatives. Such alternatives include solutions based on sampling from the posterior (e.g.\ contrastive divergence) and also alternative scoring rules, which can be evaluated without needing the normalization constant (e.g.\ pseudolikelihood and composite likelihood). 
 
 \subsection{Is one label enough?}
 The MCL objective of~\eqref{eq:MCL} is very different from the familiar cross-entropy objective: cross-entropy is usually applied to a training database with very many independent, labelled examples, while~\eqref{eq:MCL} has but a single `label'. Is this one label enough?
@@ -2234,7 +2239,7 @@ where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor
 
 To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one speaker label has to change for this move. 
 
-Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
+Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker labels in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
 
 \subsubsection{Generalized Gibbs sampler}
 Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m\le n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
@@ -2316,6 +2321,40 @@ To see that $S_C$ is proper, consider:
 \end{align}
 where the third line follows because $S_i(\theta,\Lset)$ is independent of any remaining labels in $\Lset$ that are not in $\Lset^{(i)}$ or $\Lset^{[i]}$. As before, the argument of the inner expectation is (by construction) a proper scoring rule, so that each inner expectation---and therefore the whole composition---is minimized at $\theta^*$. As mentioned above, $S_C$ will be \emph{strictly} proper if all the $S_i$ are strictly proper and all the $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ together uniquely determine $P(\Lset\mid\Rset,\theta)$.
 
+
+\section{Composite likelihood}
+If we assemble composite scores, composed of log scores, then the composite score is the negative logarithm of the more well-known \emph{composite likelihood}~\cite{Dawid_Musio_ThApp_PSR_2014,stats_sinica}. That is, we form the composite score as:
+\begin{align}
+\label{eq:df1}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) 
+\end{align} 
+Below we explore a few different composite scores that differ in how $\Lset^{(i)}$ and $\Lset^{[i]}$ are defined. For the pseudolikelihood construction above, we split the information $\Lset$ according to recording index. Below we explore more general ways of splitting the information. 
+
+\subsection{Coarse conditioning}
+We have that $\Lset\in\Pset_n$ is a partition w.r.t.\ speaker of the set of $n$ recordings. Fort every $i$, let $\Lset^{[i]}\in\Pset_n$, subject to $\Lset<\Lset^{[i]}$, meaning that $\Lset^{[i]}$ is a strictly coarser partition that $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $\Lset^{[i]}$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
+\begin{align}
+\label{eq:df2}
+\begin{split}
+S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) \\
+&= \sum_{i=1}^N -\log \prod_{j=1}^{m_i} P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta) \\
+&= \sum_{i=1}^N \sum_{j=1}^{m_i} -\log P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta)
+\end{split}
+\end{align} 
+where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker. 
+
+Although at $N=1$, we do have a proper scoring rule, the trained system never gets to demonstrate that it can differentiate between speakers in different subsets. It would be better to use a smallish $N>1$, with a few different groupings. Otherwise, in a stochastic training setting, we could repeatedly generate $\Lset^{[i]}$ at random.
+
+
+\subsection{Fine conditioning}
+In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but multiple subsets may index recordings of the same speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df2} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
+
+Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets.
+
+\subsection{Hybrid conditioning}
+The coarse conditioning recipe will still be computationally demanding if there are   
+
+
+
 \section{Binary cross-entropy}
 Binary cross-entropy, applied to pairs of recordings, is a popular discriminative training criterion in speaker recognition~\cite{STBUFusion,Sandro_pairs,calibration_Odyssey14,end2end_google,end2end}. Binary cross-entropy can be interpreted as an approximation to a composite score. We choose the composite score as:
 \begin{align}
@@ -2335,32 +2374,6 @@ where $r_{t_i}, r_{e_i}\in\Rset$ are the test and enroll recordings, so that the
 First published in~\cite{Facenet}.\\
 
 \noindent Good paper:~\cite{Defense_Triplet}: explains original triplet loss, variants for hinge vs softplus loss and gives nice recipe for mining moderately hard triplets,
-
-
-\section{Data fragmentation}
-Let us return to the intractable MCL objective of section~\ref{sec:MCL} and play around with the composite score idea to find a tractable alternative. If MCL is applied to multiple small data sets rather than one big one, then we can obtain a tractable criterion. Can we combine MCL applied to small subsets of the data, such that it forms a proper composite score? 
-
-Let us assemble our composite score using our favourite log score as building block:
-\begin{align}
-\label{eq:df1}
-S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) 
-\end{align} 
-Now define $\Lset^{[i]}$ as follows. Let $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$ be a partition of $\{1,\ldots,n\}$. However, we let each $\Lset^{[i]}$ be strictly coarser than $\Lset$ (the true partition w.r.t. speaker). That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $i$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
-\begin{align}
-\label{eq:df2}
-\begin{split}
-S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) \\
-&= \sum_{i=1}^N -\log \prod_{j=1}^{m_i} P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta) \\
-&= \sum_{i=1}^N \sum_{j=1}^{m_i} -\log P(\Lset^{(ij)}\mid\Rset_{\Iset_{ij}},\theta)
-\end{split}
-\end{align} 
-where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker. 
-
-When $N=1$, we still have a proper scoring rule, but when $N=1$, the trained system never gets to demonstrate that it can differentiate between speakers in different subsets. It would be better to use a smallish $N>1$, or otherwise in a stochastic training setting, we could repeatedly generate $\Lset^{[i]}$ at random.
-
-
-\subsection{The dual}
-In a dual recipe, we can exchange the roles of $\Lset^{(i)}$ and $\Lset^{[i]}$. We can let the conditioning partitions, the $\Lset^{[i]}$, be strictly \emph{finer} than $\Lset$. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. Every subset of $\Lset^{[i]}$ has exactly one speaker, but multiple subsets may index recordings of the same speaker.  
 
  
 
