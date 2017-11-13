@@ -2045,7 +2045,7 @@ The optimizer could be a full batch optimizer such as L-BFGS~\cite{Nocedal}, or 
 
 \section{Proper scoring rules}
 \def\Dset{\mathcal{D}}
-In the introduction we have already mentioned that, since meta-embeddings quantify uncertainty, we need objective functions that properly evaluate the goodness of the uncertainty. Since our uncertainty is expressed in a probabilistic framework, its goodness can be evaluated via \emph{proper scoring rules}~\cite{Gneiting_Raftery_PSR}. If a proper scoring rule is used as training criterion, this is known as \emph{minimum scoring rule inference}~\cite{Dawid_MinScoringRuleInference}. Well known training criteria, such as maximum likelihood, maximum conditional likelihood and minimum cross-entropy are all special cases of minimum scoring rule inference.
+In the introduction we have already mentioned that, since meta-embeddings quantify uncertainty, we need objective functions that properly evaluate the goodness of the uncertainty. Since our uncertainty is expressed in a probabilistic framework, its goodness can be evaluated via \emph{proper scoring rules}~\cite{Gneiting_Raftery_PSR}. If a proper scoring rule is used as training criterion, this is known as \emph{minimum scoring rule inference}~\cite{Dawid_MinScoringRuleInference}. Well known-training criteria, such as maximum likelihood, maximum conditional likelihood and minimum cross-entropy are all special cases of minimum scoring rule inference.
 
 There are two equivalent ways to define proper scoring rules. The first (more well-known) works like this. Let $P$ and $Q$ be probability distributions to predict an event $e\in\Eset$. A proper scoring rule is a real-valued function $S(Q,e)$, with the property:
 \begin{align}
@@ -2058,7 +2058,7 @@ S(Q,e) = -\log Q(e)
 \end{align}
 With the logarithmic rule, training based on scoring rule minimization is just (depending on the context) maximum likelihood, maximum conditional likelihood, or minimum cross-entropy. Here we are interested in discriminative training and therefore in maximum conditional likelihood (MCL), which we will discuss in the next section. Unfortunately, for our training problem, MCL is intractable, so we need to find alternatives, which we will construct using scoring rules other than the logarithmic one.
 
-The other way to define proper scoring rules works like this~\cite{DeGroot}. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is made given $Q$ (while $e$ is still unknown). Let $C(d,e)$ be a real-valued function, known as a \emph{cost function}, that quantifies the goodness of decision $d$ when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a minimum-expected-cost \emph{Bayes decision}, with the property:
+The other definition of proper scoring rules is given by decision theory~\cite{DeGroot}. Let $Q$ be a probability distribution to predict an event $e\in\Eset$. Let $d\in\Dset$, be a \emph{decision} that is made when $Q$ is given, while $e$ is still unknown. Let $C(d,e)$ be a real-valued function, known as a \emph{cost function}, that quantifies the goodness of decision $d$ when afterwards it becomes known that the value of the event is $e$. Let $d^*_Q\in\Dset$ be a minimum-expected-cost \emph{Bayes decision}, with the property:
 \begin{align}
 \expv{C(d^*_Q,e)}{e\sim Q} \le \expv{C(d,e)}{e\sim Q} \;\;\;\;\forall d\in\Dset
 \end{align} 
@@ -2080,7 +2080,7 @@ To do discriminative training with proper scoring rules as objective functions, 
 
 For our purposes, a convenient prior over partitions can be constructed using the two-parameter (Pitman-Yor) \emph{Chinese restaurant process} (CRP)~\cite{Goldwater,Pitman}. The CRP gives a recursive construction for a probability distribution over partitions of a set of  recordings, as follows. 
 
-Let $\Lset\in\Pset_n$, where $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ is a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets, $\Sset_j\subseteq\{1,\ldots,n\}$. The CRP probability distribution can be defined as:  
+Let $\Lset\in\Pset_n$, where $\Lset:\Sset_1,\Sset_2,\ldots,\Sset_k$ be a $k$-speaker partition of the set of $n$ recordings, expressed as before in terms of index subsets, $\Sset_j\subseteq\{1,\ldots,n\}$. The CRP probability distribution can be expressed as:  
 \begin{align}
 \label{eq:CRPdef}
 P(\Lset) &= P(\ell_i\mid \Li)P(\Li), \;\;\;\;\;\forall i\in\{1,\ldots,n\}
@@ -2093,9 +2093,9 @@ P(\ell_i=j\mid \Li) &= \begin{cases}
 \frac{k'\beta+\alpha}{n-1+\alpha}, &\text{for $j=k'+1$}
 \end{cases}
 \end{align}
-where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li\in\Pset_{n-1}$ is also a partition, obtained from $\Lset\in\Pset_n$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. In the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
+where $\lvert\cdot\rvert$ denotes set size and where $\Li:\Sset'_1,\Sset'_2,\ldots,\Sset'_{k'}$ is the partition that results by removing recording index $i$ from $\Lset$. That is, $\Li\in\Pset_{n-1}$ is the partition, obtained from $\Lset\in\Pset_n$ by removing $i$ from the subset where it occurs. If the modified subset remains non-empty, then $k'=k$, else that subset is removed, so that $k'=k-1$. In the trivial case when $n=1$ and $\Lset:\Sset_1=\{1\}$, we allow $\Li$ to be empty, with $k'=0$.
 
-We refer to the categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ as the \emph{speaker label}. Its value identifies the subset to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) is implied. 
+We refer to the categorical variable, $\ell_i\in\{1,2,\ldots,k',k'+1\}$ as the \emph{speaker label}. Its value identifies the subset to which recording $i$ is hypothesized to belong. If $\ell_i=k'+1$, then a new subset (speaker) that is not in $\Li$ is implied. 
 
 The definition~\eqref{eq:CRPdef} is recursive, so that $P(\Li)$ is similarly defined, where the recursion ends when $\Li$ is empty. The CRP is parametrized by the parameters $\alpha$ (concentration) and $\beta$ (discount), where $\alpha\ge0$ and $0\le\beta<1$.\footnote{The model can be extended to allow some negative values for the parameters. See \url{http://en.wikipedia.org/wiki/Chinese_restaurant_process}, or~\cite{PitmanBook}.} 
 
@@ -2141,7 +2141,7 @@ As can be seen, the distribution for $k$ can be controlled by appropriate parame
 
  
 \section{The intractable partition posterior}
-Let $\Lset_0\in\Pset_n$ represent some convenient, fixed partition hypothesis---for example the finest, or the coarsest partition.\footnote{The finest partition is the the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken $n$ different speakers, while the coarsest partition has a single speaker.} The partition posterior can be expressed in terms of prior and likelihoods, or likelihood-ratios, as follows:
+Let $\Lset_0\in\Pset_n$ represent some convenient, fixed partition hypothesis---for example the finest, or the coarsest partition.\footnote{The finest partition is the the hypothesis that $\Rset=\{r_1,\ldots,r_n\}$ was spoken $n$ different speakers, while the coarsest partition hypothesizes a single speaker.} The partition posterior can be expressed in terms of prior and likelihoods, or likelihood-ratios, as follows:
 \begin{align}
 \begin{split}
 P(\Lset\mid\Rset) &= \frac{P(\Lset)P(\Rset\mid\Lset)}{\sum_{\Lset'} P(\Lset')P(\Rset\mid\Lset')}\\
@@ -2160,12 +2160,12 @@ where $\theta$ are the model parameters. For discriminative training, the natura
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)$$
 In the case of supervised training of a (multiclass) classifier, with independent training examples, MCL is just the well-known (multiclass) cross-entropy objective:
 $$\argmax_\theta P(\text{labels}\mid\text{data},\theta)=\argmin_\theta \sum_i -\log P(\text{label}_i\mid\text{datum}_i,\theta)$$
-In our case, MCL (or the logarithmic proper scoring rule) is given by the partition posterior: 
+In our case, MCL is equivalent to applying the logarithmic proper scoring rule to the partition posterior: 
 \begin{align}
 \label{eq:MCL}
 \argmax_\theta P(\Lset^*\mid\Rset,\theta)=\argmin_\theta -\log P(\Lset^*\mid\Rset,\theta)
 \end{align}
-where we now make the to-be-trained parameters, $\theta$ explicit; where $\Rset$ is the set of recordings in the training data; and where $\Lset^*$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. As discussed above, the normalization constant of this posterior is intractable. Since the normalization constant is a function of $\theta$, MCL cannot be applied directly and we shall need to consider alternatives. Such alternatives include solutions based on sampling from the posterior (e.g.\ contrastive divergence) and also alternative scoring rules, which can be evaluated without needing the normalization constant (e.g.\ pseudolikelihood and composite likelihood). 
+where we now make the to-be-trained parameters, $\theta$ explicit; where $\Rset$ is the set of recordings in the training data; and where $\Lset^*\in\Pset_n$ is a single `label', namely the true partitioning of $\Rset$ w.r.t.\ speaker. As discussed above, the normalization constant of this posterior is intractable. Since the normalization constant is a function of $\theta$, MCL cannot be applied directly and we shall need to consider alternatives. Such alternatives include solutions based on sampling from the posterior (e.g.\ contrastive divergence) and also alternative scoring rules, which can be evaluated without needing the normalization constant (e.g.\ pseudolikelihood and composite likelihood). 
 
 \subsection{Is one label enough?}
 The MCL objective of~\eqref{eq:MCL} is very different from the familiar cross-entropy objective: cross-entropy is usually applied to a training database with very many independent, labelled examples, while~\eqref{eq:MCL} has but a single `label'. Is this one label enough?
@@ -2180,7 +2180,7 @@ bits & $17$ & $380$ & $6400$ & $92000$ & $1200000$
 $$
 
 \section{Contrastive divergence}
-One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution, so that the unnormalized partition posterior is:
+One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior be:
 \begin{align}
 \tilde P(\Lset\mid\Rset,\theta) = Z(\Rset,\theta)  P(\Lset\mid\Rset,\theta) 
 \end{align}
@@ -2323,15 +2323,15 @@ where the third line follows because $S_i(\theta,\Lset)$ is independent of any r
 
 
 \section{Composite likelihood}
-If we assemble composite scores, composed of log scores, then the composite score is the negative logarithm of the more well-known \emph{composite likelihood}~\cite{Dawid_Musio_ThApp_PSR_2014,stats_sinica}. That is, we form the composite score as:
+If the composite score is composed specifically of log scores, then the composite score is the negative logarithm of the more well-known \emph{composite likelihood}~\cite{Dawid_Musio_ThApp_PSR_2014,stats_sinica}. That is, we form the composite score as:
 \begin{align}
 \label{eq:df1}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta) 
 \end{align} 
-Below we explore a few different composite scores that differ in how $\Lset^{(i)}$ and $\Lset^{[i]}$ are defined. For the pseudolikelihood construction above, we split the information $\Lset$ according to recording index. Below we explore more general ways of splitting the information. 
+Below we explore a few different composite scores that differ in how $\Lset^{(i)}$ and $\Lset^{[i]}$ are defined. For the pseudolikelihood construction above, we split the information in $\Lset$ according to recording index. Below we explore more general ways of splitting the information. 
 
 \subsection{Coarse conditioning}
-We have that $\Lset\in\Pset_n$ is a partition w.r.t.\ speaker of the set of $n$ recordings. Fort every $i$, let $\Lset^{[i]}\in\Pset_n$, subject to $\Lset<\Lset^{[i]}$, meaning that $\Lset^{[i]}$ is a strictly coarser partition that $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. That is, some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $\Lset^{[i]}$, any pair of distinct subsets do not have any speakers in common. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
+$\Lset\in\Pset_n$ is a partition w.r.t.\ speaker of the set of $n$ recordings. For every $i$, also let $\Lset^{[i]}\in\Pset_n$, but subject to $\Lset<\Lset^{[i]}$, meaning that $\Lset^{[i]}$ is a strictly coarser partition than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. The condition $\Lset<\Lset^{[i]}$ means that some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $\Lset^{[i]}$, the subsets do not overlap w.r.t.\ speaker. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
 \begin{align}
 \label{eq:df2}
 \begin{split}
@@ -2342,16 +2342,33 @@ S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\thet
 \end{align} 
 where $\Lset^{(ij)}$ is a partition w.r.t. speaker of $\Rset_{\Iset_{ij}}$, the set of recordings indexed by $\Iset_{ij}$. The second line follows from the independence induced by the fact that the index subsets do not overlap w.r.t.\ speaker. 
 
-Although at $N=1$, we do have a proper scoring rule, the trained system never gets to demonstrate that it can differentiate between speakers in different subsets. It would be better to use a smallish $N>1$, with a few different groupings. Otherwise, in a stochastic training setting, we could repeatedly generate $\Lset^{[i]}$ at random.
+Although at $N=1$, we do have a proper scoring rule, the to-be-trained system never gets to demonstrate that it can differentiate between speakers in different subsets. It would be better to use a smallish $N>1$, with a few different groupings. Otherwise, in a stochastic training setting, we could repeatedly generate $\Lset^{[i]}$ at random.
 
 
 \subsection{Fine conditioning}
-In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but multiple subsets may index recordings of the same speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df2} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
+In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but some subsets overlap w.r.t\ speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df2} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
 
 Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets.
 
-\subsection{Hybrid conditioning}
-The coarse conditioning recipe will still be computationally demanding if there are   
+\subsection{Hybrid recipe}
+The coarse conditioning recipe will still be computationally demanding if there are too many recordings per speaker. Conversely, the fine conditioning recipe remains challenging when there are too may speakers. The two strategies can however be combined. Below we sketch an example of how to do this to get a stochastic gradient descent training recipe: 
+\begin{itemize}
+  \item Require: 
+	\begin{itemize}
+		\item Integers $s,t$, such that $2\le s \le t$ and where the $t$-th Bell number, $B_t$ is small.
+		\item Training data: a set of recordings and their true speaker labels.
+		\item A partition prior, $P(\Lset)$, e.g.\ the CRP prior. The prior parameters can be fixed, or they can be optimized too.
+	\end{itemize}
+	\item For each term, $i$, of the stochastic objective function, $-\log(\text{composite likelihood})$, do:
+	\begin{itemize}
+	   \item (Randomly) select a subset of $s$ speakers.
+	   \item Find all recordings of those speakers and extract their meta-embeddings, where the extractor is parametrized by $\theta$. If there are more than $t$ of these meta-embeddings, pool some of them, respecting speaker purity, until the number of (pooled/unpooled) meta-embeddings is $k$, such that $s\le k \le t$. Denote this set of $k$ meta-embeddings as $\Fset^{[i]}_\theta$ and their true partition w.r.t.\ speaker as $\Lset^{(i)}\in\Pset_k$.
+		\item Compute the gradient for term $i$: $\nabla_\theta -\log P(\Lset^{(i)}\mid\Fset^{[i]}_\theta)$. This requires computation of $B_k$ different likelihoods.
+  \end{itemize}
+  \item Accumulate gradients in mini-batches of say 10 or 100 terms.
+	\item Do a gradient descent step, using your current favourite minibatch stochastic optimizer.
+\end{itemize}
+  
 
 
 
