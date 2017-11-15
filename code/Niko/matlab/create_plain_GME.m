@@ -3,7 +3,7 @@ function E = create_plain_GME(a,B,logscale)
 % The Gaussian is represented by its natural parameters, a in R^d 
 % and B, a positve semi-definite matrix. The meta-embedding is: 
 %
-%   f(z) = exp(a'z -(1/2)z'Bz)
+%   f(z) = exp(a'z -(1/2)z'Bz + logscale)
 %
 % The `object' created here is home-made in the sense that it does not use
 % MATLAB's object-oriented mechanisms. Rather it is a struct, containing
