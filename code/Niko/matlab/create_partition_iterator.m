@@ -9,19 +9,19 @@ function PI = create_partition_iterator(n)
 % 	url = {http://www.cs.bgu.ac.il/~orlovm/papers/partitions.pdf}
 % }
 %
-% This code implements algorithm 1, and algorithm 3 of that paper. The 
+% This code implements algorithms 1 and 3 of that paper. The 
 % algorithms have been adapted for 1-based indexing.
 %
 % Input: n>=1, the set size.
 % Output: PI, the iterator, a struct with one function handle:
 %   labels = PI.next() returns the next partition, where
 %     labels: n-vector of block indices in the range 1...n. All set members
-%             that share the same bllock index are in the same block
-%             (subset).
+%             that share the same block index are in the same block (subset).
 %     labels = [] signals that all possibilities have been exhausted 
 %
 % Note: The coarsest partition, labels = ones(1,n) is returned first and the finest,
-%       labels = [1,2,...,n] last. (See the paper for iteration in the reverse direction.)
+%       labels = [1,2,...,n] last. (See the paper for iteration in the
+%       reverse direction.)
 %
 
 
