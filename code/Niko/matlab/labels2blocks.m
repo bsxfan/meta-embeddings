@@ -1,4 +1,4 @@
-function [subsets,counts] = labels2subsets(labels)
+function [subsets,counts] = labels2blocks(labels)
 
     if nargin==0
         test_this();
@@ -26,5 +26,5 @@ end
 function test_this()
 
     labels = [2,3,3,3,4];
-    [subsets,counts] = labels2subsets(labels)
+    [subsets,counts] = labels2blocks(labels)
 end
