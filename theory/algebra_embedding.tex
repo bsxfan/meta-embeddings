@@ -1794,10 +1794,10 @@ f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)
 But if $D\ge d$ and $\Fmat'\Wmat\Fmat$ is invertible, we can conveniently rearrange this into a t-distribution for $\zvec$.
 
 \subsection{TME: T-distribution meta-embedding}
-To see that $f_j(\zvec)$ is a t-distrition, we define (dropping subscripts for now): 
+To see that $f_j(\zvec)$ is a t-distribution, we define (dropping subscripts for now): 
 \begin{align}
 \label{eq:defBmuG}
-\Bmat &= \Fmat'\Wmat\Fmat,& \muvec &= \Bmat^{-1}\Fmat'\Wmat\rvec& \text{and} && \Gmat &= \Wmat-\Wmat\Fmat\Bmat^{-1}\Fmat'\Wmat 
+\Emat &= \Fmat'\Wmat\Fmat,& \mvec &= \Emat^{-1}\Fmat'\Wmat\rvec& \text{and} && \Gmat &= \Wmat-\Wmat\Fmat\Emat^{-1}\Fmat'\Wmat 
 \end{align}
 and we rearrange the quadratic form as:
 \begin{align}
@@ -1805,46 +1805,46 @@ and we rearrange the quadratic form as:
 \begin{split}
 Q_{\rvec\mid\zvec} &= (\rvec-\Fmat\zvec)'\Wmat(\rvec-\Fmat\zvec)\\ 
 &= \rvec'\Wmat\rvec -2\zvec'\Fmat'\Wmat\rvec + \zvec'\Fmat'\Wmat\Fmat\zvec \\
-&= \rvec'\Wmat\rvec -2\zvec'\Bmat\muvec + \zvec'\Bmat\zvec \\
-&= (\rvec'\Wmat\rvec -\muvec'\Bmat\muvec) + (\zvec'\Bmat\zvec -2\zvec\Bmat\muvec + \muvec'\Bmat\muvec) \\
-&= \rvec'\Gmat\rvec + (\zvec-\muvec)'\Bmat(\zvec-\muvec) \\
-&= E + Q_{\zvec\mid\rvec}
+&= \rvec'\Wmat\rvec -2\zvec'\Emat\mvec + \zvec'\Emat\zvec \\
+&= (\rvec'\Wmat\rvec -\mvec'\Emat\mvec) + (\zvec'\Emat\zvec -2\zvec\Emat\mvec + \mvec'\Emat\mvec) \\
+&= \rvec'\Gmat\rvec + (\zvec-\mvec)'\Emat(\zvec-\mvec) \\
+&= q + Q_{\zvec\mid\rvec}
 \end{split}
 \end{align}
-Reintroducing the subscript $j$, and defining $\nu'=\nu+D-d$, let's reassemble our t-distribution likelihood:
+where we have defined $q=\rvec'\Gmat\rvec$ and $Q_{\zvec\mid\rvec}=(\zvec-\mvec)'\Emat(\zvec-\mvec)$. Reintroducing the subscript $j$, and defining $\nu'=\nu+D-d$, let's reassemble our t-distribution likelihood:
 \begin{align}
 \label{eq:TME}
 \begin{split}
 f_j(\zvec) &\propto \Bigl[1+\frac{Q_{\rvec\mid\zvec}}{\nu}\Bigr]^{-\frac{\nu+D}{2}} \\
 &\propto\Bigl[\frac{\nu}{\nu'}+\frac{Q_{\rvec\mid\zvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
-&= \Bigl[\frac{\nu}{\nu'}+\frac{E_j + Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
-&= \Bigl[\frac{\nu+E_j}{\nu'} + \frac{Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
-&\propto \Bigl[1 + \frac{(\frac{\nu'}{\nu+E_j})Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
-&= \Bigl[1 + \frac{(\frac{\nu'}{\nu+E_j})(\zvec-\muvec_j)'\Bmat(\zvec-\muvec_j)}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
-&\propto\TD(\zvec\mid \muvec_j,\beta_j\Bmat,\nu')
+&= \Bigl[\frac{\nu}{\nu'}+\frac{q_j + Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&= \Bigl[\frac{\nu+q_j}{\nu'} + \frac{Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&\propto \Bigl[1 + \frac{(\frac{\nu'}{\nu+q_j})Q_{\zvec\mid\rvec}}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&= \Bigl[1 + \frac{(\frac{\nu'}{\nu+q_j})(\zvec-\mvec_j)'\Emat(\zvec-\mvec_j)}{\nu'}\Bigr]^{-\frac{\nu'+d}{2}} \\
+&\propto\TD(\zvec\mid \mvec_j,\beta_j\Emat,\nu')
 \end{split}
 \end{align}
 where
 \begin{align}
 \label{eq:mu_and_E}
-\muvec_j &= \Bmat^{-1}\Fmat'\Wmat\rvec_j\,, & \beta_j&=\frac{\nu'}{\nu+E_j}& \text{and} &&
-E_j &= \rvec'_j\Gmat\rvec_j
+\mvec_j &= \Emat^{-1}\Fmat'\Wmat\rvec_j\,, & \beta_j&=\frac{\nu'}{\nu+q_j}& \text{and} &&
+q_j &= \rvec'_j\Gmat\rvec_j
 \end{align}
-We have shown that the meta-embedding, $f_j(\zvec)$, is proportional to a t-distribution, with \emph{increased} degrees of freedom $\nu'=\nu+(D-d)$, location parameter $\muvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu'>2$ and is given in this case by $\frac{\nu+E_j}{\nu'-2}\,\Bmat^{-1}$.} $\beta_j\Bmat$. The mean exists only for $\nu'>1$ and is then $\muvec_j$. The mode is $\muvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
+We have shown that the meta-embedding, $f_j(\zvec)$, is proportional to a t-distribution, with \emph{increased} degrees of freedom $\nu'=\nu+(D-d)$, location parameter $\mvec_j$ and precision\footnote{\emph{Precision} for the t-distribution is not quite the same as inverse variance. The variance of a t-distribution is defined only for $\nu'>2$ and is given in this case by $\frac{\nu+q_j}{\nu'-2}\,\Emat^{-1}$.} $\beta_j\Emat$. The mean exists only for $\nu'>1$ and is then $\mvec_j$. The mode is $\mvec_j$ and is therefore also the maximum-likelihood estimate for $\zvec$. We shall refer to the \emph{t-distribution meta-embedding} as TME.
 
 In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian:
 \begin{align}
 \label{eq:TMEvsGME}
-f_j{\zvec} &\propto \TD(\zvec\mid \muvec_j,\beta_j\Bmat,\nu')
-\approx \ND\bigl(\zvec\mid\muvec_j,(\beta_j\Bmat)^{-1}\bigr)
+f_j{\zvec} &\propto \TD(\zvec\mid \mvec_j,\beta_j\Emat,\nu')
+\approx \ND\bigl(\zvec\mid\mvec_j,(\beta_j\Emat)^{-1}\bigr)
 \end{align}
-Nevertheless, the almost-Gaussian TME is \emph{substantially} different from the GME given by Gaussian PLDA. In Gaussian PLDA (with $\nu\to\infty$), the meta-embedding has constant precision, $\Bmat$, while in the case of heavy-tailed noise, the precision is modulated by the data-dependent factor, $\frac{\nu'}{\nu+E_j}$.   
+Nevertheless, the almost-Gaussian TME is \emph{substantially} different from the GME given by Gaussian PLDA. In Gaussian PLDA (with $\nu\to\infty$), the meta-embedding has constant precision, $\Emat$, while in the case of heavy-tailed noise, the precision is modulated by the data-dependent factor, $\frac{\nu'}{\nu+q_j}$.   
 
-Let us examine $E_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
+Let us examine $q_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
 \begin{align}
 \Gmat\rvec=\Gmat(\Fmat\zvec+\etavec)=\Gmat\etavec
 \end{align}
-Even though $E_j$ is independent of $\zvec$, which we are trying to infer, it is nevertheless relevant to that inference, because it modulates the uncertainty. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $E_j=0$.
+Even though $q_j$ is independent of $\zvec$, which we are trying to infer, it is nevertheless relevant to that inference, because it modulates the uncertainty. Notice that this statistic only works for $D> d$. If we have $d=D$, and $\Fmat$ is invertible, then $\Gmat=\nulvec$ and $q_j=0$.
 
 To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertible linear transform to the data, such that the model for the transformed data then has $\Wmat=\Imat$. Since this transform does not change anything essential, the role played by $\Gmat$ is much the same as in the general case. For $\Wmat=\Imat$ we have:
 \begin{align*}
@@ -1852,11 +1852,11 @@ To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertib
 \end{align*}
 which is an \emph{idempotent projection matrix}, for which:
 \begin{align*}
-E_j &= \rvec_j'\Gmat\rvec_j = (\Fmat\zvec+\etavec_j)'\Gmat(\Fmat\zvec+\etavec_j) = \etavec_j'\Gmat\etavec_j = (\Gmat\etavec_j)'(\Gmat\etavec_j)
+q_j &= \rvec_j'\Gmat\rvec_j = (\Fmat\zvec+\etavec_j)'\Gmat(\Fmat\zvec+\etavec_j) = \etavec_j'\Gmat\etavec_j = (\Gmat\etavec_j)'(\Gmat\etavec_j)
 \end{align*}
 That is, $\Gmat\rvec_j$ is the projection of $\rvec_j$ onto the complement of the subspace spanned by the columns of $\Fmat$. Since $\Gmat\rvec_j$ is $(D-d)$-dimensional, $(\Gmat\rvec_j)'(\Gmat\rvec_j)$ is effectively composed of the sum of $D-d$ squares. Intuitively, 
-$$\beta_j=\frac{\nu'}{\nu+E_j}=\frac{\nu+(D-d)}{\nu+E_j}$$ 
-forms a regularized estimate of the hidden noise precision modulation factor $\frac{\nu}{\lambda_j}$. The scale of $E_j$ is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. The scale of $E_j$ is however independent of $\nu$, so that for Gaussian noise, where $\nu\to\infty$ and $\frac{\nu}{\lambda_j}\to1$, we also have $\frac{\nu'}{\nu+E_j}\to1$. 
+$$\beta_j=\frac{\nu'}{\nu+q_j}=\frac{\nu+(D-d)}{\nu+q_j}$$ 
+forms a regularized estimate of the hidden noise precision modulation factor $\frac{\lambda_j}{\nu}$. The scale of $q_j$ is proportional to $D-d$ and will (as indeed intuition suggests) have a greater effect for larger dimensionality differences. The scale of $q_j$ is however independent of $\nu$, so that for Gaussian noise, where $\nu\to\infty$ and $\frac{\nu}{\lambda_j}\to1$, we also have $\frac{\nu'}{\nu+q_j}\to1$. 
 
 
 \subsection{Generalizations}
@@ -1874,15 +1874,15 @@ Our model can be generalized in the following ways:
 LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to a GME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the Gaussian approximation. As we already know, GME LRs are tractable, but slower than quadratic GPLDA scoring. Fortunately, if precision matrices differ only by a scaling factor, we can find faster recipes than for general GMEs. Below we consider an exact solution and a Taylor series approximation.
 
 \subsubsection{Exact GME scoring}
-We are interested in matrix factorizations of matrices of the form $\Imat+\beta\Bmat$, where $\beta$ varies but $\Bmat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $\beta$. Since $\Bmat$ is symmetric positive semi-definite, we can factorize it as:
+We are interested in matrix factorizations of matrices of the form $\Imat+\beta\Emat$, where $\beta$ varies but $\Emat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $\beta$. Since $\Emat$ is symmetric positive semi-definite, we can factorize it as:
 \begin{align}
-\Bmat = \Vmat\Lambdamat\Vmat'
+\Emat = \Vmat\Lambdamat\Vmat'
 \end{align}  
 where $\Vmat$ is an orthonormal matrix having the eigenvectors along its columns, while $\Lambdamat$ is a diagonal matrix of real, non-negative eigenvalues. By orthonormality we have $\Imat = \Vmat\Vmat'$, so that:
 \begin{align}
-\Imat+\beta\Bmat &= \Vmat(\Imat+\beta\Lambdamat)\Vmat'
+\Imat+\beta\Emat &= \Vmat(\Imat+\beta\Lambdamat)\Vmat'
 \end{align}
-for any $\beta\ge0$, the matrix of interest has a factorization of the same form, where we can re-use $\Vmat$. In short, the eigenvectors remain fixed, while if $\lambda$ is an eigenvalue of $\Bmat$, then the corresponding eigenvalue of $\Imat+\beta\Bmat$ is $1+\beta\lambda$.
+for any $\beta\ge0$, the matrix of interest has a factorization of the same form, where we can re-use $\Vmat$. In short, the eigenvectors remain fixed, while if $\lambda$ is an eigenvalue of $\Emat$, then the corresponding eigenvalue of $\Imat+\beta\Emat$ is $1+\beta\lambda$.
 
 One way to structure the calculations is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices.  
 
@@ -1890,17 +1890,17 @@ One way to structure the calculations is to transform the hidden variable as $\t
 \subsubsection{Taylor series approximation}
 We examine the Taylor series approximation for this case in more detail.
 
-Let $f_j(\zvec)=\exp[\zvec'\avec_j,\beta_j\Bmat]$. Pooling is done by simple addition of the $\avec$ and $\beta$ parameters and gives a representation in the same form. We can therefore do any LR computation by using identical building blocks, of the form 
+Let $f_j(\zvec)=\exp[\zvec'\avec_j-\beta_j\zvec'\Emat\zvec]$. Pooling is done by simple addition of the $\avec$ and $\beta$ parameters and gives a representation in the same form. We can therefore do any LR computation by using identical building blocks, of the form 
 \begin{align}
 F(\avec_i,\avec_j,\beta_i,\beta_j) = \log\dotn{f_i}{f_j}
 \end{align}
-Let us approximate this using a variant of the symmetrical Taylor series approximation about some fixed value $\beta_0>0$. Letting $\delta_i=\beta_i-\beta_0$ and $\delta_j=\beta_j-\beta$ and $F_{ij}=F(\avec_i,\avec_j,\beta_0,\beta_0)$ we do:
+Let us approximate this using a variant of the symmetrical Taylor series approximation about some fixed value $\beta_0>0$. Letting $\delta_i=\beta_i-\beta_0$ and $\delta_j=\beta_j-\beta_0$ and $F_{ij}=F(\avec_i,\avec_j,\beta_0,\beta_0)$ we do:
 \begin{align}
 F(\avec_i,\avec_j,\beta_i,\beta_j) &\approx F_{ij} + \pd{F_{ij}}{\beta}(\delta_i+\delta_j) +\frac12\bmat{\delta_i&\delta_j}\Hmat\bmat{\delta_i\\ \delta_j} 
 \end{align} 
 where by symmetry $\pd{F_{ij}}{\beta}=\pd{F_{ij}}{\beta_i}=\pd{F_{ij}}{\beta_j}$. The Hessian, $H$, is fixed, because it depends only on $\beta_0$, but fortunately not on $(\avec_i,\avec_j)$.  
 
-Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and do the expansion in terms of $\gamma$ instead. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Bmat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+\beta\Bmat}$.
+Other variants are possible, for example we could let $\gamma=\log(\beta+c)$ and do the expansion in terms of $\gamma$ instead. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Emat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+\beta\Emat}$.
 
 
 %For t-distribution meta-embeddings (TMEs), the expectations do not have closed-form solutions. In two steps, we (i) approximate the TME as a tractable \emph{mixture of Gaussian meta-embeddings} (MoGME), to which we can then (ii) apply the Taylor series approximations of section~\ref{sec:TSapr}. 
@@ -1926,53 +1926,53 @@ For multiclass classification, with large amounts of training data for each clas
 \subsubsection{Training}
 Let class $i$ have a set of training data, $\Rset_i=\{\rvec_{ij}\}_{j=1}^{N_i}$, where each $\rvec_{ij}$ is represented by~\eqref{eq:TMEvsGME} as the approximate Gaussian meta-embedding:
 \begin{align}
-f_{ij}(\zvec) &= \ND\bigr(\zvec\mid\muvec_{ij},(\beta_{ij}\Bmat)^{-1}\bigl)
+f_{ij}(\zvec) &= \ND\bigr(\zvec\mid\mvec_{ij},(\beta_{ij}\Emat)^{-1}\bigl)
 \end{align}  
 where by~\eqref{eq:mu_and_E}:
 \begin{align}
-\muvec_{ij} &= \Bmat^{-1}\Fmat'\Wmat\rvec_{ij}\,,&\beta_{ij}&=\frac{\nu+D-d}{\nu+E_{ij}} &\text{and} &&
+\mvec_{ij} &= \Emat^{-1}\Fmat'\Wmat\rvec_{ij}\,,&\beta_{ij}&=\frac{\nu+D-d}{\nu+E_{ij}} &\text{and} &&
 E_{ij} &= \rvec'_{ij}\Gmat\rvec_{ij}
 \end{align}
 This gives:
 \begin{align}
-\pi(\zvec)f_i(\zvec) &= \pi(\zvec)\prod_j f_{ij}(\zvec) \propto P(\zvec\mid\Rset_i,\pi)=\ND(\zvec\mid\hat\zvec_i,\bar\Bmat_i^{-1}) 
+\pi(\zvec)f_i(\zvec) &= \pi(\zvec)\prod_j f_{ij}(\zvec) \propto P(\zvec\mid\Rset_i,\pi)=\ND(\zvec\mid\hat\zvec_i,\bar\Emat_i^{-1}) 
 \end{align}
 where
 \begin{align}
-\bar\Bmat_i &= \Imat+\sum_j \beta_{ij} \Bmat
+\bar\Emat_i &= \Imat+\sum_j \beta_{ij} \Emat
 \end{align}
 and
 \begin{align}
 \begin{split}
-\hat\zvec_i &= \bar\Bmat_i^{-1}\Bmat \sum_j \beta_{ij} \muvec_{ij} = \bar\Bmat_i^{-1}\Bmat\sum_j \beta_j \muvec_{ij}
-= \bar\Bmat^{-1}\Bmat\Fmat'\Wmat\sum_j  \beta_j\rvec_{ij}
+\hat\zvec_i &= \bar\Emat_i^{-1}\Emat \sum_j \beta_{ij} \mvec_{ij} = \bar\Emat_i^{-1}\Emat\sum_j \beta_j \mvec_{ij}
+= \bar\Emat^{-1}\Emat\Fmat'\Wmat\sum_j  \beta_j\rvec_{ij}
 \end{split}
 \end{align}
-Notice that the class representative, $\hat\zvec_i$, is formed via a weighted combination of the data for that class. The weights are inversely proportional to the estimated noise variances. If we have enough data, so that $\bar\Bmat_i\gg\Imat$, then we can approximate: 
+Notice that the class representative, $\hat\zvec_i$, is formed via a weighted combination of the data for that class. The weights are inversely proportional to the estimated noise variances. If we have enough data, so that $\bar\Emat_i\gg\Imat$, then we can approximate: 
 $$\pi(\zvec)\normal{f_i}\approx \delta(\zvec-\hat\zvec_i)$$
 
 
 \subsubsection{Scoring}
 At runtime, given a test recording, $r_j$, represented by the approximate Gaussian meta-embedding:
 \begin{align}
-g_j(\zvec) &= \exp[\avec_j'\zvec-\frac{\beta_j}{2}\zvec'\Bmat\zvec]
+g_j(\zvec) &= \exp[\avec_j'\zvec-\frac{\beta_j}{2}\zvec'\Emat\zvec]
 \end{align}
 we can use~\eqref{eq:Dirac_scoring} to approximate the log-likelihood for each class $i$ as:\footnote{As a sanity check, we can derive the same result, without makes use of the Dirac delta, by directly taking the limit of~\eqref{eq:LRMVG} when taking the precision of one of the Gaussians to infinity.}
 \begin{align}
 \begin{split}
 \log L_{ij} &\approx \log g_j(\hat\zvec_i) - \log\expp{g_j} \\
-&= \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Bmat)^{-1}\avec_j +\frac12\log\detm{\Imat+\beta_j\Bmat}
+&= \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Emat\hat\zvec_i -\frac{1}{2}\avec_j(\Imat+\beta_j\Emat)^{-1}\avec_j +\frac12\log\detm{\Imat+\beta_j\Emat}
 \end{split}
 \end{align}
 This can be used for open-set case, while for the \emph{closed-set} case, we can omit all terms independent of $i$, to give:
 \begin{align}
 \label{eq:TPLDA_delta_score}
-\log L_{ij} &\approx \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Bmat\hat\zvec_i + \const
+\log L_{ij} &\approx \avec_j'\hat\zvec_i -\frac{\beta_j}{2}\hat\zvec_i'\Emat\hat\zvec_i + \const
 \end{align}
 This can be arranged into a $(d+1)$-dimensional dot-product for computational convenience. 
 
-Intuitively it would be satisfying for the the score to be modulated by $\beta_j$, so that score magnitudes become smaller for noisier data. This is true for the second term in~\eqref{eq:TPLDA_delta_score}, but what about the first term? We can make the the dependence on $\beta_j$ clear by considering $\muvec_j=(\Imat+\beta_j\Bmat)^{-1}\avec_j$, which is the mean of the Gaussian approximation to $P(\zvec\mid \rvec_j,\pi)$. Recall that similarly, $\hat\zvec_i$ is the mean of the Gaussian approximation to $P(\zvec\mid\Rset_i,\pi)$. The first term can now be rewritten as:
-$$\avec_j'\hat\zvec_i = \muvec'_i(\Imat+\beta_j\Bmat)\hat\zvec_i$$
+Intuitively it would be satisfying for the the score to be modulated by $\beta_j$, so that score magnitudes become smaller for noisier data. This is true for the second term in~\eqref{eq:TPLDA_delta_score}, but what about the first term? We can make the the dependence on $\beta_j$ clear by considering $\muvec_j=(\Imat+\beta_j\Emat)^{-1}\avec_j$, which is the mean of the Gaussian approximation to $P(\zvec\mid \rvec_j,\pi)$. Recall that similarly, $\hat\zvec_i$ is the mean of the Gaussian approximation to $P(\zvec\mid\Rset_i,\pi)$. The first term can now be rewritten as:
+$$\avec_j'\hat\zvec_i = \muvec'_i(\Imat+\beta_j\Emat)\hat\zvec_i$$
 where the role of $\beta_j$ becomes clear.
 
 \subsubsection{Doing it without Gaussians}

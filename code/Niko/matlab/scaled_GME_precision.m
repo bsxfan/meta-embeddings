@@ -17,7 +17,7 @@ function [SGMEP,meand] = scaled_GME_precision(B)
     SGMEP.solve = @solve;
     
     function [y,back] = logdet(beta)
-        betad = beta*d;
+        betad = bsxfun(@times,beta,d);
         y = sum(log1p(betad),1);
         back = @(dy) dy*sum(d./(1+betad),1);
     end

@@ -140,8 +140,11 @@ function test_this
 
     
     poi = [1 1 2];
-    prior = create_PYCRP(0,[],2,3);
+    %prior = create_PYCRP(0,[],2,3);
     %prior = create_PYCRP([],0,2,3);
+    
+    create_flat_partition_prior(length(poi));
+    
     calc = create_partition_posterior_calculator(prior,poi);
     f = calc.logPost(A,B);
     exp([f([1 1 2]), f([1 1 1]), f([1 2 3]), f([1 2 2]), f([1 2 1])])

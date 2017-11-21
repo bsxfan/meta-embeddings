@@ -38,7 +38,7 @@ function tikz = plotGaussian(mu,C,colr,c)
     ellipse = bsxfun(@plus,mu,V*sqrt(D)*circle);
     plot(ellipse(1,:),ellipse(2,:),c);
     
-    fprintf('%s',tikz);
+    %fprintf('%s',tikz);
     
 
 
