@@ -1,5 +1,7 @@
-function calc = create_partition_posterior_calculator(prior,poi)
+function calc = create_partition_posterior_calculator(log_expectations,prior,poi)
 % Inputs:
+%   log_expectations: function handle, maps matrices of additive natural 
+%                     parameters to log-expectations
 %   prior: Exchangeable prior over partitions, for example CRP. It needs to
 %          implement prior.logprob(counts), where counts are the number of 
 %          customers per table (partition block sizes).
@@ -12,22 +14,28 @@ function calc = create_partition_posterior_calculator(prior,poi)
     end
 
     n = length(poi);  %number of customers
+    
+    %Generate flags for all possible (non-empty) subsets
     ns = 2^n-1;       %number of non-empty customer subsets
     subsets = logical(mod(fix(bsxfun(@rdivide,0:ns,2.^(0:n-1)')),2));
     subsets = subsets(:,2:end);  % dump empty subset
 
     
-    function [weights,counts] = labels2weights(labels)
+    %maps partition to flags indicating subsets (blocks)
+    % also returns table counts
+    function [flags,counts] = labels2weights(labels)
         [blocks,counts] = labels2blocks(labels);
         [tf,loc] = ismember(blocks',subsets','rows');
         assert(all(tf));
-        weights = false(ns,1);
-        weights(loc) = true; 
+        flags = false(ns,1);
+        flags(loc) = true; 
     end
     
     [poi_weights,counts] = labels2weights(poi);
     log_prior_poi = prior.logprob(counts);
     
+    
+    %precompute weights and prior for every partition
     Bn = Bell(n);
     PI = create_partition_iterator(n);
     Weights = false(ns,Bn);
@@ -50,26 +58,17 @@ function calc = create_partition_posterior_calculator(prior,poi)
     % Output:
     %   y: log P(poi | A,B, prior)
     
-        [dim,n1] = size(A);
-        assert(n1==n);
-        assert(size(B,2)==n);
+        assert(size(B,2)==n && size(A,2)==n);
 
 
-        % accumulate natural params for every subset
-        A = A*subsets;  
-        B = B*subsets;
-        
         %compute subset likelihoods
-        log_ex = zeros(1,ns); 
-        for i=1:ns
-            E = create_plain_GME(A(:,i),reshape(B(:,i),dim,dim),0);
-            log_ex(i) = E.log_expectation();
-        end
-        
+        log_ex = log_expectations(A*subsets,B*subsets); 
+
+        %compute posterior
         num = log_prior_poi + log_ex*poi_weights;
-        den = log_prior + log_ex*Weights;
-        maxden = max(den);
-        den = maxden+log(sum(exp(den-maxden)));
+        dens = log_prior + log_ex*Weights;
+        maxden = max(dens);
+        den = maxden+log(sum(exp(dens-maxden)));
         y = num - den;
     
     end
@@ -80,21 +79,11 @@ function calc = create_partition_posterior_calculator(prior,poi)
     % Output:
     %   y: log P(poi | A,B, prior)
     
-        [dim,n1] = size(A);
-        assert(n1==n);
-        assert(size(B,2)==n);
+        assert(size(B,2)==n && size(A,2)==n);
 
 
-        % accumulate natural params for every subset
-        A = A*subsets;  
-        B = B*subsets;
-        
         %compute subset likelihoods
-        log_ex = zeros(1,ns); 
-        for i=1:ns
-            E = create_plain_GME(A(:,i),reshape(B(:,i),dim,dim),0);
-            log_ex(i) = E.log_expectation();
-        end
+        log_ex = log_expectations(A*subsets,B*subsets); 
         
         llh = log_ex*Weights;
         den = log_prior + llh; 

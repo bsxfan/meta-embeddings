@@ -1,4 +1,11 @@
 function [subsets,counts] = labels2blocks(labels)
+% Inputs:
+%   labels: n-vector with elements in 1..m, maps each of n customers to a
+%           table number. There are m tables. Empty tables not allowed. 
+%
+% Ouputs:
+%   subsets: n-by-m logical, with one-hot rows
+%   counts: m-vector, maps table number to customer count
 
     if nargin==0
         test_this();
@@ -10,14 +17,9 @@ function [subsets,counts] = labels2blocks(labels)
     assert(min(labels)==1,'illegal argument ''labels'': tables must be consecutively numbered from 1');
     assert(m <= n,'illegal argument ''labels'': there are more tables than customers');
     
-%     subsets = false(n,m);
-%     for j=1:m
-%         ii = labels==j;
-%         assert(any(ii),'illegal argument ''labels'': tables must be consecutively numbered from 1');
-%         subsets(ii,j) = true;
-%     end
     subsets = bsxfun(@eq,1:m,labels(:));
     counts = sum(subsets,1);
+
     assert(sum(counts)==n,'illegal argument ''labels'': table counts must add up to length(labels)');
     assert(all(counts),'illegal argument ''labels'': empty tables not allowed');
 
