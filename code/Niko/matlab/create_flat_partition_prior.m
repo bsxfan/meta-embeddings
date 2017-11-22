@@ -7,7 +7,7 @@ function prior = create_flat_partition_prior(n)
     end
     
     
-    prior.logProb = @(counts) const;
+    prior.logprob = @(counts) const;
 
 
 end

@@ -5,7 +5,7 @@ function tikz = plotGaussian(mu,C,colr,c)
         return;
     end
 
-    if isempty(C)
+    if isempty(C)  %assume mu is a GME
         [mu,C] = mu.get_mu_cov();
     end
     
