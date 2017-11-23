@@ -96,7 +96,7 @@
 
 
 
-\usetikzlibrary{arrows,shapes,backgrounds,positioning,fit}
+\usetikzlibrary{arrows,shapes,backgrounds,positioning,fit,plotmarks}
 
 % Caches tikz figures as PDF on disk. 
 % Needs --shell-escape on pdflatex commandline, or for TexicCenter, see here: https://tex.stackexchange.com/questions/222632/how-to-do-shell-escape-in-texniccenter
@@ -1482,12 +1482,13 @@ where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembli
 \end{align}
 
 \subsubsection{Note}
-Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space, $f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec]$, is given by the natural parameters: 
+Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is $f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec]$, with the natural parameters: 
 \begin{align}
 \tilde\avec&=\Vmat'\avec &\text{and} &&
 \tilde\Bmat&=\Vmat'\Bmat\Vmat = b\Lambdamat
 \end{align}  
 
+\section{Complex Gaussians}
 
 
 \section{MoGME: Mixture of GME}
@@ -1966,6 +1967,26 @@ where $\tilde\avec=\Vmat'\avec$.
 
 
 Further speed-up can be achieved for example by the Taylor series approximation of section~\ref{sec:Taylor_expectation}.
+
+
+\subsection{Example}
+Below is an example of three SGME approximations extracted from three data points (recordings) randomly generated from a heavy-tailed PLDA model, with $d=2$, $D=20$ and $\nu=2$. There is one recording from a blue speaker and two recordings from a red one: 
+$$
+\begin{tikzpicture}[xscale=1,yscale=1]
+\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
+\draw[rotate around ={69.3:(0.137,-0.545)},blue] (0.137,-0.545) ellipse [x radius=0.194, y radius=0.304];
+\draw[rotate around ={69.3:(0.517,0.746)},red] (0.517,0.746) ellipse [x radius=0.295, y radius=0.462];
+\draw[rotate around ={69.3:(0.839,0.83)},red] (0.839,0.83) ellipse [x radius=0.401, y radius=0.629];
+\draw[rotate around ={69.3:(0.137,-0.545)},blue, dotted] (0.137,-0.545) ellipse [x radius=0.217, y radius=0.34];
+\draw[rotate around ={69.3:(0.517,0.746)},red, dotted] (0.517,0.746) ellipse [x radius=0.395, y radius=0.619];
+\draw[rotate around ={69.3:(0.839,0.83)},red, dotted] (0.839,0.83) ellipse [x radius=0.42, y radius=0.658];
+\draw[blue] plot[mark = asterisk] coordinates {(0.3252,-0.4289)};
+\draw[red] plot[mark = asterisk] coordinates {(0.0116,0.7313)};
+\end{tikzpicture}
+$$
+As before, the dashed black circle represents $\pi(\zvec)$. The true values of the identity variables are indicated with the blue and red asterisks. The solid ellipses reflect the precisions as calculated by $b_j\Emat$, while the dotted ones reflect the true (oracle) values of the precision modulation factors. 
+
+
 
 %\subsubsection{Exact GME scoring}
 %We are interested in matrix factorizations of matrices of the form $\Imat+b\Emat$, where $b$ varies but $\Emat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $b$. Since $\Emat$ is symmetric positive semi-definite, we can factorize it as:
