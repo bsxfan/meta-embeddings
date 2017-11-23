@@ -2,7 +2,7 @@ function example_8_1
 
     zdim = 2;
     xdim = 20;      %required: xdim > zdim
-    nu = 100;       %required: nu >= 1, integer, DF
+    nu = 2;       %required: nu >= 1, integer, DF
     fscal = 2;      %increase fscal to move speakers apart
     
     F = randn(xdim,zdim)*fscal;
@@ -48,7 +48,7 @@ function example_8_1
     
     calc = create_partition_posterior_calculator(HTPLDA.log_expectations,prior,poi);
     f = calc.logPost(A,b);
-    exp([f([1 1 2]), f([1 1 1]), f([1 2 3]), f([1 2 2]), f([1 2 1])])
+    exp([f([1 1 1]), f([1 2 2]), f([2 1 2]), f([2 2 1]), f([1 2 3])])
     
     
 

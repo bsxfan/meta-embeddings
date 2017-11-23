@@ -1450,7 +1450,11 @@ A useful specialization of the GME, which we call \emph{simple Gaussian meta-emb
 where $\Emat$ is a constant, $d$-by-$d$, positive semi-definite matrix. As we shall see in chapter~\ref{chap:generative}, generative PLDA models produce SGMEs. An advantage to SGMEs is that we can find faster recipes for computing expectations. 
 
 \subsection{Expectation (L1 norm)}
-To compute expectations using~\eqref{eq:GMElogex}, we need factorizations of matrices of the form $\Imat+b\Emat$, where $b$ varies but $\Emat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $b$. Since $\Emat$ is symmetric positive semi-definite, we can factorize it as:
+To compute expectations using~\eqref{eq:GMElogex}, we need factorizations of 
+\begin{align}
+\Bmat &= \Imat+b\Emat
+\end{align}
+where $b$ varies but $\Emat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $b$. Since $\Emat$ is symmetric positive semi-definite, we can factorize it as:
 \begin{align}
 \Emat = \Vmat\Lambdamat\Vmat'
 \end{align}  
@@ -1458,7 +1462,7 @@ where $\Vmat$ is an orthonormal matrix having the eigenvectors along its columns
 \begin{align}
 \Imat+b\Emat &= \Vmat(\Imat+b\Lambdamat)\Vmat'
 \end{align}
-for any $b\ge0$, the matrix of interest has a factorization of the same form, where we can re-use $\Vmat$. That is, the eigenvectors remain fixed. Denote the eigenvalues of $\Emat$ as $\{\lambda_i\}_{i=1}^d$, then corresponding eigenvalues of $\Imat+b\Emat$ are $\{1+b\lambda_i\}_{i=1}^d$. The log-determinant---the second term of~\eqref{eq:GMElogex}---is just:
+for any $b\ge0$, $\Bmat$ has a factorization of the same form, where we can re-use $\Vmat$. That is, the eigenvectors remain fixed. Denote the eigenvalues of $\Emat$ as $\{\lambda_i\}_{i=1}^d$, then the corresponding eigenvalues of $\Imat+b\Emat$ are $\{1+b\lambda_i\}_{i=1}^d$. The log-determinant---the second term of~\eqref{eq:GMElogex}---is just:
 \begin{align}
 \logdet{\Imat+b\Emat} &= \sum_{i=1}^d \log(1+b\lambda_i)
 \end{align}
@@ -1478,7 +1482,7 @@ where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembli
 \end{align}
 
 \subsubsection{Note}
-Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. In this case the meta-embedding in the transformed space is given by the natural parameters: 
+Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space, $f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec]$, is given by the natural parameters: 
 \begin{align}
 \tilde\avec&=\Vmat'\avec &\text{and} &&
 \tilde\Bmat&=\Vmat'\Bmat\Vmat = b\Lambdamat
@@ -1667,7 +1671,7 @@ Yet more approximation recipes can be derived by approximating the log expectati
 \begin{align}
 \log E(\tilde\avec,b) &= \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
 \end{align}
-This expression is quadratic in $\tilde\avec$, just like for GPLDA, but more complex as a function of $b$. We can reduce the complexity w.r.t.\ $b$ by doing a second-order Taylor series expansion w.r.t.\ $b$. We can also do it w.r.t.\ a reparametrization, for example in terms of $\gamma=\log(b+c)$. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Emat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+b\Emat}$.
+This expression is quadratic in $\tilde\avec$, just like for GPLDA, but more complex as a function of $b$. We can reduce the complexity w.r.t.\ $b$ by doing a second-order Taylor series expansion w.r.t.\ $b$. Otherwise, we can do it w.r.t.\ a reparametrization, for example in terms of $\gamma=\log(b+c)$. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Emat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+b\Emat}$.
 
 
 \section{Stochastic approximations}
@@ -1900,12 +1904,24 @@ We have shown that the meta-embedding, $f_j(\zvec)$, is proportional to a t-dist
 In a typical i-vector PLDA speaker recognizer, we have $400\le D\le 600$, while $100\le d \le 200$. Since $\nu>0$, this means $\nu'>200$, which for all practical purposes means that $f_j(\zvec)$ is Gaussian:
 \begin{align}
 \label{eq:TMEvsGME}
-f_j{\zvec} &\propto \TD(\zvec\mid \mvec_j,b_j\Emat,\nu')
+f_j(\zvec) &\propto \TD(\zvec\mid \mvec_j,b_j\Emat,\nu')
 \approx \ND\bigl(\zvec\mid\mvec_j,(b_j\Emat)^{-1}\bigr)
 \end{align}
-Specifically, this is a \emph{simple} Gaussian meta-embedding (SGME), as explained in section~\ref{sec:SGME}. Nevertheless, these almost-Gaussian TMEs are different from the SGME given by Gaussian PLDA. In Gaussian PLDA (with $\nu\to\infty$), the raw meta-embeddings have constant precision, $\Emat$, while in the case of heavy-tailed noise, the precision is modulated by the data-dependent factor, $b_j=\frac{\nu'}{\nu+q_j}$.   
+Specifically, the RHS is a \emph{simple} Gaussian meta-embedding (SGME), as explained in section~\ref{sec:SGME}. That is:
+\begin{align}
+f_j(\zvec) &\approx \exp\bigl[\zvec'\avec -\frac12\zvec'\Bmat_j\zvec\bigr]
+\end{align}
+where the natural parameters are:
+\begin{align}
+\label{eq:TSGME_params}
+\Bmat_j &= b_j\Emat &\text{and} &&
+\avec_j &= \Bmat_j\mvec_j = b_j\Fmat'\Wmat\rvec_j
+\end{align}
 
-Let us examine $q_j$ in more detail, which is very interesting indeed. It turns out to be an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
+
+%Nevertheless, these almost-Gaussian TMEs are different from the SGME given by Gaussian PLDA. In Gaussian PLDA (with $\nu\to\infty$), the raw meta-embeddings have constant precision, $\Emat$, while in the case of heavy-tailed noise, the precision is modulated by the data-dependent factor, $b_j=\frac{\nu'}{\nu+q_j}$.   
+\subsubsection{Ancillary statistic}
+To better understand $b_j$, let us examine $q_j=\rvec'_j\Gmat\rvec$ in more detail, which is very interesting indeed. It turns out that $q_j$ is an \emph{ancillary statistic}---it is \emph{independent} of $\zvec$, because $\Gmat\Fmat=\nulvec$ and so: 
 \begin{align}
 \Gmat\rvec=\Gmat(\Fmat\zvec+\etavec)=\Gmat\etavec
 \end{align}
@@ -1936,7 +1952,20 @@ Our model can be generalized in the following ways:
 \subsection{LR computation}
 \def\pd#1#2{\frac{\partial#1}{\partial#2}}
 %\def\pdd#1#2{\frac{\partial#1}{\partial#2}}
-LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to an SGME, even though the noise may be very heavy tailed, with a small $\nu$. Let us proceed with the SGME approximation. We already know that SGME expectations can be done more efficiently than for the general GME case, as explained in section~\ref{sec:SGME}. Further speed-up can be achieved for example by the Taylor series approximation of section~\ref{sec:Taylor_expectation}.
+LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to an SGME, even though the noise may be very heavy tailed. Let us proceed with the SGME approximation, with natural parameters, $\avec_j,b_j\Emat$ given by~\eqref{eq:TSGME_params}. We already know that SGME expectations can be done more efficiently than for the general GME case, as explained in section~\ref{sec:SGME}. Given the precomputed eigendecomposition, $\Emat=\Vmat\Lambdamat\Vmat'$, the SGME log-expectation~\eqref{eq:SGME_log_ex} is:
+\begin{align}
+\begin{split}
+\log E(\avec,b) &= \avec'(\Imat+b\Emat)^{-1}\avec - \logdet{\Imat+b\Emat}\\
+&= \trace\Bigl[(\tilde\avec\tilde\avec')(\Imat+b\Lambdamat)^{-1}
+\Bigr] - \logdet{\Imat+b\Lambdamat}
+\end{split}
+\end{align}
+where $\tilde\avec=\Vmat'\avec$.
+
+
+
+
+Further speed-up can be achieved for example by the Taylor series approximation of section~\ref{sec:Taylor_expectation}.
 
 %\subsubsection{Exact GME scoring}
 %We are interested in matrix factorizations of matrices of the form $\Imat+b\Emat$, where $b$ varies but $\Emat$ remains fixed. It turns out we do not have to redo the matrix factorization for every $b$. Since $\Emat$ is symmetric positive semi-definite, we can factorize it as:
@@ -2415,7 +2444,7 @@ Although at $N=1$, we do have a proper scoring rule, the to-be-trained system ne
 \subsection{Fine conditioning}
 In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but some subsets overlap w.r.t\ speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df2} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
 
-Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets.
+Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets. $N>1$ seems better.
 
 \subsection{Hybrid recipe}
 The coarse conditioning recipe will still be computationally demanding if there are too many recordings per speaker. Conversely, the fine conditioning recipe remains challenging when there are too may speakers. The two strategies can however be combined. Below we sketch an example of how to do this to get a stochastic gradient descent training recipe: 
