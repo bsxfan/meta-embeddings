@@ -1443,7 +1443,7 @@ The apparently wayward magenta mean is the location where the blue and red distr
 
 \section{SGME: Simple Gaussian meta-embedding}
 \label{sec:SGME}
-A useful specialization of the GME, which we call \emph{simple Gaussian meta-embedding} (SGME), is obtained when $D=1$, so that precisions differ by a scale factor. As in the general case, we have $\avec_j=\R^d$, but there is but a single precision weight, which we denote with $b_j$, so that the precision is: 
+A useful specialization of the GME, which we call \emph{simple Gaussian meta-embedding} (SGME), is obtained when $D=1$, so that precisions differ by a scale factor. As in the general case, we have $\avec_j=\R^d$, but there is only a single precision weight, which we denote with $b_j$, so that the precision is: 
 \begin{align}
 \Bmat_j &= b_j\Emat
 \end{align}
@@ -1482,7 +1482,11 @@ where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembli
 \end{align}
 
 \subsubsection{Note}
-Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is $f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec]$, with the natural parameters: 
+Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is:
+\begin{align}
+f(\zvec)&=f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec] 
+\end{align}
+with the natural parameters:
 \begin{align}
 \tilde\avec&=\Vmat'\avec &\text{and} &&
 \tilde\Bmat&=\Vmat'\Bmat\Vmat = b\Lambdamat
@@ -2295,6 +2299,8 @@ $n$  & $10$ & $100$ & $1000$ & $10000$ & $100000$ \\
 bits & $17$ & $380$ & $6400$ & $92000$ & $1200000$
 \end{tabular} 
 $$
+Also notice that the number of bits is a superlinear function of $n$. This shows that if we were to chop a training database into subsets, the sum of the subset labels would contain less information than the original label.
+
 
 \section{Contrastive divergence}
 One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior be:

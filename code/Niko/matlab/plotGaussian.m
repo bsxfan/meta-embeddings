@@ -30,15 +30,18 @@ function tikz = plotGaussian(mu,C,colr,c)
         r2 = sqrt(D(1,1));
         rotate = acos(-v2(1))*180/pi;
     end
-    tikz = sprintf('\\draw[rotate around ={%4.3g:(%4.3g,%4.3g)},%s] (%4.3g,%4.3g) ellipse [x radius=%4.3g, y radius=%4.3g];\n',rotate,mu(1),mu(2),colr,mu(1),mu(2),r1,r2);        
     
+    if ~isempty(colr)
+        tikz = sprintf('\\draw[rotate around ={%4.3g:(%4.3g,%4.3g)},%s] (%4.3g,%4.3g) ellipse [x radius=%4.3g, y radius=%4.3g];\n',rotate,mu(1),mu(2),colr,mu(1),mu(2),r1,r2);
+        fprintf('%s',tikz);
+    end
     
     theta = (0:100)*2*pi/100;
     circle = [cos(theta);sin(theta)];
     ellipse = bsxfun(@plus,mu,V*sqrt(D)*circle);
     plot(ellipse(1,:),ellipse(2,:),c);
     
-    fprintf('%s',tikz);
+    
     
 
 
