@@ -69,7 +69,7 @@ function test_this()
     %[R,Z,precisions] = sample_HTPLDA_database(nu,F,labels);
     
     
-    n = 30;
+    n = 8;
     m = 5;
     %prior = create_PYCRP(0,[],m,n);
     prior = create_PYCRP([],0,m,n);
@@ -93,7 +93,18 @@ function test_this()
     HTPLDA.plot_database(R,labels,Z);
     axis('square');axis('equal');
     
+    tic;calc = create_partition_posterior_calculator(SGME.log_expectations,prior,labels);toc
     
+    scale = exp(-5:0.1:5);
+    MCL = zeros(size(scale));
+    tic;
+    for i=1:length(scale)
+        MCL(i) = - calc.logPostPoi(scale(i)*A,scale(i)*b);
+    end
+    toc
+    
+    figure;
+    semilogx(scale,MCL);
     
     %[precisions;b]
     

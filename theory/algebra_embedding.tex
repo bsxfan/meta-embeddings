@@ -2386,6 +2386,10 @@ For computational efficiency, we could construct an approximate Gibbs sampler an
 \end{enumerate}
 
 
+\subsubsection{Deterministic annealing}
+A problem with the Gibbs sampler, especially if only one label is changed per iteration, is that it can mix\footnote{MCMC slang for reaching equilibrium, where samples come from the true target distribution.} very slowly, getting stuck in some local mode of the posterior. For exponential family meta-embeddings, e.g.\ GMEs, the posterior can be flattened by multiplying the natural parameters with some factor smaller than one. This factor can then be gradually increased back to unity.
+
+
 \section{Pseudolikelihood}
 Pseudolikelihood as an alternative to intractable likelihood has been around for decades~\cite{Besag_pseudolikelihood}, but it seems it has only very recently been pointed out that pseudolikelihood is also a proper scoring rule~\cite{Dawid_Musio_ThApp_PSR_2014,Dawid_discrete_PSR}. 
 
@@ -2420,7 +2424,7 @@ To better understand the relationship between the pseudolikelihood of~\eqref{eq:
 \begin{align}
 P(\Lset \mid \Rset) &= \prod_{i=1}^{n} P(\ell_i\mid\Lset_{< i},\Rset)
 \end{align} 
-where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the missing labels ($n-i$ of them) have to be summed out.\footnote{$P(\ell_i\mid\Lset_{<i},\Rset_{<i})$ \emph{is} tractable, where $\Rset_{<i}=\{r_1,\ldots,r_{i-1}\}$.}
+where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the missing labels ($n-i$ of them) have to be summed out.\footnote{$P(\ell_i\mid\Lset_{<i},\Rset_{\le i})$ \emph{is} tractable, where $\Rset_{\le i}=\{r_1,\ldots,r_i\}$.}
 
 Finally, recall that the CRP prior \emph{is} tractable in autoregressive form~\eqref{eq:CRP_AR}, but that is because the CRP distribution is exchangeable.
 

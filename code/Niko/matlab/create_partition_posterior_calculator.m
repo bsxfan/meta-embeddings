@@ -19,13 +19,14 @@ function calc = create_partition_posterior_calculator(log_expectations,prior,poi
     ns = 2^n-1;       %number of non-empty customer subsets
     subsets = logical(mod(fix(bsxfun(@rdivide,0:ns,2.^(0:n-1)')),2));
     subsets = subsets(:,2:end);  % dump empty subset
-
+    %subsets = sparse(subsets);
     
     %maps partition to flags indicating subsets (blocks)
     % also returns table counts
     function [flags,counts] = labels2weights(labels)
         [blocks,counts] = labels2blocks(labels);
-        [tf,loc] = ismember(blocks',subsets','rows');
+        %blocks = sparse(blocks);
+        [tf,loc] = ismember(blocks',subsets','rows');  %seems faster with full matrices
         assert(all(tf));
         flags = false(ns,1);
         flags(loc) = true; 
@@ -46,7 +47,9 @@ function calc = create_partition_posterior_calculator(log_expectations,prior,poi
         log_prior(j) = prior.logprob(counts);
     end
     
-    
+    Weights = sparse(Weights);
+    subsets = sparse(subsets);
+    poi_weights = sparse(poi_weights);
     
     calc.logPost = @logPost;
     calc.logPostPoi = @logPostPoi;
