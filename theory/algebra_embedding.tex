@@ -14,6 +14,7 @@
 \usepackage{amssymb}%
 \usepackage{graphicx}
 
+\pdfminorversion=7
 
 \usepackage{tikz}
 
@@ -340,7 +341,7 @@
 
 \emph{Embeddings} are familiar in modern machine learning. Neural nets to extract word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
 
-Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}. A new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
+Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}, while a new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. The idea with embeddings is that they are representations of complex input patterns that live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
@@ -401,8 +402,8 @@ We base everything that follows on a pair of simple independence assumptions:
 \end{itemize}
 Almost all current probabilistic solutions in speaker recognition---also PLDA---make use of these assumptions. While these assumptions are mathematically convenient, in the real world they are not exactly true: 
 \begin{itemize}
-	\item The speech of any speaker will change over a time span of years and recordings made over such a period will not be exchangeable. 
-	\item The independence assumption between different speakers can only apply if our recognizer is sufficiently well trained: The recognizer has to have been exposed to so much speech, that only the speech of a new speaker itself can provide information about that speaker.
+	\item The speech of any speaker will change over a time span of years~\cite{Finnian} and recordings made over such a period will not be exchangeable. 
+	\item The independence assumption between different speakers can only apply if our recognizer is sufficiently well trained: The recognizer has to have been exposed to so much speech, that only the speech of a new speaker itself can provide information about that speaker~\cite{Jesus_IS11}.
 \end{itemize}
 As long as we understand the limitations imposed by our assumptions, we can proceed.  \\
 
@@ -1225,11 +1226,11 @@ To do expectations we need to define the prior. The simplest choice is the stand
 \end{align}
 
 \subsection{Expectation (L1 norm)}
-Since our logarithmic representation is closed under elementwise multiplication, our expectations can always be performed on representations of the form~\eqref{eq:gaussembed}. Dropping the subscript $j$ to avoid clutter, we derive an expression for $E(\avec,\Bmat)=\expv{f}{}$, where $f(\zvec)=\exp[\avec'\zvec-\frac12\zvec'\Bmat\zvec]$:
+Since our logarithmic representation is closed under elementwise multiplication, our expectations can always be performed on representations of the form~\eqref{eq:gaussembed}. Dropping the subscript $j$ to avoid clutter, we derive an expression for $E_G(\avec,\Bmat)=\expv{f}{}$, where $f(\zvec)=\exp[\avec'\zvec-\frac12\zvec'\Bmat\zvec]$:
 \begin{align}
 \label{eq:MVGproblem}
 \begin{split}
-E(\avec,\Bmat) &= \expv{f}{} \\
+E_G(\avec,\Bmat) &= \expv{f}{} \\
 &= \int_{\R^d} f(\zvec)\pi(\zvec) \,d\zvec \\
 &= \int_{\R^d} f(\zvec)\ND(\zvec\mid\nulvec,\Imat) \,d\zvec \\
 &= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec 
@@ -1239,7 +1240,7 @@ If we define $\muvec=(\Imat+\Bmat)^{-1}\avec$, we can rewrite this as:
 \begin{align}
 \label{eq:exactMVG}
 \begin{split}
-E(\avec,\Bmat) &= \expv{f}{} \\
+E_G(\avec,\Bmat) &= \expv{f}{} \\
 &= \int_{\R^d} \frac{\exp\bigl[\muvec'(\Imat+\Bmat)\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec \\
 &= \frac{\exp\bigl[\frac12\muvec'(\Imat+\Bmat)\muvec\bigr]}{\abs{\Imat+\Bmat}^{\frac12}}
 \int_{\R^d} \frac{\abs{\Imat+\Bmat}^\frac12}{\sqrt{(2\uppi)^d}} \exp\bigl[-\frac12(\zvec-\muvec)'(\Imat+\Bmat)(\zvec-\muvec)\bigr]\,d\zvec \\
@@ -1253,7 +1254,7 @@ For convenience, let us repeat this formula in logarithmic form:
 \begin{align}
 \label{eq:GMElogex}
 \begin{split}
-\log E(\avec,\Bmat) = \log\expp{f} 
+\log E_G(\avec,\Bmat) = \log\expp{f} 
 &= \frac12\avec'(\Imat+\Bmat)^{-1}\avec - \logdet{\Imat+\Bmat} \\
 &= \frac12\avec'\muvec - \logdet{\Imat+\Bmat}
 \end{split}
@@ -1263,31 +1264,31 @@ Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found for example b
 Our pooling and expectation operations can now be combined for LR calculation. For $f_1,f_2$ represented by $(\avec_1,\Bmat_1)$ and $(\avec_2,\Bmat_2)$, the normalized inner product is given by:
 \begin{align}
 \label{eq:LRMVG}
-\dotn{f_1}{f_2} &= \frac{\expp{f_1f_2}}{\expp{f_1}\expp{f_2}} = \frac{E(\avec_1+\avec_2,\Bmat_1+\Bmat_2)}{E(\avec_1,\Bmat_1)E(\avec_2,\Bmat_2)}
+\dotn{f_1}{f_2} &= \frac{\expp{f_1f_2}}{\expp{f_1}\expp{f_2}} = \frac{E_G(\avec_1+\avec_2,\Bmat_1+\Bmat_2)}{E_G(\avec_1,\Bmat_1)E_G(\avec_2,\Bmat_2)}
 \end{align}
 
 
 \subsection{L2 norm}
 As we have seen, we can represent all LR calculations via pooling and expectation. For non-negative Gaussians, expectation is also L1 norm.  However, as~\eqref{eq:dotvianorms} shows, we can alternatively assemble our LR calculations via the L2 norm. For Gaussian meta-embeddings, the L2 norm is readily calculated via the same expectation mechanism derived above. For an embedding $f$ represented by $(\avec,\Bmat)$, we have:
 \begin{align}
-\norm{f}^2 &= \dot{f}{f} = \expp{f^2} = \int_{\R^d}f(\zvec)^2\pi(\zvec)\,d\zvec = E(2\avec,2\Bmat)
+\norm{f}^2 &= \dot{f}{f} = \expp{f^2} = \int_{\R^d}f(\zvec)^2\pi(\zvec)\,d\zvec = E_G(2\avec,2\Bmat)
 \end{align}  
 Notice that 
 \begin{align}
 \label{eq:MVG_normalL2}
-\norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E(2\avec,2\Bmat)}{E(\avec,\Bmat)^2}
+\norm{\normal{f}}^2 &= \dotn{f}{f} = \frac{\expp{f^2}}{\expp{f}^2} = \frac{E_G(2\avec,2\Bmat)}{E_G(\avec,\Bmat)^2}
 \end{align}  
 If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If we use the closed-form expressions, maybe not. But as we shall see in section~\ref{sec:stochL2} below, stochastic approximations to the L2 norm may have advantages relative to stochastic L1 norm approximations.
 
 %\subsubsection{Backpropagation}
-%Derivation of the backpropagating equations for $E(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.
+%Derivation of the backpropagating equations for $E_G(\avec,\Bmat)$ can be done by using the fact that the derivatives w.r.t.\ the natural parameters of the log-normalizer of any exponential family distribution give the expected values of the sufficient statistics.
 
 
 %\subsection{Expectation via maximization}
 %We want to find the value of integral~\eqref{eq:MVGproblem}:
 %\begin{align}
 %\begin{split}
-%E(\avec,\Bmat) &= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec  \\
+%E_G(\avec,\Bmat) &= \int_{\R^d} \frac{\exp\bigl[\avec'\zvec -\frac12\zvec'(\Imat+\Bmat)\zvec\bigr]}{\sqrt{(2\uppi)^d}} \,d\zvec  \\
 %&= 
 %\end{split}
 %\end{align}
@@ -1296,7 +1297,7 @@ If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If 
 %To better understand this formula, let us examine the one-dimensional case, $\Zset=\R$. Denoting $b=\Bmat$ and $a=\avec$, where $a\in\R$ and $b\ge0$, we find:
 %\begin{align}
 %\begin{split}
-%E(a,b) &= \frac{e^{\frac12\frac{a^2}{1+b}}}{\sqrt{1+b}} \\
+%E_G(a,b) &= \frac{e^{\frac12\frac{a^2}{1+b}}}{\sqrt{1+b}} \\
 %&= \frac1{\sqrt{2\uppi}(1+b)\ND(a\mid0,1+b)}\\
 %&= \frac1{1+b}\,\frac{\ND(0\mid0,1)}{\ND(0\mid a,1+b)}\\
 %\end{split}
@@ -1304,13 +1305,14 @@ If L2 norm is computed using L1 norm, is there any advantage to the L2 norm? If 
 %Given two meta-embeddings, $f_1,f_2$, respectively represented by $(a_1,b_1)$ and $(a_2,b_2)$, the LR between them is:
 %\begin{align}
 %\begin{split}
-%\dotn{f_1}{f_2} &= \frac{E(a_1+a_2,b_1+b_2)}{E(a_1,b_1)E(a_2,b_2)} \\
+%\dotn{f_1}{f_2} &= \frac{E_G(a_1+a_2,b_1+b_2)}{E_G(a_1,b_1)E_G(a_2,b_2)} \\
 %&= \frac{(1+b_1)(1+b_2)}{1+b_1+b_2}\,\frac{\ND(0\mid a_1,1+b_1)\ND(0\mid a_2,1+b_2)}{\ND(0\mid 0,1)\ND(0\mid a_1+a_2,1+b_1+b_2)}
 %\end{split}
 %\end{align} 
 %
 
 \subsection{Graphical multivariate Gaussian examples}
+\label{sec:GME_examples}
 Let us again turn to some simple examples to better understand our multivariate Gaussian meta-embeddings. We choose $\zvec\in\Zset=R^2$, so that we can plot the examples. Recall that in the example of section~\ref{sec:exem} we were able to directly plot points in meta-embedding space. Here, that space is infinite-dimensional, so we cannot plot our meta-embeddings as points. But we \emph{can} plot representations of the Gaussian \emph{distributions} in $\Zset$-space. 
 
 In our plots below, every meta-embedding is shown as an ellipse, centered at the mean of the Gaussian. The ellipse represents the $\sigma=1$ contour so that it is elongated in directions where the meta-embedding has less certainty about the location of $\zvec$, while the ellipse is more compressed in directions of greater certainty.\footnote{The ellipse axes are aligned with the eigenvectors of the covariance, and the radii are the square roots of the eigenvalues. MATLAB code that computes LLRs and outputs Ti\emph{k}Z code for plotting the ellipses in \LaTeX~is available here: \url{http://github.com/bsxfan/meta-embeddings/tree/master/code/Niko/matlab}.}
@@ -1478,19 +1480,28 @@ which gives the other term of~\eqref{eq:GMElogex} as:
 where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembling everything gives:
 \begin{align}
 \label{eq:SGME_log_ex}
-\log E(\avec,b) &= \log\expp{f} = \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
+\log E_G(\avec,b) &= \log\expp{f} = \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
 \end{align}
 
-\subsubsection{Note}
+\subsubsection{Diagonalized SGME}
 Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is:
 \begin{align}
-f(\zvec)&=f(\tilde\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec] 
+f(\tilde\zvec)&=f(\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec] 
 \end{align}
 with the natural parameters:
 \begin{align}
 \tilde\avec&=\Vmat'\avec &\text{and} &&
 \tilde\Bmat&=\Vmat'\Bmat\Vmat = b\Lambdamat
 \end{align}  
+
+\section{DGME: Diagonal GME}
+A mild generalization of the diagonalized SGME---with similar computational requirements---is the \emph{diagonal Gaussian meta-embedding} (DGME), where we restrict the precisions, $\Bmat_j$, to be diagonal. In the canonical GME representation, we could express the diagonal precision as $\Bmat_j=\sum_{i=1}^D b_{ij}\Emat_i$, where all the $\Emat_i$ are diagonal and $D\le d$. For the full dimensionality, $D=d$, which we expect would be used by default, we don't need the $\Emat_i$ and we can represent $\Bmat_j$ as the diagonal matrix with diagonal $\bvec_j\in\R^d$.
+
+\subsubsection{Expectation (L1 norm)}
+The expected value of a DGME, $f(\zvec)=\exp[\zvec'\avec-\frac12\zvec'\Bmat\zvec]$, where $\Bmat$ is diagonal, with diagonal elements $b_i$, is given by:
+\begin{align}
+\log E_G(\avec,\bvec) &= \log\expp{f} = \frac12\sum_{i=1}^d \frac{a^2_i}{1+b_i} -\log(1+b_i)
+\end{align}
 
 \section{Complex Gaussians}
 
@@ -1612,7 +1623,7 @@ Let us think in terms of inner products, rather than expectations. If we want fa
 
 \chapter{Approximate computation}
 \label{chap:approx}
-Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be too slow to be useful in practice, unavailable in closed form, and maybe even completely intractable. Even the multivariate Gaussian meta-embeddings, which have tractable closed-form calculations are a lot slower than traditional Gaussian PLDA (GPLDA) scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the GPLDA scoring function.
+Meta-embeddings are more powerful than existing methods and therefore potentially more accurate, but the required calculation of inner products or expectations may be too slow to be useful in practice, unavailable in closed form, and maybe even completely intractable. Even the multivariate Gaussian meta-embeddings, for which we have tractable closed-form calculations are a lot slower than traditional Gaussian PLDA (GPLDA) scoring. In this chapter we examine some proposals for fast approximations. For reference below, we briefly derive the GPLDA scoring function.
 
 
 \section{The GPLDA score}
@@ -1622,7 +1633,7 @@ Adapting the notation of section~\ref{sec:MVG}, for the case $D=1$, the GPLDA GM
 \begin{align}
 \label{eq:PLDAscore}
 \begin{split}
-\log\dotn{f_i}{f_j} &=\log E(\avec_i+\avec_j,2\Emat)  -\log E(\avec_i,\Emat) -\log E(\avec_j,\Emat) \\
+\log\dotn{f_i}{f_j} &=\log E_G(\avec_i+\avec_j,2\Emat)  -\log E_G(\avec_i,\Emat) -\log E_G(\avec_j,\Emat) \\
 &= (\avec_i+\avec_j)' \Kmat (\avec_i+\avec_j)
 -\avec_i' \Lmat \avec_i -\avec_j' \Lmat \avec_j + C
 \end{split}
@@ -1655,9 +1666,6 @@ where $\nabla_\tvec$ and $\Hmat_\tvec$ are gradient and Hessian of $F$, obtained
 
 It is easy to verify that when this approximation is applied to the PLDA score~\eqref{eq:PLDAscore}, at for example $\tvec_0=\nulvec$, we recover the GPLDA score exactly. 
 
-\subsubsection{Implementation}
-In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived and hand-coded second-order differentiation. 
-
 
 \subsection{Asymmetric Taylor series approximation}
 A potentially more accurate, but somewhat slower approximation can be obtained by evaluating $F(\xvec,\yvec)$ at the exact, required value of say $\xvec$ and doing the expansion only w.r.t.\ $\yvec$. The approximation is:  
@@ -1674,10 +1682,12 @@ This recipe is slower, because for every $\xvec$ we need a new computation of $F
 \label{sec:Taylor_expectation}
 Yet more approximation recipes can be derived by approximating the log expectations, rather than the log LR scores. Consider for example the SGME log expectation of~\eqref{eq:SGME_log_ex}:
 \begin{align}
-\log E(\tilde\avec,b) &= \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
+\log E_G(\tilde\avec,b) &= \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
 \end{align}
 This expression is quadratic in $\tilde\avec$, just like for GPLDA, but more complex as a function of $b$. We can reduce the complexity w.r.t.\ $b$ by doing a second-order Taylor series expansion w.r.t.\ $b$. Otherwise, we can do it w.r.t.\ a reparametrization, for example in terms of $\gamma=\log(b+c)$. In preliminary experiments, we found that choosing $c$ as the reciprocal of the mean of the eigenvalues of $\Emat$ gives an almost linear relationship between $\gamma$ and $\log\detm{\Imat+b\Emat}$.
 
+\subsection{Implementation}
+In an environment where both complex arithmetic and first-order derivatives of $F$ are available, \emph{complex-step automatic differentiation} can be used (with some caveats) to compute the Hessian to high accuracy, without having to resort to laborious hand-derived and hand-coded second-order differentiation. 
 
 \section{Stochastic approximations}
 Since our meta-embeddings are essentially probability distributions, we can sample from them in many cases. This is explored below.
@@ -1960,7 +1970,7 @@ Our model can be generalized in the following ways:
 LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to an SGME, even though the noise may be very heavy tailed. Let us proceed with the SGME approximation, with natural parameters, $\avec_j,b_j\Emat$ given by~\eqref{eq:TSGME_params}. We already know that SGME expectations can be done more efficiently than for the general GME case, as explained in section~\ref{sec:SGME}. Given the precomputed eigendecomposition, $\Emat=\Vmat\Lambdamat\Vmat'$, the SGME log-expectation~\eqref{eq:SGME_log_ex} is:
 \begin{align}
 \begin{split}
-\log E(\avec,b) &= \avec'(\Imat+b\Emat)^{-1}\avec - \logdet{\Imat+b\Emat}\\
+\log E_G(\avec,b) &= \avec'(\Imat+b\Emat)^{-1}\avec - \logdet{\Imat+b\Emat}\\
 &= \trace\Bigl[(\tilde\avec\tilde\avec')(\Imat+b\Lambdamat)^{-1}
 \Bigr] - \logdet{\Imat+b\Lambdamat}
 \end{split}
@@ -2301,6 +2311,36 @@ bits & $17$ & $380$ & $6400$ & $92000$ & $1200000$
 $$
 Also notice that the number of bits is a superlinear function of $n$. This shows that if we were to chop a training database into subsets, the sum of the subset labels would contain less information than the original label.
 
+We show in the example below, via a brute-force calculation for a small data set, with $n=8$ and a single label worth about 12 bits, that the MCL objective already \emph{works}.
+
+
+\subsection{Example: MCL calibration of SGMEs}
+Figure~\ref{fig:SGME_MCL_CAL} shows an experiment on synthetic data that demonstrates the calibration-sensitive nature of the MCL objective. 
+
+We randomly sampled a data set, $\Rset$, consisting of eight i-vector-like recording representations, of dimensionality $D=20$, from the heavy-tailed PLDA model of section~\ref{sec:TPLDA}. We used $\zvec\in\R^2$ to make plotting possible. The model was parametrized with $\nu=3$, $\Wmat=\Imat$ and $\Fmat$ randomly generated using a scale that gives reasonable separation between speakers. 
+
+We extracted the eight simple Gaussian meta-embeddings (SGMEs), which as explained in section~\ref{sec:TPLDA} are a good approximation (for $D-d\gg1$) to the true meta-embeddings for this model. We then applied a deliberate miscalibration to these meta-embeddings, by scaling the natural parameters, with scale varying logarithmically through about 4 orders of magnitude. Scale factors larger than $1$ cause overoptimistic precisions (they would show smaller ellipses if plotted), while those smaller than $1$ do the opposite. 
+
+The MCL objective, $-P(\Lset^*\mid\Rset,\text{scale})$, where $\Lset^*$ is the true partition w.r.t\ speaker, was evaluated for every scale factor and plotted. As the plot shows, the optimal MCL value is close to unity (no miscalibration) as it should be. Recall that MCL requires a prior, for which we used CRP parametrized to have an expected number of speakers equal to 5. 
+
+For tractability, we chose the size of $\Rset$ at just $n=8$, for which there are already $4140$ partition possibilities. Our MCL implementation requires (for every value of the scale factor) the following: 
+\begin{itemize}
+	\item Pooling different combinations of meta-embeddings for each of the possible $2^{n}-1$ non-empty subsets. Since the SGME natural parameters are additive, this is implemented with (sparse) matrix multiplication. 
+	\item Computing log-expectations~\eqref{eq:SGME_log_ex} for every subset, $2^{n}-1$ of them.
+	\item Adding log-expectations (again with sparse matrix multiplication) to compute the log-likelihood for every possible partition, $n$-th Bell number of them. 
+\end{itemize}
+By doing some precomputation of some large, sparse index matrices,\footnote{Code is available at \url{http://github.com/bsxfan/meta-embeddings}.} we got every MCL computation (per scale factor) to be reasonably fast. Even for $n=10$, it takes about 10ms per MCL evaluation on a high-end laptop. However, because of the explosive Bell number, we can't go much higher than $n=10$, so for real datasets, as already mentioned, we cannot rely on brute-force MCL. We can however allow ourselves to assemble other recipes that apply MCL to subsets of data, as long as the subset sizes are no larger than say $n=10$.  
+
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[height=6cm,trim={3cm 7cm 4cm 8cm},clip]{Some_SGMEs.pdf}        %trim parameters: left, bottom, right, top
+\includegraphics[height=6cm,trim={0 7cm 6cm 8cm},clip]{SGME_calibration.pdf}
+\caption[MCL calibration of SGMEs]{MCL calibration of SGMEs. Left: 8 SGMEs for 5 speakers, using the same representation as in section~\ref{sec:GME_examples}. Dashed black shows $\pi(\zvec)$. Asterisks show the true values of the speaker identity variables. Right: The MCL objective, $-\log P(\Lset^*\mid\Rset,\text{scale})$, as a function of a deliberate miscalibration scale factor. The optimal value is close to unity as it should be.}
+\label{fig:SGME_MCL_CAL}
+\end{figure}
+
 
 \section{Contrastive divergence}
 One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior be:
@@ -2504,7 +2544,7 @@ Binary cross-entropy, applied to pairs of recordings, is a popular discriminativ
 \begin{align}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset)
 \end{align} 
-where $t_i,e_i\in\{1,\ldots,n\}$ are two indices (enroll and test) that select a pair of recordings and $h_i\in\{H_1,H_2\}$ is the (true) hypothesis that states whether this pair was spoken by one or two speakers. We can use all pairs that can be formed from $\Rset$ (where $e_i\ne t_i$), or we can use some subset of pairs chosen via some heuristic. (Given indices $t_i,e_i$, the true $h_i$ can be found from $\Lset$.) Unfortunately, $P(h_i \mid t_i, e_i, \Rset)$ is intractable, because it is conditioned on \emph{all} the recordings in $\Rset$. For a given pair, the rest of $\Rset$ may still contain speech from the same speaker(s) present in the pair, so that we effectively have a large unsupervised dataset, requiring an intractable sum over all the possibilities. If however, the prior $P(\Lset)$ is such that the large majority of the recordings in $\Rset$ do not have a speaker in common with the pair under test, then we could approximate:
+where $t_i,e_i\in\{1,\ldots,n\}$ are two indices (enroll and test) that select a pair of recordings and $h_i\in\{H_1,H_2\}$ is the (true) hypothesis that states whether this pair was spoken by one or two speakers. We can use all pairs that can be formed from $\Rset$ (where $e_i\ne t_i$), or we can use some subset of pairs chosen via some heuristic~\cite{Sandro_PSVM}. (Given indices $t_i,e_i$, the true $h_i$ can be found from $\Lset$.) Unfortunately, $P(h_i \mid t_i, e_i, \Rset)$ is intractable, because it is conditioned on \emph{all} the recordings in $\Rset$. For a given pair, the rest of $\Rset$ may still contain speech from the same speaker(s) present in the pair, so that we effectively have a large unsupervised dataset, requiring an intractable sum over all the possibilities. If however, the prior $P(\Lset)$ is such that the large majority of the recordings in $\Rset$ do not have a speaker in common with the pair under test, then we could approximate:
 \begin{align}
 \begin{split}
 S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset) \\
