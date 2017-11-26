@@ -17,7 +17,8 @@ function [subsets,counts] = labels2blocks(labels)
     assert(min(labels)==1,'illegal argument ''labels'': tables must be consecutively numbered from 1');
     assert(m <= n,'illegal argument ''labels'': there are more tables than customers');
     
-    subsets = bsxfun(@eq,1:m,labels(:));
+    %subsets = bsxfun(@eq,1:m,labels(:));
+    subsets = sparse(1:n,poi,true,n,m,n);
     counts = sum(subsets,1);
 
     assert(sum(counts)==n,'illegal argument ''labels'': table counts must add up to length(labels)');
