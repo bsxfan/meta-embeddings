@@ -3,18 +3,12 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     n = length(poi);
     m = max(poi);
 
-    blocks = sparse(1:n,poi,true,n,m+1,n);  %add extra empty table
+    %m-by-n index matrix, with one-hot columns
+    blocks = sparse(poi,1:n,true,m+1,n);  %add extra row for empty table
+    LLR = zeros(m+1,n);
+
+    logPrior = prior.Gibbs(labels);
     
-    
-    %precompute logprior(rest of labels when label i removed)
-    logprior_rest = zeros(1,n);
-    ci = counts;
-    for k=1:n
-        ti = labels(k);
-        ci(ti) = ci(ti) - 1;
-        logprior_rest(k) = prior.logprob(ci(ci>0));     
-        ci(ti) = counts(ti);
-    end
     
     
     calc.log_pseudo_likelihood = @log_pseudo_likelihood;
@@ -25,43 +19,34 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         %[dimB,nB] = size(B);assert(n==nB);
         
         %original table stats
-        At = A*blocks;
-        Bt = B*blocks;
+        At = A*blocks.';
+        Bt = B*blocks.';
         %log-expectations for every original table
         LEt = log_expectations(At,Bt);
+        
+        %log-expectations for every customer at his own table
+        LEc = log_expectations(A,B);
         
         %for every customer: log-expectation for the rest of the table,
         %                    excluding this customer
         LEmin = log_expectations(At(:,labels) - A,Bt(:,labels) - B);
         
-        
-        %log-expectations for every table, (re)joined by every customer
-        LEx = zeros(n,m);
-        for j=1:m+1
-            bj = blocks(:,j).'; %customers at this table
-            Aplus = bsxfun(@plus,At(:,j),A); %table is joined by every customer 
-            Aplus(bj) = Aplus(bj) - A(bj);   %except those already sitting there
-            Bplus = bsxfun(@plus,Bt(:,j),B);
-            Bplus(bj) = Bplus(bj) - B(bj);
-            LEx(:,j) = log_expectations(Aplus,Bplus).';
+        for i=1:m
+             tar = blocks(i,:);  %target trials in this row 
+             non = ~tar;         %the non-targets 
+             
+             LLR(i,tar) = LEt(labels(tar)) - LEc(non) - LEmin(tar);
+             
+             Aplus = At(labels(non)) + A(non);
+             Bplus = Bt(labels(non)) + B(non);
+             LLR(i,non) = log_expectations(Aplus,Bplus) - LEc(non) - LEt(i);
         end
+        %LLR(m+1,:) = 0; already zeroed
         
-        %log-expectations for every customer sitting at his own new table
-        LEc = LEx(:,m+1);
-        
-        y = 0;
-        for i=1:n
-            left = LEc(i);
-            right = LEt;
-            right(labels(i)) = LEmin(i);
-            both = LEx(:,i).'; 
-            LLR = both - left - right;
-        end
-
-        LLR = bsxfun(@minus,LEx,LEt);
-        LLR = bsxfun(@minus,LLR,LEc);
-        LLR = LLR + LEt() - LEmin(); 
-        
+        logPost = LLR + logPrior;
+        M = max(logPost,[],1);
+        Den = M + log(sum(exp(bsxfun(@minus,logPost,M)),1));
+        y = sum(logPost(blocks)) - sum(Den); 
     
     end
 

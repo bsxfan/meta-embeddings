@@ -38,6 +38,24 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         discount = beta;
     end
     
+
+    function logP = Gibbs(blocks)
+        m,n = size(blocks);
+        counts = sum(blocks,2);
+        logP0 = logprob(counts);
+        logP = zeros(m,n);
+        for i=1:m+1
+            tar = blocks(i,:);
+            non = ~tar;
+            
+            counts_min = counts(labels(tar)) -1;
+            logP(i,tar) = logP0 - gammaln(counts_min - beta);
+            
+            counts_plus = counts(labels(non))
+        end
+    end
+
+
     
     function e = expected_number_tables(n)
         e = ent(alpha,beta,n);
