@@ -32,6 +32,7 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     PYCRP.set_expected_number_tables = @set_expected_number_tables;
     PYCRP.ent = @ent;
     PYCRP.getParams = @getParams;
+    PYCRP.GibbsMatrix = @GibbsMatrix;
     
     function [concentration,discount] = getParams()
         concentration = alpha;
@@ -39,21 +40,6 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     end
     
 
-    function logP = Gibbs(blocks)
-        m,n = size(blocks);
-        counts = sum(blocks,2);
-        logP0 = logprob(counts);
-        logP = zeros(m,n);
-        for i=1:m+1
-            tar = blocks(i,:);
-            non = ~tar;
-            
-            counts_min = counts(labels(tar)) -1;
-            logP(i,tar) = logP0 - gammaln(counts_min - beta);
-            
-            counts_plus = counts(labels(non))
-        end
-    end
 
 
     
@@ -232,9 +218,36 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     end
 
 
+    % GibbsMatrix. Computes matrix of conditional log-probabilities 
+    % suitable for Gibbs sampling, or pseudolikelihood calculation.
+    % Input: 
+    %   labels: n-vector, maps each of n customers to a table in 1..m 
+    % Output:
+    %   logP: (m+1)-by-n matrix of **unnormalized** log-probabilities
+    %         logP(i,j) = log P(customer j at table i | seating of all others) + const
+    %         table m+1 is a new table
+    function logP = GibbsMatrix(labels)
+        m = max(labels);
+        n = length(labels);
+        blocks = sparse(labels,1:n,true);
+        counts = sum(blocks,2);                            %original table sizes
+        logP = repmat([log(counts-beta);alpha+m*beta],1,n);  %most common values for every row
+        table_emptied = false(1,n);                        %new empty table when customer j removed
+        for i=1:m
+            cmin = counts(i) - 1;
+            tar = blocks(i,:);
+            if cmin==0  %table empty 
+                logP(i,tar) = log(alpha + (m-1)*beta);              
+                table_emptied(tar) = false;
+            else
+                logP(i,tar) = log(cmin-beta);
+            end
+        end
+        logP(m+1,table_emptied) = -inf; 
+    end
+
 
     function [labels,counts] = sample(T)
-
         labels = zeros(1,T);
         counts = zeros(1,T);
         labels(1) = 1;
@@ -242,9 +255,6 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         counts(1) = 1;
         for i=2:T
             p = zeros(K+1,1);
-%             for k=1:K
-%                 p(k) = counts(k) - beta;
-%             end
             p(1:K) = counts(1:K) - beta; 
             p(K+1) = alpha + K*beta;
             [~,k] = max(randgumbel(K+1,1) + log(p));  
@@ -259,8 +269,6 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         end
         counts = counts(1:K);
         labels = labels(randperm(T));
-        
-        
     end
     
     

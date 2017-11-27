@@ -1,13 +1,20 @@
 function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
+% Inputs:
+%   log_expectations: function handle
+%   poi: partition of interest, n-vector that maps customers to tables
+%   prior: exchangeble prior, struct, for example CRP
+%
 
-    n = length(poi);
-    m = max(poi);
+    n = length(poi);  % # customers
+    m = max(poi);     % # tables
 
+    labels = poi;
+    
     %m-by-n index matrix, with one-hot columns
     blocks = sparse(poi,1:n,true,m+1,n);  %add extra row for empty table
     LLR = zeros(m+1,n);
 
-    logPrior = prior.Gibbs(labels);
+    logPrior = prior.GibbsMatrix(poi);
     
     
     
@@ -24,7 +31,7 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         %log-expectations for every original table
         LEt = log_expectations(At,Bt);
         
-        %log-expectations for every customer at his own table
+        %log-expectations for every customerm alone at singleton table
         LEc = log_expectations(A,B);
         
         %for every customer: log-expectation for the rest of the table,
@@ -35,10 +42,10 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
              tar = blocks(i,:);  %target trials in this row 
              non = ~tar;         %the non-targets 
              
-             LLR(i,tar) = LEt(labels(tar)) - LEc(non) - LEmin(tar);
+             LLR(i,tar) = LEt(labels(tar)) - LEc(tar) - LEmin(tar);
              
-             Aplus = At(labels(non)) + A(non);
-             Bplus = Bt(labels(non)) + B(non);
+             Aplus = At(:,labels(non)) + A(:,non);
+             Bplus = Bt(:,labels(non)) + B(:,non);
              LLR(i,non) = log_expectations(Aplus,Bplus) - LEc(non) - LEt(i);
         end
         %LLR(m+1,:) = 0; already zeroed
