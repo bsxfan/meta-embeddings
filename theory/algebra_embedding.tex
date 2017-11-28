@@ -2390,7 +2390,7 @@ If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs samp
 	\item Sample a new speaker label, $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
 	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
 \end{enumerate}
-In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$. We have:
+In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$ and indeed, for a typical training database $k'\ll n$. We have:
 \begin{align}
 \label{eq:Gibbsfactor}
 \begin{split}
@@ -2456,7 +2456,7 @@ To see that the pseudoscore forms a proper scoring rule, consider:
 \end{align}
 where we have used the fact that the argument of the inner expectation is the logarithmic proper scoring rule, so that the inner expectation is minimized at $\theta^*$, for every $i$ and $\Li$. 
 
-It can be shown that the pseudoscore is indeed also \emph{strictly} proper. The pseudoscore is a special case of a \emph{composite score} (to be discussed below). A composite score is strictly proper provided that (i) every term in the composition is strictly proper; and that (ii) the individual terms completely determine the full joint distribution~\cite{Dawid_Musio_ThApp_PSR_2014}. The first condition is met because the pseudoscore is composed of logarithmic scores and the second condition is met thanks to \emph{Brook's lemma}~\cite{Lyu_BrooksLemma,BrooksLemma}.
+It can be shown that the pseudoscore is indeed also \emph{strictly} proper. The pseudoscore is a special case of a \emph{composite score} (to be discussed below). According to~\cite{Dawid_Musio_ThApp_PSR_2014}, a composite score is strictly proper provided that (i) every term in the composition is strictly proper; and that (ii) the individual terms completely determine the full joint distribution. The first condition is met because the pseudoscore is composed of logarithmic scores. The second condition is met thanks to \emph{Brook's lemma}~\cite{Lyu_BrooksLemma,BrooksLemma}.
 
 
 \subsection{Note on autoregressive full conditional likelihood}

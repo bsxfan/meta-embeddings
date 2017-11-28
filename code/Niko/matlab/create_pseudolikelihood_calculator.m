@@ -75,7 +75,7 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         
         %for every customer: log-expectation for the rest of the table,
         %                    excluding this customer
-        LEmin = log_expectations(At(:,labels) - A,Bt(:,labels) - B);
+        %LEmin = log_expectations(At(:,labels) - A,Bt(:,labels) - B);
         
         y = 0;
         LLR = zeros(m+1,1);
@@ -84,7 +84,12 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
             Aplus = bsxfun(@plus,A(:,j),At);
             Bplus = bsxfun(@plus,B(:,j),Bt);
             LLR(1:m) = log_expectations(Aplus,Bplus).' - LEt.' - LEc(j);
-            LLR(tj) = LEt(tj) - LEmin(tj) - LEc(j);
+            
+            Amin = At(:,tj) - A(:,j);
+            Bmin = Bt(:,tj) - B(:,j);
+            LLR(tj) = LEt(tj) - log_expectations(Amin,Bmin) - LEc(j);
+            
+            
             LLR(m+1) = 0; 
             
             logPost = LLR + logPrior(:,j);

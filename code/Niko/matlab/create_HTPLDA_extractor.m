@@ -1,8 +1,8 @@
 function HTPLDA = create_HTPLDA_extractor(F,nu,W)
 
     if nargin==0
-        %test_PsL();
-        test_this();
+        test_PsL();
+        %test_this();
         return;
     end
 
@@ -97,7 +97,7 @@ function test_this()
     tic;calc = create_partition_posterior_calculator(SGME.log_expectations,prior,labels);toc
     tic;calc2 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);toc
     
-    scale = 1; %exp(-5:0.1:5);
+    scale = exp(-5:0.1:5);
     MCL = zeros(size(scale));
     PsL = zeros(size(scale));
     tic;
@@ -108,8 +108,9 @@ function test_this()
     toc
     
     figure;
-    subplot(2,1,1);semilogx(scale,MCL);title('MCL')
-    subplot(2,1,2);semilogx(scale,PsL);title('PsL');
+    %subplot(2,1,1);semilogx(scale,MCL);title('MCL')
+    %subplot(2,1,2);semilogx(scale,PsL);title('PsL');
+    semilogx(scale,MCL,scale,PsL);legend('MCL','PsL');
     
     %[precisions;b]
     
