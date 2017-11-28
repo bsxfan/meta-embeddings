@@ -6,7 +6,8 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     
 
     if nargin==0
-        test_this2();
+        %test_this2();
+        test_Gibbsmatrix()
         return;
     end
 
@@ -33,6 +34,7 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     PYCRP.ent = @ent;
     PYCRP.getParams = @getParams;
     PYCRP.GibbsMatrix = @GibbsMatrix;
+    PYCRP.slowGibbsMatrix = @slowGibbsMatrix;
     
     function [concentration,discount] = getParams()
         concentration = alpha;
@@ -230,20 +232,47 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         m = max(labels);
         n = length(labels);
         blocks = sparse(labels,1:n,true);
-        counts = sum(blocks,2);                            %original table sizes
-        logP = repmat([log(counts-beta);alpha+m*beta],1,n);  %most common values for every row
+        counts = full(sum(blocks,2));                            %original table sizes
+        logP = repmat(log([counts-beta;alpha+m*beta]),1,n);  %most common values for every row
+        
+        %return;
+        
         table_emptied = false(1,n);                        %new empty table when customer j removed
         for i=1:m
             cmin = counts(i) - 1;
             tar = blocks(i,:);
             if cmin==0  %table empty 
                 logP(i,tar) = log(alpha + (m-1)*beta);              
-                table_emptied(tar) = false;
+                table_emptied(tar) = true;
             else
                 logP(i,tar) = log(cmin-beta);
             end
         end
         logP(m+1,table_emptied) = -inf; 
+    end
+
+
+    function logP = slowGibbsMatrix(labels)
+        m = max(labels);
+        n = length(labels);
+        blocks = sparse(labels,1:n,true,m+1,n);
+        counts = full(sum(blocks,2));                            %original table sizes
+        logP = zeros(m+1,n);
+        for j=1:n
+            cj = counts;
+            tj = labels(j);
+            cj(tj) = cj(tj) - 1;
+            nz = cj>0;
+            k = sum(nz);
+            if k==m
+                logP(nz,j) = log(cj(nz) - beta);
+                logP(m+1,j) = log(alpha + m*beta);
+            else %new empty table
+                logP(nz,j) = log(cj(nz) - beta);
+                logP(tj,j) = log(alpha + k*beta);
+                logP(m+1,j) = -inf;
+            end
+        end
     end
 
 
@@ -321,6 +350,20 @@ function test_this2()
         fprintf('(%i,%6.4f) ',2*i,K2(i))
     end
     fprintf('\n');
+    
+    
+end
+
+
+function test_Gibbsmatrix()
+
+    alpha = randn^2;
+    beta = rand;
+    PYCRP = create_PYCRP(alpha,beta);
+    labels = [1 1 1 2 1 3 4 4]
+    logP = exp(PYCRP.slowGibbsMatrix(labels))
+    
+    logP = exp(PYCRP.GibbsMatrix(labels))
     
     
 end

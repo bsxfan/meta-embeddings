@@ -1,8 +1,8 @@
 function HTPLDA = create_HTPLDA_extractor(F,nu,W)
 
     if nargin==0
-        test_PsL();
-        %test_this();
+        %test_PsL();
+        test_this();
         return;
     end
 
@@ -97,13 +97,13 @@ function test_this()
     tic;calc = create_partition_posterior_calculator(SGME.log_expectations,prior,labels);toc
     tic;calc2 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);toc
     
-    scale = exp(-5:0.1:5);
+    scale = 1; %exp(-5:0.1:5);
     MCL = zeros(size(scale));
     PsL = zeros(size(scale));
     tic;
     for i=1:length(scale)
         MCL(i) = - calc.logPostPoi(scale(i)*A,scale(i)*b);
-        PsL(i) = - calc2.log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+        PsL(i) = - calc2.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
     end
     toc
     
@@ -124,7 +124,7 @@ function test_PsL()
     zdim = 10;
     xdim = 100;      %required: xdim > zdim
     nu = 2;         %required: nu >= 1, integer, DF
-    fscal = 1;      %increase fscal to move speakers apart
+    fscal = 3;      %increase fscal to move speakers apart
     
     F = randn(xdim,zdim)*fscal;
 
@@ -147,7 +147,7 @@ function test_PsL()
 
     close all;
     
-    if max(labels)<=12
+    if zdim==2 && max(labels)<=12
         figure;hold;
         plotGaussian(zeros(zdim,1),eye(zdim),'black, dashed','k--');
 
@@ -161,7 +161,7 @@ function test_PsL()
     PsL = zeros(size(scale));
     tic;
     for i=1:length(scale)
-        PsL(i) = - calc.log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+        PsL(i) = - calc.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
     end
     toc
     

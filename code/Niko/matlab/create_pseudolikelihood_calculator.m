@@ -11,14 +11,16 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     labels = poi;
     
     %m-by-n index matrix, with one-hot columns
-    blocks = sparse(poi,1:n,true,m+1,n);  %add extra row for empty table
-    LLR = zeros(m+1,n);
+    blocks = sparse(poi,1:n,true,m,n);  %add extra row for empty table
+    %LLR = zeros(m+1,n);
 
-    logPrior = prior.GibbsMatrix(poi);
+    logPrior = prior.GibbsMatrix(poi);  
+    %logPrior = prior.slowGibbsMatrix(poi);
     
     
     
     calc.log_pseudo_likelihood = @log_pseudo_likelihood;
+    calc.slow_log_pseudo_likelihood = @slow_log_pseudo_likelihood;
     
     function y = log_pseudo_likelihood(A,B)
         
@@ -31,7 +33,7 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         %log-expectations for every original table
         LEt = log_expectations(At,Bt);
         
-        %log-expectations for every customerm alone at singleton table
+        %log-expectations for every customer, alone at singleton table
         LEc = log_expectations(A,B);
         
         %for every customer: log-expectation for the rest of the table,
@@ -57,6 +59,44 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     
     end
 
+    function y = slow_log_pseudo_likelihood(A,B)
+        
+        %[dimA,nA] = size(A);assert(n==nA);
+        %[dimB,nB] = size(B);assert(n==nB);
+        
+        %original table stats
+        At = A*blocks.';
+        Bt = B*blocks.';
+        %log-expectations for every original table
+        LEt = log_expectations(At,Bt);
+        
+        %log-expectations for every customer, alone at singleton table
+        LEc = log_expectations(A,B);  
+        
+        %for every customer: log-expectation for the rest of the table,
+        %                    excluding this customer
+        LEmin = log_expectations(At(:,labels) - A,Bt(:,labels) - B);
+        
+        y = 0;
+        LLR = zeros(m+1,1);
+        for j=1:n
+            tj = labels(j); 
+            Aplus = bsxfun(@plus,A(:,j),At);
+            Bplus = bsxfun(@plus,B(:,j),Bt);
+            LLR(1:m) = log_expectations(Aplus,Bplus).' - LEt.' - LEc(j);
+            LLR(tj) = LEt(tj) - LEmin(tj) - LEc(j);
+            LLR(m+1) = 0; 
+            
+            logPost = LLR + logPrior(:,j);
+            M = max(logPost);
+            Den = M + log(sum(exp(logPost-M)));
+            y = y + logPost(tj) - Den; 
+            post = exp(logPost - Den);
+            
+        end
+        
+    
+    end
 
 
 
