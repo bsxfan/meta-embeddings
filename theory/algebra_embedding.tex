@@ -2283,6 +2283,13 @@ Although the posterior is intractable to evaluate, we \emph{can} sample from it,
 
 For small $n$, see for example~\cite{orlov}, for an algorithm to iterate through all the partitions.
 
+
+
+
+
+
+
+
 \section{The intractable MCL objective}
 \label{sec:MCL}
 In supervised training of generative models, \emph{maximum likelihood} (ML) is the natural training criterion: 
@@ -2315,6 +2322,7 @@ We show in the example below, via a brute-force calculation for a small data set
 
 
 \subsection{Example: MCL calibration of SGMEs}
+\label{sec:MCLcal}
 Figure~\ref{fig:SGME_MCL_CAL} shows an experiment on synthetic data that demonstrates the calibration-sensitive nature of the MCL objective. 
 
 We randomly sampled a data set, $\Rset$, consisting of eight i-vector-like recording representations, of dimensionality $D=20$, from the heavy-tailed PLDA model of section~\ref{sec:TPLDA}. We used $\zvec\in\R^2$ to make plotting possible. The model was parametrized with $\nu=3$, $\Wmat=\Imat$ and $\Fmat$ randomly generated using a scale that gives reasonable separation between speakers. 
@@ -2342,7 +2350,64 @@ By doing some precomputation of some large, sparse index matrices,\footnote{Code
 \end{figure}
 
 
+\section{Gibbs sampling}
+As we shall see below in section~\ref{sec:CD}, the intractable MCL objective can be replaced by recipes based on Monte-Carlo sampling from the intractable partition posterior. In this section we present some recipes based on Gibbs sampling. 
+
+\def\LI{\Lset_{\setminus\Iset}}
+\label{sec:Gibbs}
+If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs sampler for the posterior $P(\Lset\mid\Rset)$ can be constructed as follows. Let $n$ be the number of recordings. Given the previously sampled partition, $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select $i\in\{1,\ldots,n\}$, randomly, or in round-robin fashion.
+	\item Obtain $\Li$ by removing index $i$ from $\Lset$, as explained in section~\ref{sec:CRP}.
+	\item Sample a new speaker label, $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
+	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
+\end{enumerate}
+In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$ and indeed, for a typical training database $k'\ll n$. We have:
+\begin{align}
+\label{eq:Gibbsfactor}
+\begin{split}
+P(\ell_i\mid\Li,\Rset) &\propto P(\ell_i\mid\Li) P(\Rset\mid\ell_i,\Li) \\
+&\propto P(\ell_i\mid\Li) \frac{P(\Rset\mid\ell_i,\Li)}{P(\Rset\mid\bar\Lset_i)} 
+\end{split}
+\end{align}  
+where as above, $\bar\Lset_i$ is a conveniently chosen constant partition. To be clear, $\bar\Lset_i$ must be independent of the value of $\ell_i$, but may be dependent on the index $i$. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second RHS factor (likelihood-ratio) can be computed with the methods of section~\ref{sec:simpleLR}. The most convenient choice of $\bar\Lset_i$ could vary depending on the context. We highlight $\bar\Lset_i=(\ell_i=k'+1,\Li)$, which casts~\eqref{eq:Gibbsfactor} as an open-set classifier, for which the LR factor is given by \eqref{eq:lropenset}.
+
+\subsubsection{Gibbs sampling and the Hasse diagram}
+To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one speaker label has to change for this move. 
+
+Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker labels in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
+
+\subsection{Generalized Gibbs sampler}
+Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m\le n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select an index subset, $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$.
+	\item Sample a set of $m$ new speaker labels, denoted $\Lset_\Iset$, from  $P(\Lset_\Iset\mid\LI,\Rset)$.
+	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
+\end{enumerate}
+Let us examine the case $m=2$. Let the number of speakers hypothesized by $\LI$ be $k'$. The number of possibilities for $\Lset_\Iset$ is $(k'+1)^2+1$. (Each of the two recordings can belong independently to one of $k'$ speakers, or be a new speaker, giving $(k'+1)^2$ possibilities, but there is another possibility that both recordings belong to the same new speaker.) In the general case, all partition possibilities having up to $m$ new speakers, must be included. We cannot make $m$ too large in this Gibbs sampler. 
+
+\subsection{Approximate Gibbs sampler}
+For computational efficiency, we could construct an approximate Gibbs sampler and use that as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+\begin{enumerate}
+	\item Select $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. Denote the number of speakers in $\Li$ by $k'$.
+	\item Sample the $m$ new speaker labels independently (and therefore efficiently), as if this were an open-set speaker recognition problem, with $k'$ enrolled speakers. This gives anywhere from $0$ to $m$ new speakers, say $k''$ of them.
+	\item If $k''>0$, sample a partition for this set of $k''$ recordings. (If this is done by some flavour of Markov chain Monte Carlo, some thought will have to be given to which initial state to use.)
+	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
+	\item Apply the Metropolis-Hastings acceptance criterion to the new partition $\Lset$. For details, see for example~\cite{PRML}, chapter 11, and references therein. 
+\end{enumerate}
+
+
+\subsection{Deterministic annealing}
+A problem with the Gibbs sampler, especially if only one label is changed per iteration, is that it can mix\footnote{MCMC slang for reaching equilibrium, where samples come from the true target distribution.} very slowly, getting stuck in some local mode of the posterior. For exponential family meta-embeddings, e.g.\ GMEs, the posterior can be flattened by multiplying the natural parameters with some factor smaller than one. This factor can then be gradually increased back to unity.
+
+
+
+
+
 \section{Contrastive divergence}
+\label{sec:CD}
 One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior be:
 \begin{align}
 \tilde P(\Lset\mid\Rset,\theta) = Z(\Rset,\theta)  P(\Lset\mid\Rset,\theta) 
@@ -2379,55 +2444,6 @@ where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The sa
 %\end{align}
 
 
-
-\subsection{Gibbs sampling}
-\def\LI{\Lset_{\setminus\Iset}}
-\label{sec:Gibbs}
-If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs sampler for the posterior $P(\Lset\mid\Rset)$ can be constructed as follows. Let $n$ be the number of recordings. Given the previously sampled partition, $\Lset$, the next sample is obtained as follows:
-\begin{enumerate}
-	\item Select $i\in\{1,\ldots,n\}$, randomly, or in round-robin fashion.
-	\item Obtain $\Li$ by removing index $i$ from $\Lset$, as explained in section~\ref{sec:CRP}.
-	\item Sample a new speaker label, $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
-	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
-\end{enumerate}
-In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$ and indeed, for a typical training database $k'\ll n$. We have:
-\begin{align}
-\label{eq:Gibbsfactor}
-\begin{split}
-P(\ell_i\mid\Li,\Rset) &\propto P(\ell_i\mid\Li) P(\Rset\mid\ell_i,\Li) \\
-&\propto P(\ell_i\mid\Li) \frac{P(\Rset\mid\ell_i,\Li)}{P(\Rset\mid\Lset_0)} 
-\end{split}
-\end{align}  
-where as above, $\Lset_0$ is a convenient, fixed partition. The first RHS factor (prior) is given by~\eqref{eq:CRP_recur}, while the second RHS factor (likelihood-ratio) can be computed with the methods of section~\ref{sec:generalLR}.
-
-To better understand this Gibbs sampling procedure and possible generalizations, consider again the Hasse diagram in figure~\ref{fig:lattice}. The Gibbs sampler moves between nodes of the lattice, but the moves it can do are not the same as the arcs in the Hasse diagram. For example, the Gibbs sampler can jump from $124|3$ to $12|24$, a move for which there is no arc in the diagram. Conversely, in the Hasse diagram, $14|23$ and $1234$ are connected, but the Gibbs sampler cannot do this in one step, because more than one speaker label has to change for this move. 
-
-Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker labels in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
-
-\subsubsection{Generalized Gibbs sampler}
-Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m\le n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
-\begin{enumerate}
-	\item Select an index subset, $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
-	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$.
-	\item Sample a set of $m$ new speaker labels, denoted $\Lset_\Iset$, from  $P(\Lset_\Iset\mid\LI,\Rset)$.
-	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
-\end{enumerate}
-Let us examine the case $m=2$. Let the number of speakers hypothesized by $\LI$ be $k'$. The number of possibilities for $\Lset_\Iset$ is $(k'+1)^2+1$. (Each of the two recordings can belong independently to one of $k'$ speakers, or be a new speaker, giving $(k'+1)^2$ possibilities, but there is another possibility that both recordings belong to the same new speaker.) In the general case, all partition possibilities having up to $m$ new speakers, must be included. We cannot make $m$ too large in this Gibbs sampler. 
-
-\subsubsection{Approximate Gibbs sampler}
-For computational efficiency, we could construct an approximate Gibbs sampler and use that as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
-\begin{enumerate}
-	\item Select $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
-	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. Denote the number of speakers in $\Li$ by $k'$.
-	\item Sample the $m$ new speaker labels independently (and therefore efficiently), as if this were an open-set speaker recognition problem, with $k'$ enrolled speakers. This gives anywhere from $0$ to $m$ new speakers, say $k''$ of them.
-	\item If $k''>0$, sample a partition for this set of $k''$ recordings. (If this is done by some flavour of Markov chain Monte Carlo, some thought will have to be given to which initial state to use.)
-	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
-	\item Apply the Metropolis-Hastings acceptance criterion to the new partition $\Lset$. For details, see for example~\cite{PRML}, chapter 11, and references therein. 
-\end{enumerate}
-
-
-\subsubsection{Deterministic annealing}
-A problem with the Gibbs sampler, especially if only one label is changed per iteration, is that it can mix\footnote{MCMC slang for reaching equilibrium, where samples come from the true target distribution.} very slowly, getting stuck in some local mode of the posterior. For exponential family meta-embeddings, e.g.\ GMEs, the posterior can be flattened by multiplying the natural parameters with some factor smaller than one. This factor can then be gradually increased back to unity.
 
 
 \section{Pseudolikelihood}
@@ -2467,6 +2483,22 @@ P(\Lset \mid \Rset) &= \prod_{i=1}^{n} P(\ell_i\mid\Lset_{< i},\Rset)
 where $\Lset_{< i}$ is obtained from $\Lset$ by retaining all indices less than $i$ and removing the rest. As before, $\ell_i$ is the speaker label for recording $r_i$ and takes values in $\{1,\ldots,k'+1\}$, when there are $k'$ speakers in $\Lset_{< i}$. The pseudolikelihood factors, $P(\ell_i\mid\Li,\Rset)$, are tractable because there are no hidden labels, but the autoregressive factors, $P(\ell_i\mid\Lset_{< i},\Rset)$, are intractable (except for small $n-i$), because all the missing labels ($n-i$ of them) have to be summed out.\footnote{$P(\ell_i\mid\Lset_{<i},\Rset_{\le i})$ \emph{is} tractable, where $\Rset_{\le i}=\{r_1,\ldots,r_i\}$.}
 
 Finally, recall that the CRP prior \emph{is} tractable in autoregressive form~\eqref{eq:CRP_AR}, but that is because the CRP distribution is exchangeable.
+
+\subsection{Example: MCL vs Pseudolikelihood}
+In an experiment similar to that of section~\ref{sec:MCLcal}, also with 8 recordings, we compare the MCL criterion with the pseudolikelihood. The result is shown in figure~\ref{fig:MCL_vs_PsL}. Further calibration experiments were done on much larger synthetic datasets, for which pseudolikelihood remains tractable, but MCL not. The pseudolikelihood curves show the same behaviour, with minima at or close to a well-calibrated scale value of unity.
+\begin{figure}[htb!]
+\centering
+\includegraphics[height=6cm,trim={0cm 7cm 0cm 8cm},clip]{SGME_calibration_MCL_vs_PsL.pdf}        %trim parameters: left, bottom, right, top
+\caption[MCL vs Pseudolikelihood]{MCL vs Pseudolikelihood. The experiment is similar to that of section~\ref{sec:MCLcal}, although with different random data. The miscalibration scale is on the horizontal axis and the criteria on the vertical. This and other similar experiments show that MCL and Pseudolikelihood (PsL) behave in much the same way.}
+\label{fig:MCL_vs_PsL}
+\end{figure}
+
+
+
+\subsection{Computation}
+The pseudolikelihood computational load scales as $kn$, where $k$ is the number of speakers and $n$ the number of recordings. In this respect it is similar to generative training of PLDA models and similar to discriminative cross-entropy training of multiclass classifiers. It must however be noted that pseudolikelihood may not play well with stochastic minibatch optimizers. The most important condition for stochastic optimization is that the objective function must decompose into a (large)  number of terms. This is true of pseudolikelihood---it has $n$ terms, but unfortunately every term needs access to statistics that are dependent on the parameters being trained and that have been computed over the whole dataset. 
+
+
 
 
 \section{Composite score}
@@ -2561,7 +2593,7 @@ First published in~\cite{Facenet}.\\
 
  
 
-\section{Multiclass classification}
+\section{Multiclass cross-entropy}
 \cite{DSIS17,LIMSI_Language_embedding}
 
 
