@@ -94,23 +94,27 @@ function test_this()
     HTPLDA.plot_database(R,labels,Z);
     axis('square');axis('equal');
     
-    tic;calc = create_partition_posterior_calculator(SGME.log_expectations,prior,labels);toc
-    tic;calc2 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);toc
+    calc1 = create_partition_posterior_calculator(SGME.log_expectations,prior,labels);
+    calc2 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);
+    calc3 = create_BXE_calculator(SGME.log_expectations,[],labels);
     
     scale = exp(-5:0.1:5);
     MCL = zeros(size(scale));
     PsL = zeros(size(scale));
+    BXE = zeros(size(scale));
     tic;
     for i=1:length(scale)
-        MCL(i) = - calc.logPostPoi(scale(i)*A,scale(i)*b);
+        MCL(i) = - calc1.logPostPoi(scale(i)*A,scale(i)*b);
         PsL(i) = - calc2.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+        BXE(i) = calc3.BXE(scale(i)*A,scale(i)*b);
     end
     toc
     
     figure;
     %subplot(2,1,1);semilogx(scale,MCL);title('MCL')
     %subplot(2,1,2);semilogx(scale,PsL);title('PsL');
-    semilogx(scale,MCL,scale,PsL);legend('MCL','PsL');
+    subplot(2,1,1);semilogx(scale,MCL,scale,PsL);legend('MCL','PsL');
+    subplot(2,1,2);semilogx(scale,BXE);legend('BXE');
     
     %[precisions;b]
     
@@ -122,9 +126,9 @@ end
 
 function test_PsL()
 
-    zdim = 10;
-    xdim = 100;      %required: xdim > zdim
-    nu = 2;         %required: nu >= 1, integer, DF
+    zdim = 2;
+    xdim = 20;      %required: xdim > zdim
+    nu = 3;         %required: nu >= 1, integer, DF
     fscal = 3;      %increase fscal to move speakers apart
     
     F = randn(xdim,zdim)*fscal;
@@ -156,18 +160,22 @@ function test_PsL()
         axis('square');axis('equal');
     end
     
-    tic;calc = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);toc
+    calc1 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);
+    calc2 = create_BXE_calculator(SGME.log_expectations,[],labels);
     
     scale = exp(-5:0.1:5);
     PsL = zeros(size(scale));
+    BXE = zeros(size(scale));
     tic;
     for i=1:length(scale)
-        PsL(i) = - calc.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+        PsL(i) = - calc1.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+        BXE(i) = calc2.BXE(scale(i)*A,scale(i)*b);
     end
     toc
     
     figure;
-    semilogx(scale,PsL);title('PsL');
+    subplot(2,1,1);semilogx(scale,PsL);title('PsL');
+    subplot(2,1,2);semilogx(scale,BXE);title('BXE');
     
     %[precisions;b]
     

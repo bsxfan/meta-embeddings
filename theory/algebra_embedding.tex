@@ -2496,7 +2496,7 @@ In an experiment similar to that of section~\ref{sec:MCLcal}, also with 8 record
 
 
 \subsection{Computation}
-The pseudolikelihood computational load scales as $kn$, where $k$ is the number of speakers and $n$ the number of recordings. In this respect it is similar to generative training of PLDA models and similar to discriminative cross-entropy training of multiclass classifiers. It must however be noted that pseudolikelihood may not play well with stochastic minibatch optimizers. The most important condition for stochastic optimization is that the objective function must decompose into a (large)  number of terms. This is true of pseudolikelihood---it has $n$ terms, but unfortunately every term needs access to statistics that are dependent on the parameters being trained and that have been computed over the whole dataset. 
+The pseudolikelihood computational load scales as $kn$, where $k$ is the number of speakers and $n$ the number of recordings. In this respect it is similar to generative training of PLDA models and similar to discriminative cross-entropy training of multiclass classifiers. It must however be noted that pseudolikelihood may not play well with stochastic minibatch optimizers. The most important condition for stochastic optimization is that the objective function must decompose into a (large)  number of terms. This is true of pseudolikelihood---it has $n$ terms, but unfortunately every term involves statistics that are accumulated over the whole dataset. 
 
 
 
