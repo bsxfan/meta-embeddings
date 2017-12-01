@@ -66,7 +66,12 @@ function [SGME,LEfun] = create_SGME_calculator(E)
     end
 
     function [y,back] = log_expectations(A,b)
-        [y,back] = LE(A,b,d);
+        [y,back0] = LE(A,b,d);
+        back = @back_this;
+        function [dA,db] = back_this(dy)
+            [dA,db,dd0] = back0(dy);
+            dd = dd + dd0;
+        end
     end
 
 

@@ -24,7 +24,7 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     
     calc.log_pseudo_likelihood = @log_pseudo_likelihood;
     
-    function y = log_pseudo_likelihood(A,B)
+    function [y,back] = log_pseudo_likelihood(A,B)
         %[dimA,nA] = size(A);assert(n==nA);
         %[dimB,nB] = size(B);assert(n==nB);
         
@@ -57,8 +57,15 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         logPost = LLR + logPrior;
         M = max(logPost,[],1);
         Den = M + log(sum(exp(bsxfun(@minus,logPost,M)),1));
-        y = sum(logPost(num)) - sum(Den);    
+        y = sum(logPost(num),1) - sum(Den,2);    
         
+        
+        back = @back_this;
+        
+        
+        function [dA,dB] = back_this()
+            
+        end
         
         
     
