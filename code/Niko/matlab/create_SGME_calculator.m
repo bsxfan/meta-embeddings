@@ -1,8 +1,14 @@
-function SGME = create_SGME_calculator(E)
+function [SGME,LEfun] = create_SGME_calculator(E)
+
+    if nargin==0
+        test_this();
+        return;
+    end
 
     
     [V,D] = eig(E);  % E = VDV'
     d = diag(D);     % eigenvalues
+    dd = zeros(size(d)); %gradient w.r.t. d backpropagated from log_expectations
     zdim = length(d);
     ii = reshape(logical(eye(zdim)),[],1);
 
@@ -13,8 +19,18 @@ function SGME = create_SGME_calculator(E)
     SGME.plotAll = @plotAll;
     SGME.V = V;
     SGME.d = d;
+    LEfun = @LE;
 
     
+    function reset_parameter_gradient()
+        dd(:) = 0;
+    end
+    
+    function dd1 = get_parameter_gradient()    
+        dd1 = dd;
+    end
+
+
     function plotAll(A,b,matlab_colours, tikz_colours, rotate)
         if ~exist('rotate','var') || isempty(rotate)
             rotate = true;
@@ -49,11 +65,8 @@ function SGME = create_SGME_calculator(E)
         end
     end
 
-    function y = log_expectations(A,b)
-        bd = bsxfun(@times,b,d);
-        logdets = sum(log1p(bd),1);
-        Q = sum((A.^2)./(1+bd),1);
-        y = (Q-logdets)/2;
+    function [y,back] = log_expectations(A,b)
+        [y,back] = LE(A,b,d);
     end
 
 
@@ -68,3 +81,53 @@ function SGME = create_SGME_calculator(E)
     end
     
 end
+
+
+function [y,back] = LE(A,b,d)
+    bd = bsxfun(@times,b,d);
+    logdets = sum(log1p(bd),1);
+    den = 1 + bd;
+    Aden = A./den;
+    Q = sum(A.*Aden,1);    %Q = sum((A.^2)./den,1);
+    y = (Q-logdets)/2;
+
+    back = @back_LE;
+
+
+    function [dA,db,dd] = back_LE(dy)
+        dQ = dy/2;
+        %dlogdets = - dQ;
+
+        dAden = bsxfun(@times,dQ,A);           
+        dA = bsxfun(@times,dQ,Aden);           
+
+        dA2 = dAden./den;
+        dA = dA + dA2;          
+        dden = -Aden.*dA2;
+
+        dbd = dden - bsxfun(@rdivide,dQ,den);    %dlogdets = -dQ
+
+        db = d.' * dbd;
+        dd = dbd * b.';
+    end
+
+
+end
+
+
+
+
+
+
+function test_this()
+
+    m = 3;
+    n = 5;
+    A = randn(m,n);
+    b = rand(1,n);
+    d = rand(m,1);
+    
+    testBackprop(@LE,{A,b,d},{1,1,1});
+
+end
+

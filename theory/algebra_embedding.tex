@@ -2585,6 +2585,17 @@ S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(h_i \mid t_i, e_i, \Rset) \\
 \end{align} 
 where $r_{t_i}, r_{e_i}\in\Rset$ are the test and enroll recordings, so that the RHS is the binary cross-entropy criterion.
 
+\subsection{Example}
+See figure~\ref{fig:BXE_vs_PsL} for a comparison of binary cross-entropy (all pairs) vs pseudolikelihood. The calibration behaviour of the two criteria are very similar. Since the binary cross-entropy uses all pairs, it is slower. Heuristics to choose a subset of the trials could improve this.
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[height=6cm,trim={0cm 7cm 0cm 8cm},clip]{SGME_cal_PsL_vs_BXE_1000rec.pdf}        %trim parameters: left, bottom, right, top
+\caption[Pseudolikelihood vs binary cross-entropy]{Pseudolikelihood vs binary cross-entropy. The experiment is similar to that of section~\ref{sec:MCLcal}, although with 1000 recordings. This and other similar experiments show that binary cross-entropy (BXE) and pseudolikelihood (PsL) behave in much the same way.}
+\label{fig:BXE_vs_PsL}
+\end{figure}
+
 
 \subsection{Note on triplet loss}
 First published in~\cite{Facenet}.\\

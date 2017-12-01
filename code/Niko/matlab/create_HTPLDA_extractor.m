@@ -101,19 +101,39 @@ function test_this()
     scale = exp(-5:0.1:5);
     MCL = zeros(size(scale));
     PsL = zeros(size(scale));
+    slowPsL = zeros(size(scale));
     BXE = zeros(size(scale));
     tic;
     for i=1:length(scale)
         MCL(i) = - calc1.logPostPoi(scale(i)*A,scale(i)*b);
-        PsL(i) = - calc2.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+    end
+    toc
+
+    tic;
+    for i=1:length(scale)
         BXE(i) = calc3.BXE(scale(i)*A,scale(i)*b);
     end
     toc
     
+    tic;
+    for i=1:length(scale)
+        slowPsL(i) = - calc2.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+    end
+    toc
+
+    tic;
+    for i=1:length(scale)
+        PsL(i) = - calc2.log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+    end
+    toc
+
+    
+    
+    
     figure;
     %subplot(2,1,1);semilogx(scale,MCL);title('MCL')
     %subplot(2,1,2);semilogx(scale,PsL);title('PsL');
-    subplot(2,1,1);semilogx(scale,MCL,scale,PsL);legend('MCL','PsL');
+    subplot(2,1,1);semilogx(scale,MCL,scale,slowPsL,scale,PsL,'--');legend('MCL','slowPsL','PsL');
     subplot(2,1,2);semilogx(scale,BXE);legend('BXE');
     
     %[precisions;b]
@@ -160,21 +180,42 @@ function test_PsL()
         axis('square');axis('equal');
     end
     
-    calc1 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);
-    calc2 = create_BXE_calculator(SGME.log_expectations,[],labels);
+    tic;calc0 = create_pseudolikelihood_calculator_old(SGME.log_expectations,prior,labels);toc
+    tic;calc1 = create_pseudolikelihood_calculator(SGME.log_expectations,prior,labels);toc;
+    tic;calc2 = create_BXE_calculator(SGME.log_expectations,[],labels);toc
     
     scale = exp(-5:0.1:5);
+    oldPsL = zeros(size(scale));
     PsL = zeros(size(scale));
     BXE = zeros(size(scale));
+
+%     tic;
+%     for i=1:length(scale)
+%         slowPsL(i) = - calc1.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+%     end
+%     toc
+    
     tic;
     for i=1:length(scale)
-        PsL(i) = - calc1.slow_log_pseudo_likelihood(scale(i)*A,scale(i)*b);
-        BXE(i) = calc2.BXE(scale(i)*A,scale(i)*b);
+        oldPsL(i) = - calc0.log_pseudo_likelihood(scale(i)*A,scale(i)*b);
+    end
+    toc
+
+    tic;
+    for i=1:length(scale)
+        PsL(i) = - calc1.log_pseudo_likelihood(scale(i)*A,scale(i)*b);
     end
     toc
     
+    
+%     tic;
+%     for i=1:length(scale)
+%         BXE(i) = calc2.BXE(scale(i)*A,scale(i)*b);
+%     end
+%     toc
+
     figure;
-    subplot(2,1,1);semilogx(scale,PsL);title('PsL');
+    subplot(2,1,1);semilogx(scale,oldPsL,scale,PsL,'--');legend('oldPsL','PsL');
     subplot(2,1,2);semilogx(scale,BXE);title('BXE');
     
     %[precisions;b]

@@ -8,11 +8,11 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     n = length(poi);  % # customers
     m = max(poi);     % # tables
 
+    labels = poi;
     
-    %(m+1)-by-n index matrix, with one-hot columns
-    blocks = sparse(poi,1:n,true,m+1,n);  
-    num = find(blocks(:));    
-    
+    %m-by-n index matrix, with one-hot columns
+    blocks = sparse(poi,1:n,true,m,n);  
+    blocks2 = [blocks;false(1,n)];  
     
     %pre-allocate
     LLR = zeros(m+1,n);
@@ -23,6 +23,7 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
     
     
     calc.log_pseudo_likelihood = @log_pseudo_likelihood;
+    calc.slow_log_pseudo_likelihood = @slow_log_pseudo_likelihood;
     
     function y = log_pseudo_likelihood(A,B)
         %[dimA,nA] = size(A);assert(n==nA);
@@ -57,12 +58,58 @@ function calc = create_pseudolikelihood_calculator(log_expectations,prior,poi)
         logPost = LLR + logPrior;
         M = max(logPost,[],1);
         Den = M + log(sum(exp(bsxfun(@minus,logPost,M)),1));
-        y = sum(logPost(num)) - sum(Den);    
+        y = sum(logPost(blocks2)) - sum(Den);    
         
         
         
     
     end
+
+    function y = slow_log_pseudo_likelihood(A,B)
+        
+        %[dimA,nA] = size(A);assert(n==nA);
+        %[dimB,nB] = size(B);assert(n==nB);
+        
+        %original table stats
+        At = A*blocks.';
+        Bt = B*blocks.';
+        %log-expectations for every original table
+        LEt = log_expectations(At,Bt);
+        
+        %log-expectations for every customer, alone at singleton table
+        LEc = log_expectations(A,B);  
+        
+        
+        y = 0;
+        LLRcol = zeros(m+1,1);
+        for j=1:n
+            tj = labels(j); 
+            
+            %non-targets
+            Aplus = bsxfun(@plus,A(:,j),At);
+            Bplus = bsxfun(@plus,B(:,j),Bt);
+            LLRcol(1:m) = log_expectations(Aplus,Bplus).' - LEt.' - LEc(j);
+            
+            %targets
+            Amin = At(:,tj) - A(:,j);
+            Bmin = Bt(:,tj) - B(:,j);
+            LLRcol(tj) = LEt(tj) - log_expectations(Amin,Bmin) - LEc(j);
+            
+            
+            LLRcol(m+1) = 0; 
+            
+            logPost = LLRcol + logPrior(:,j);
+            M = max(logPost);
+            Den = M + log(sum(exp(logPost-M)));
+            y = y + logPost(tj) - Den; 
+            %post = exp(logPost - Den);
+            
+        end
+        
+    
+    end
+
+
 
 
 
