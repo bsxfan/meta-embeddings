@@ -20,7 +20,8 @@ function [SGME,LEfun] = create_SGME_calculator(E)
     SGME.V = V;
     SGME.d = d;
     LEfun = @LE;
-
+    SGME.reset_parameter_gradient = @reset_parameter_gradient;
+    SGME.get_parameter_gradient = @get_parameter_gradient;
     
     function reset_parameter_gradient()
         dd(:) = 0;

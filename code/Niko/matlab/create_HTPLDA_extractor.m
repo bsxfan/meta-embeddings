@@ -215,7 +215,7 @@ function test_PsL()
 %     toc
 
     figure;
-    subplot(2,1,1);semilogx(scale,oldPsL,scale,PsL,'--');legend('oldPsL','PsL');
+    subplot(2,1,1);semilogx(scale,oldPsL,scale,PsL,'r--');legend('oldPsL','PsL');
     subplot(2,1,2);semilogx(scale,BXE);title('BXE');
     
     %[precisions;b]

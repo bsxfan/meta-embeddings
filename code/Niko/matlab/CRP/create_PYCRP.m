@@ -228,7 +228,7 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     %   logP: (m+1)-by-n matrix of **unnormalized** log-probabilities
     %         logP(i,j) = log P(customer j at table i | seating of all others) + const
     %         table m+1 is a new table
-    function logP = GibbsMatrix(labels)
+    function [logP,empties] = GibbsMatrix(labels)
         m = max(labels);
         n = length(labels);
         blocks = sparse(labels,1:n,true);
@@ -237,18 +237,18 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         
         %return;
         
-        table_emptied = false(1,n);                        %new empty table when customer j removed
+        empties = false(1,n);                        %new empty table when customer j removed
         for i=1:m
             cmin = counts(i) - 1;
             tar = blocks(i,:);
             if cmin==0  %table empty 
                 logP(i,tar) = log(alpha + (m-1)*beta);              
-                table_emptied(tar) = true;
+                empties(tar) = true;
             else
                 logP(i,tar) = log(cmin-beta);
             end
         end
-        logP(m+1,table_emptied) = -inf; 
+        logP(m+1,empties) = -inf; 
     end
 
 
