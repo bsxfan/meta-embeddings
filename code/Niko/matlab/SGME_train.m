@@ -51,8 +51,8 @@ function model = SGME_train(R,labels,nu,zdim,niters,test)
     
     model.logexpectation = @(A,b) SGME_logexpectation(A,b,d);
     model.extract = @(R) SGME_extract(P,H,nu,R);
-    
-    
+    model.objective = @(P,H,d) objective(pack(P,H,d));
+    model.d = d;
     
     
     function w = pack(P,H,d)

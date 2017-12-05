@@ -1969,6 +1969,7 @@ Our model can be generalized in the following ways:
 %\def\pdd#1#2{\frac{\partial#1}{\partial#2}}
 LRs between TMEs are not available in closed form. However, as we found above, when $(D-d)\gg1$, the TME is very close to an SGME, even though the noise may be very heavy tailed. Let us proceed with the SGME approximation, with natural parameters, $\avec_j,b_j\Emat$ given by~\eqref{eq:TSGME_params}. We already know that SGME expectations can be done more efficiently than for the general GME case, as explained in section~\ref{sec:SGME}. Given the precomputed eigendecomposition, $\Emat=\Vmat\Lambdamat\Vmat'$, the SGME log-expectation~\eqref{eq:SGME_log_ex} is:
 \begin{align}
+\label{eq:fast_SGME_exp}
 \begin{split}
 \log E_G(\avec,b) &= \avec'(\Imat+b\Emat)^{-1}\avec - \logdet{\Imat+b\Emat}\\
 &= \trace\Bigl[(\tilde\avec\tilde\avec')(\Imat+b\Lambdamat)^{-1}
@@ -2609,11 +2610,44 @@ First published in~\cite{Facenet}.\\
 
 
 
+\section{Example: Full SGME training}
+\def\Pmat{\mathbf{P}}
+With the following experiment, we close the loop, demonstrating that we can use pseudolikelihood to discriminatively train the full parameter set of a meta-embedding extractor (rather than just a calibration constant). 
 
+As in previous examples, synthetic i-vector-like data of dimension $D=20$ was generated from the heavy-tailed PLDA model, with speaker identity variable of dimension $d=2$, and $\nu=3$. We used independently sampled data sets for train and test, each having $1000$ recordings. The labels for train and test were also independently sampled from the CRP model, with $\beta=0$ and $\alpha$ chosen to give an expected number of $100$ speakers. \\
 
-%\subsection{Agglomerative clustering}
-%\subsection{Agglomerative clustering}
+\noindent The discriminative SGME extractor was parameterized as follows: 
+\begin{itemize}
+	\item A $(D-d)$-by-$D$ matrix, $\Hmat$, used for $q_j=\rvec_j'\Hmat'\Hmat\rvec_j$, where $\rvec_j$ is an input vector. The meta-embedding natural parameter $b_j$ is extracted as $b_j=\frac{\nu'}{\nu+q_j}$. The true value of $\nu$ was given.
+	\item A $d$-by-$D$ matrix, $\Pmat$ that does the same work as $\Vmat'\Fmat'\Wmat$ in the generatively derived SGME of section~\ref{sec:TPLDA}. The meta-embedding natural parameter $\avec_j$ is extracted $\avec_j=b_j\Pmat\rvec_j$.
+	\item A $d$-dimensional vector, with non-negative components to represent the diagonal matrix $\Lambdamat$ in~\eqref{eq:fast_SGME_exp}.  
+\end{itemize}
+%
+The accuracy of the discriminatively trained SGME extractor is compared against the generative SGME approximation of section~\ref{sec:TPLDA}, where we used the \emph{true parameters} that generated the synthetic data. The results are given in the table below: 
+$$
+\begin{tabular}{l l | r r r}
+  &  & $S_\Psi$ & BXE & EER \\
+\hline
+discriminative & train & $0.11$  & $0.042$ & $0.026$ \\
+generative & train & $0.13$ & $0.042$ & $0.026$ \\
+discriminative & test & $0.12$ & $0.075$ & $0.037$ \\
+generative & test & $0.11$ & $0.067$ & $0.034$
+\end{tabular} 
+$$
+Here $S_\Psi$ represents negative log pseudolikelihood, conveniently normalized by $n\log(m)$, where $n$ is the number of recordings and $m$ the true number of speakers. BXE is binary-cross entropy (in bits), computed for the upper triangle of the symmetric matrix of LLR-scores of all possible pairs. EER is equal-error-rate (the ROCCH version~\cite{PhD}), computed from the same LLR-scores as the BXE criterion.\footnote{See, for example the BOSARIS Toolkit for a tool to compute ROCCH EER: \url{http://sites.google.com/site/bosaristoolkit/}.}
 
+Notice that there is some evidence of mild overtraining---on the train data, discriminative does better than generative, while on test, it is the other way round. Do keep in mind that this is an unfair comparison, because the generative method had access to the true parameters. A similar experiment, with $5000$ synthetic recordings and a prior expectation of $500$ speakers shows that the overtraining effect is less for bigger data sets:
+$$
+\begin{tabular}{l l | r r r}
+  &  & $S_\Psi$ & BXE & EER \\
+\hline
+discriminative & train & $0.27$  & $0.032$ & $0.054$ \\
+generative & train & $0.28$ & $0.031$ & $0.054$ \\
+discriminative & test & $0.28$ & $0.030$ & $0.054$ \\
+generative & test & $0.28$ & $0.029$ & $0.052$
+\end{tabular} 
+$$
+In both experiments, full batch L-BFGS optimization was used, which converged in just a few minutes, running on a laptop. 
 
 \chapter{Unsupervised training}
 With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of the meta-embedding extractor, without having to train a full generative model?

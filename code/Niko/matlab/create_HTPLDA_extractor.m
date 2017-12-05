@@ -25,6 +25,14 @@ function HTPLDA = create_HTPLDA_extractor(F,nu,W)
     HTPLDA.extractSGMEs = @extractSGMEs;
     HTPLDA.SGME = SGME;
     HTPLDA.plot_database = @plot_database;
+    HTPLDA.getPHd = @getPHd;
+    
+    function [P,H,d] = getPHd()
+        P = VFW;
+        H = G;
+        %HH = H'*H;
+        d = SGME.d;
+    end
     
     
     function [A,b] = extractSGMEs(R)

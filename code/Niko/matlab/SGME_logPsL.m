@@ -6,8 +6,21 @@ function [y,back] = SGME_logPsL(A,B,d,blocks,poi,num,logPrior)
     end
 
     
-    m = size(blocks,1) - 1;
+    if isempty(blocks)
+        m = max(poi);
+        n = length(poi);
+        blocks = sparse(poi,1:n,true,m+1,n);
+        num = find(blocks(:));
+    else
+        m = size(blocks,1) - 1;
+    end
 
+    if isstruct(logPrior)  % then it is prior
+        prior = logPrior;
+        logPrior = prior.GibbsMatrix(poi);
+    end
+    
+    
     At = A*blocks.';
     Bt = B*blocks.';
     [LEt,back1] = SGME_logexpectation(At,Bt,d);

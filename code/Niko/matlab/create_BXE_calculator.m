@@ -1,6 +1,7 @@
 function calc = create_BXE_calculator(log_expectations,prior,poi)
 
     calc.BXE = @BXE;
+    calc.get_tar_non = @get_tar_non;
 
     n = length(poi);
     spoi = sparse(poi);
@@ -18,21 +19,20 @@ function calc = create_BXE_calculator(log_expectations,prior,poi)
     
     if isempty(prior)
         prior = ntar/(ntar+nnon);
-        plo = log(prior) - log1p(-prior);
     end
     
+    plo = log(prior) - log1p(-prior);
+
     
     function y = BXE(A,B)
         LEc = log_expectations(A,B);
         yt = 0;
         yn = 0;
-        ntar = 0;
         for i=1:n-1
             jj = i+1:n;
             AA = bsxfun(@plus,A(:,i),A(:,jj));
             BB = bsxfun(@plus,B(:,i),B(:,jj));
             tari = full(tar(i,jj));
-            ntar = ntar + sum(tari);
             LE2 = log_expectations(AA,BB);
             llr = LE2 - LEc(i) - LEc(jj);
             log_post = plo + llr;
@@ -45,6 +45,34 @@ function calc = create_BXE_calculator(log_expectations,prior,poi)
         
     end
     
+    function [tars,nons] = get_tar_non(A,B)
+        LEc = log_expectations(A,B);
+        tars = zeros(1,ntar);
+        nons = zeros(1,nnon);
+        tcount = 0;
+        ncount = 0;
+        for i=1:n-1
+            jj = i+1:n;
+            AA = bsxfun(@plus,A(:,i),A(:,jj));
+            BB = bsxfun(@plus,B(:,i),B(:,jj));
+            tari = full(tar(i,jj));
+            LE2 = log_expectations(AA,BB);
+            llr = LE2 - LEc(i) - LEc(jj);
+            
+            llr_tar = llr(tari);
+            count = length(llr_tar);
+            tars(tcount+(1:count)) = llr_tar;
+            tcount = tcount + count;
+
+            llr_non = llr(~tari);
+            count = length(llr_non);
+            nons(ncount+(1:count)) = llr_non;
+            ncount = ncount + count;
+            
+        end
+        
+        
+    end
     
 end
 
