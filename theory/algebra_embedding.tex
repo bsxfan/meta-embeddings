@@ -505,7 +505,7 @@ Again, for readers that are comfortable with the idea that probability distribut
 \begin{align}
 P(\zvec\mid \Rset,\Sset,H_1,\pi) &=\frac{\pi(\zvec)\prod_{j\in\Sset}f_j(\zvec)}{\expvb{\prod_{j\in\Sset}f_j(\zvec')}{\zvec'\sim\pi}}
 \end{align}
-The likelihood function, $f_j$, or indeed a product of any number of them, can be regarded as a \emph{raw} form of posterior distribution for $\zvec$. We use the term raw, because the likelihood function is independent of the choice of prior, $\pi$, and is also un-normalized. Nevertheless, $f_j$ contains all the speaker information that a given probabilistic model could extract from $r_j$.
+The likelihood function, $f_j$, or indeed a product of any number of them, can be regarded as a \emph{pre-posterior} for $\zvec$. We use the term pre-posterior, because the likelihood function is independent of the choice of prior, $\pi$, and is also un-normalized. Nevertheless, $f_j$ contains all the speaker information that a given probabilistic model could extract from $r_j$.
 
 
 
@@ -1503,7 +1503,18 @@ The expected value of a DGME, $f(\zvec)=\exp[\zvec'\avec-\frac12\zvec'\Bmat\zvec
 \log E_G(\avec,\bvec) &= \log\expp{f} = \frac12\sum_{i=1}^d \frac{a^2_i}{1+b_i} -\log(1+b_i)
 \end{align}
 
+
+
+\section{Autoregressive Gaussians}
+
+
+
+
 \section{Complex Gaussians}
+This section is incomplete. First, we need to establish whether the Fourier transform (or equivalently characteristic function) of a complex Gaussian\footnote{\url{http://en.wikipedia.org/wiki/Complex_normal_distribution}} is again a complex Gaussian function. I don't know if this is true or not. For ordinary (real) multivariate Gaussians, it is not true: the transform of a zero-mean Gaussian is another Gaussian, but for a non-zero mean the transform has a more complex form.  
+
+If it turns out that complex Gaussians are indeed closed under Fourier transform, we can do business. We can let our speaker identity variables be complex-valued vectors and our meta-embeddings can be complex Gaussians. The convolution theorem shows we can approximate pooling stochastically in the transform domain, by simple addition of samples drawn from the complex Gaussians in the frequency domain. By Parseval's theorem, for expectations, we don't have to transform back after pooling---we can compute the stochastic averages directly in the frequency domain. See appendix~\ref{chap:MDFT} for some notes on the multivariate Fourier transform. 
+
 
 
 \section{MoGME: Mixture of GME}
