@@ -36,19 +36,46 @@ function SGME_train_experiment1
     discriminative_logPsL = -SGME_logPsL(A,B,model.d,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(@model.logexpectation,[],labels);
     discriminative_BXE = calc.BXE(A,B) / log(2)
-    [tar,non] = calc.get_tar_non(A,B);
-    disc_EER = eer(tar,non)
+    [dtar,dnon] = calc.get_tar_non(A,B);
+    disc_EER = eer(dtar,dnon)
     
     
     [Ag,Bg] = HTPLDA.extractSGMEs(R);
     generative_logPsL = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA.SGME.log_expectations,[],labels);
     generative_BXE = calc.BXE(Ag,Bg) / log(2)
-    [tar,non] = calc.get_tar_non(Ag,Bg);
-    gen_EER = eer(tar,non)
+    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    gen_EER = eer(gtar,gnon)
     
     
+    close all;
+    
+    plot_type = Det_Plot.make_plot_window_from_string('old');
+    plot_obj = Det_Plot(plot_type,'Disc vs Gen');
+    plot_obj.set_system(dtar,dnon,'disc');
+    plot_obj.plot_rocch_det({'b'},'train');    
+    plot_obj.set_system(gtar,gnon,'gen');
+    plot_obj.plot_rocch_det({'g'},'train');    
+    
+    calplot = Norm_DCF_Plot([-8,4,0.0,1.4],'Train');    
+    calplot.set_system(gtar,gnon,'gen_{min}');
+    plot_dcf_curve_min(calplot,{'g--'},'train');
+    calplot.set_system(gtar,gnon,'gen');
+    plot_dcf_curve_act(calplot,{'g'},'train');
+    
+    calplot.set_system(dtar,dnon,'disc_{min}');
+    plot_dcf_curve_min(calplot,{'r--'},'train');
+    calplot.set_system(dtar,dnon,'gen');
+    plot_dcf_curve_act(calplot,{'r'},'train');
 
+    calplot.set_system(dtar,dnon,'');
+    plot_DR30_fa(calplot,{'k<','MarkerFaceColor','k','MarkerSize',8},'30 false alarms');
+    plot_DR30_miss(calplot,{'k>','MarkerFaceColor','k','MarkerSize',8},'30 misses');
+    
+    display_legend(calplot);
+    
+    
+    
     %generative_objective = model.objective(Pg,Hg,sqrt(dg))
     
 %     ntest = 10;
@@ -71,19 +98,40 @@ function SGME_train_experiment1
     discriminative_logPsL = -SGME_logPsL(A,B,model.d,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(@model.logexpectation,[],labels);
     discriminative_BXE = calc.BXE(A,B) / log(2)
-    [tar,non] = calc.get_tar_non(A,B);
-    disc_EER = eer(tar,non)
+    [dtar,dnon] = calc.get_tar_non(A,B);
+    disc_EER = eer(dtar,dnon)
     
     
     [Ag,Bg] = HTPLDA.extractSGMEs(R);
     generative_logPsL = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA.SGME.log_expectations,[],labels);
     generative_BXE = calc.BXE(Ag,Bg) / log(2)
-    [tar,non] = calc.get_tar_non(Ag,Bg);
-    gen_EER = eer(tar,non)
+    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    gen_EER = eer(gtar,gnon)
     
     
+    plot_obj.set_system(dtar,dnon,'disc');
+    plot_obj.plot_rocch_det({'r--'},'test');    
+    plot_obj.set_system(gtar,gnon,'gen');
+    plot_obj.plot_rocch_det({'m--'},'test');    
+    plot_obj.display_legend();    
     
 
+    calplot = Norm_DCF_Plot([-8,4,0.0,1.4],'Test');    
+    calplot.set_system(gtar,gnon,'gen_{min}');
+    plot_dcf_curve_min(calplot,{'g--'},'test');
+    calplot.set_system(gtar,gnon,'gen');
+    plot_dcf_curve_act(calplot,{'g'},'test');
+    
+    calplot.set_system(dtar,dnon,'disc_{min}');
+    plot_dcf_curve_min(calplot,{'r--'},'test');
+    calplot.set_system(dtar,dnon,'gen');
+    plot_dcf_curve_act(calplot,{'r'},'test');
 
+    calplot.set_system(dtar,dnon,'');
+    plot_DR30_fa(calplot,{'k<','MarkerFaceColor','k','MarkerSize',8},'30 false alarms');
+    plot_DR30_miss(calplot,{'k>','MarkerFaceColor','k','MarkerSize',8},'30 misses');
+    display_legend(calplot);
+    
+    
 end

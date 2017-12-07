@@ -2629,11 +2629,13 @@ As in previous examples, synthetic i-vector-like data of dimension $D=20$ was ge
 
 \noindent The discriminative SGME extractor was parameterized as follows: 
 \begin{itemize}
-	\item A $(D-d)$-by-$D$ matrix, $\Hmat$, used for $q_j=\rvec_j'\Hmat'\Hmat\rvec_j$, where $\rvec_j$ is an input vector. The meta-embedding natural parameter $b_j$ is extracted as $b_j=\frac{\nu'}{\nu+q_j}$. The true value of $\nu$ was given.
+	\item A $(D-d)$-by-$D$ matrix, $\Hmat$, used for $q_j=\rvec_j'\Hmat'\Hmat\rvec_j$, where $\rvec_j$ is an input vector. The meta-embedding natural parameter $b_j$ is extracted as $b_j=\frac{\nu + D - d}{\nu+q_j}$. The true value of $\nu$ was given.
 	\item A $d$-by-$D$ matrix, $\Pmat$ that does the same work as $\Vmat'\Fmat'\Wmat$ in the generatively derived SGME of section~\ref{sec:TPLDA}. The meta-embedding natural parameter $\avec_j$ is extracted $\avec_j=b_j\Pmat\rvec_j$.
 	\item A $d$-dimensional vector, with non-negative components to represent the diagonal matrix $\Lambdamat$ in~\eqref{eq:fast_SGME_exp}.  
 \end{itemize}
-%
+The values of $\Hmat,\Pmat$ and $\Lambdamat$ were found with a full batch L-BFGS optimizer. In this experiment (and in the larger one below) L-BFGS, running on a laptop, converged in a few minutes.
+
+
 The accuracy of the discriminatively trained SGME extractor is compared against the generative SGME approximation of section~\ref{sec:TPLDA}, where we used the \emph{true parameters} that generated the synthetic data. The results are given in the table below: 
 $$
 \begin{tabular}{l l | r r r}
@@ -2647,7 +2649,10 @@ generative & test & $0.11$ & $0.067$ & $0.034$
 $$
 Here $S_\Psi$ represents negative log pseudolikelihood, conveniently normalized by $n\log(m)$, where $n$ is the number of recordings and $m$ the true number of speakers. BXE is binary-cross entropy (in bits), computed for the upper triangle of the symmetric matrix of LLR-scores of all possible pairs. EER is equal-error-rate (the ROCCH version~\cite{PhD}), computed from the same LLR-scores as the BXE criterion.\footnote{See, for example the BOSARIS Toolkit for a tool to compute ROCCH EER: \url{http://sites.google.com/site/bosaristoolkit/}.}
 
-Notice that there is some evidence of mild overtraining---on the train data, discriminative does better than generative, while on test, it is the other way round. Do keep in mind that this is an unfair comparison, because the generative method had access to the true parameters. A similar experiment, with $5000$ synthetic recordings and a prior expectation of $500$ speakers shows that the overtraining effect is less for bigger data sets:
+Notice that there is some evidence of mild overtraining---on the train data, discriminative does better than generative, while on test, it is the other way round. Do keep in mind that this is an unfair comparison, because the generative method had access to the true parameters. 
+
+\subsection{Using more data}
+A similar experiment, now with $5000$ synthetic recordings and a prior expectation of $500$ speakers, shows that the overtraining effect is less for bigger data sets:
 $$
 \begin{tabular}{l l | r r r}
   &  & $S_\Psi$ & BXE & EER \\
@@ -2658,7 +2663,33 @@ discriminative & test & $0.28$ & $0.030$ & $0.054$ \\
 generative & test & $0.28$ & $0.029$ & $0.052$
 \end{tabular} 
 $$
-In both experiments, full batch L-BFGS optimization was used, which converged in just a few minutes, running on a laptop. 
+The accuracy\footnote{{The plots and the above table were for different experimental runs, with different model parameters that generated the synthetic data. The plot and table therefore show different accuracies.}} of likelihood-ratios computed for all pairs of recordings for the generative and discriminative systems are further analyzed in figure~\ref{fig:SGME_PsL_Train}, using the well-known speaker recognition tools of DET-plots~\cite{DETPLOT} and Bayes-error-rate plots~\cite{PhD,BosarisToolkit}. 
+
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[height=6cm,trim={3cm 7cm 4cm 8cm},clip]{SGME_training_DET_plot.pdf}        %trim parameters: left, bottom, right, top
+\includegraphics[height=6cm,trim={0 7cm 2cm 8cm},clip]{SGME_training_DCF_plot.pdf}
+\caption[Pseudolikelihood SGME training]{Pseudolikelihood SGME training. Left: DET plot showing accuracy of both systems on both train and test data. Right: Bayes error-rate plot for both systems on the test data. (The training data plot is similar).}
+\label{fig:SGME_PsL_Train}
+\end{figure}
+
+
+
+The DET-plot is a trade-off of miss rate against false-alarm rate (on a probit scale) as the score decision threshold is varied over the whole real line. It is a calibration-insensitive analysis of the decision-making ability of binary classifier scores. This plot shows that the two systems are essentially equivalent at all operating points and that the overtraining problem has virtually disappeared for the larger training set.\footnote{We ascribe the unfamiliar, steep angle of the DET plot to the use of low-dimensional synthetic data.}
+
+The Bayes error-rate (aka DCF) plot is designed to be calibration sensitive. It shows the (normalized) prior-weighted average of the miss and false-alarm rates as the class prior, $P(\text{target})=1-P(\text{non-target})$ is varied along the horizontal axis (on a logit scale). The decision threshold (applied to the log-likelihood-ratios) is the Bayes threshold, namely $-\log\frac{P(\text{target})}{P(\text{non-target})}$. See the references for further explanation. This plot shows that the calibration of both systems is good (solid plots lie on dashed plots) and that the two systems are also almost equivalent. 
+
+
+
+
+
+
+
+
+
+
+
 
 \chapter{Unsupervised training}
 With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of the meta-embedding extractor, without having to train a full generative model?
