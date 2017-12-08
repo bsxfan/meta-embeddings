@@ -1,4 +1,4 @@
-function b = logBell(n)
+function [b, B] = logBell(n)
 % b = logBell(n)
 % n integer
 % Compute the log Bell number. It is the number of all possible partitions
@@ -8,11 +8,13 @@ function b = logBell(n)
 %
 if n==0 || n==1
     b = 0;
+    B = zeros(n,1);
     return
 end
 A1 = zeros(1,n);
 A2 = zeros(1,n);
 A1(1) = 0;
+B = zeros(n,1);
 for i=2:n
     A2(1) = A1(i-1);
     for j=2:n
@@ -26,6 +28,7 @@ for i=2:n
         %A2(j) = A2(j-1) + A1(j-1);
     end
     A1 = A2;    
+    B(i) = A2(i);
 end
 b = A2(n);
 end

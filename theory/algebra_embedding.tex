@@ -1735,11 +1735,11 @@ We fear this might be inaccurate, because in high-dimensional space, samples fro
 where using~\eqref{eq:Bmat}, we have defined $\tilde\gammavec = [\tilde\gamma_1,\ldots,\tilde\gamma_D]\in\R^D$, with $\tilde\gamma_\ell = \tilde\zvec'\Emat_\ell\tilde\zvec$ and 
 where $c_i,c_j$ reflect the normalizations. The meta-embedding representations, $\avec_i,\bvec_i$ and $\avec_j,\bvec_j$, and the trainable constants, $\{\Emat_\ell\}_{\ell=1}^D$, are as defined in the beginning of section~\ref{sec:MVG}. 
 
-Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $m$ different samples, $\tilde\zvec$, and therefore also $N$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $N$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
+Notice that $\tilde\gammavec$ is independent of the meta-embeddings and therefore independent of the data and can be precomputed. If the $\Emat_\ell$ are constrained to be either diagonal or rank-one, then the calculations $\tilde\zvec'\Emat_\ell\zvec$ will be cheap. Keep in mind that we need $N$ different samples, $\tilde\zvec$, and therefore also $N$ different versions of $\tilde\gammavec$. In stochastic minibatch training, if we update the $\{\Emat_\ell\}$ after every minibatch, we will have to update all of the $\tilde\gammavec$ also, in which case it might make sense to also resample $N$ new values for $\tilde\zvec$. This type of strategy, which is well-known also in VAE~\cite{VAE}, is termed \emph{doubly stochastic} by Michalis Titsias~\cite{Titsias}. 
 
 An advantage of~\eqref{eq:priorsampling} is that it generalizes to expectations of more (or fewer) than two factors---the argument in the exponent will have independent terms for each of the factors in the expectation.
 
-Experiments would have to be conducted to verify if an affordably small $m$ could give reasonable accuracy. Keep in mind that in such experiments, we can compare accuracy against the exact calculation~\eqref{eq:exactMVG}.\\
+Experiments would have to be conducted to verify if an affordably small $N$ could give reasonable accuracy. Keep in mind that in such experiments, we can compare accuracy against the exact calculation~\eqref{eq:exactMVG}.\\
 
 %\subsubsection{Transformed prior sampling}
 %\begin{align}
@@ -1753,7 +1753,7 @@ Experiments would have to be conducted to verify if an affordably small $m$ coul
 
 
 \subsubsection{Posterior sampling} 
-If meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
+If Gaussian meta-embedding $f_i$ represents recording $r_i$, then $$\pi(\zvec)\normal{f_i}(\zvec)=P(\zvec\mid r_i,\pi)$$ is a properly normalized Gaussian, from which we can sample.\footnote{The same is not always true of $f_i$ or $\normal{f_i}$, which might have a singular precision, in which case sampling could not be done.} We can now rewrite the expectation as:
 \begin{align}
 \label{eq:cross_sampling}
 \expv{\normal{f_i}(\zvec)\normal{f_j}(\zvec)}{\zvec\sim\pi} &= \expv{\normal{f_j}(\tilde\zvec)}{\tilde\zvec\sim\pi\normal{f_i}}
@@ -2652,7 +2652,7 @@ Here $S_\Psi$ represents negative log pseudolikelihood, conveniently normalized 
 Notice that there is some evidence of mild overtraining---on the train data, discriminative does better than generative, while on test, it is the other way round. Do keep in mind that this is an unfair comparison, because the generative method had access to the true parameters. 
 
 \subsection{Using more data}
-A similar experiment, now with $5000$ synthetic recordings and a prior expectation of $500$ speakers, shows that the overtraining effect is less for bigger data sets:
+A similar experiment, now with $5000$ synthetic recordings (for each of train and test) and a prior expectation of $500$ speakers, shows that the overtraining effect is less for bigger data sets:
 $$
 \begin{tabular}{l l | r r r}
   &  & $S_\Psi$ & BXE & EER \\
@@ -2676,7 +2676,7 @@ The accuracy\footnote{{The plots and the above table were for different experime
 
 
 
-The DET-plot is a trade-off of miss rate against false-alarm rate (on a probit scale) as the score decision threshold is varied over the whole real line. It is a calibration-insensitive analysis of the decision-making ability of binary classifier scores. This plot shows that the two systems are essentially equivalent at all operating points and that the overtraining problem has virtually disappeared for the larger training set.\footnote{We ascribe the unfamiliar, steep angle of the DET plot to the use of low-dimensional synthetic data.}
+The DET-plot is a trade-off of miss rate against false-alarm rate (on a probit scale) as the score decision threshold is varied over the real line. It is a calibration-insensitive analysis of the decision-making ability of binary classifier scores. This plot shows that the two systems are essentially equivalent at all operating points and that the overtraining problem has virtually disappeared for the larger training set.\footnote{We ascribe the unfamiliar, steep angle of the DET plot to the use of low-dimensional synthetic data.}
 
 The Bayes error-rate (aka DCF) plot is designed to be calibration sensitive. It shows the (normalized) prior-weighted average of the miss and false-alarm rates as the class prior, $P(\text{target})=1-P(\text{non-target})$ is varied along the horizontal axis (on a logit scale). The decision threshold (applied to the log-likelihood-ratios) is the Bayes threshold, namely $-\log\frac{P(\text{target})}{P(\text{non-target})}$. See the references for further explanation. This plot shows that the calibration of both systems is good (solid plots lie on dashed plots) and that the two systems are also almost equivalent. 
 
