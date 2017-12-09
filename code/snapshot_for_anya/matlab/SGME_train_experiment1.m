@@ -1,7 +1,7 @@
 function SGME_train_experiment1
 
     zdim = 2;
-    rdim = 20;      %required: xdim > zdim
+    rdim = 20;      %required: rdim > zdim
     nu = 3;         %required: nu >= 1, integer, DF
     fscal = 3;      %increase fscal to move speakers apart
     
