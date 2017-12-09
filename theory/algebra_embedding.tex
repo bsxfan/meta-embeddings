@@ -2682,6 +2682,40 @@ The Bayes error-rate (aka DCF) plot is designed to be calibration sensitive. It 
 
 
 
+\subsection{Using binary cross-entropy}
+The previous experiment (training size 5000) is repeated, but now using as training objective binary cross-entropy (BXE), rather than pseudolikelihood (PsL). The main difference is speed---the BXE complexity scales as $n^2$, while PsL scales as $mn$, where there are $n$ recordings and $m$ speakers. Apart from that, accuracy is similar, although there is still some evidence of overtraining:
+$$
+\begin{tabular}{l l | r r r}
+  &  & $S_\Psi$ & BXE & EER \\
+\hline
+discriminative & train & $0.26$  & $0.024$ & $0.046$ \\
+generative & train & $0.26$ & $0.025$ & $0.048$ \\
+discriminative & test & $0.29$ & $0.025$ & $0.051$ \\
+generative & test & $0.28$ & $0.024$ & $0.049$
+\end{tabular} 
+$$
+Bayes-error-rate plots are given in figure~\ref{fig:SGME_BXE_Train_DCF} and the DET plot in figure~\ref{fig:SGME_BXE_Train_DET}.
+
+
+\begin{figure}[htb!]
+\centering
+%trim parameters: left, bottom, right, top
+\includegraphics[height=5cm,trim={0cm 7cm 1.5cm 8cm},clip]{SGME__BXE_training_DCF_plot_Train.pdf}        
+\includegraphics[height=5cm,trim={0 7cm 1.5cm 8cm},clip]{SGME__BXE_training_DCF_plot.pdf}
+\caption[Binary cross-entropy SGME training]{Binary cross-entropy SGME training. Bayes error-rate plot for both systems on the training data (left) and test data (right).}
+\label{fig:SGME_BXE_Train_DCF}
+\end{figure}
+
+\begin{figure}[htb!]
+\centering
+%trim parameters: left, bottom, right, top
+\includegraphics[height=6cm,trim={0cm 7cm 1.5cm 8cm},clip]{SGME_BXE_training_DET_plot.pdf}        
+\caption[Binary cross-entropy SGME training DET]{Binary cross-entropy SGME training. DET plot for both systems, evaluated on both training and test data.} 
+\label{fig:SGME_BXE_Train_DET}
+\end{figure}
+
+
+
 
 
 
