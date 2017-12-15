@@ -20,7 +20,7 @@ __maintainer__ = "Andreas Nautsch"
 __email__ = "andreas.nautsch@h-da.de"
 __status__ = "Development"
 __docformat__ = 'reStructuredText'
-__credits__ = ["Nike Brümmer, Adrian Bulat"]
+__credits__ = ["Niko Brümmer, Adrian Bulat"]
 
 
 class SiameseNetworkDataset(Dataset):
@@ -349,6 +349,7 @@ def get_data_loader(folder, shuffle=True, train_add_noise=False):
                                      std=[0.229, 0.224, 0.225])
     if train_add_noise:
         transform = transforms.Compose([transforms.Resize((100,100)),
+                                        transforms.Grayscale(),
                                         transforms.RandomHorizontalFlip(),
                                         transforms.RandomResizedCrop(100),
                                         #transforms.RandomVerticalFlip(),
@@ -375,10 +376,11 @@ def get_data_loader(folder, shuffle=True, train_add_noise=False):
         """
     else:
         transform = transforms.Compose([transforms.Resize((100,100)),
+                                        transforms.Grayscale(),
                                         transforms.ToTensor(),
                                         normalize,
                                         ])
-    if ConfigNetwork.train_with_softmax and folder is ConfigFaceDatasets.training_dir:
+    if (ConfigNetwork.train_with_softmax or ConfigNetwork.train_vae) and folder is ConfigFaceDatasets.training_dir:
         dataset = SoftMaxDatabase(imageFolderDataset=folder_dataset,
                                   transform=transform,
                                   should_invert=False)

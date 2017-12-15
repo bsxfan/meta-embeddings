@@ -221,3 +221,6 @@ TSWLatexianTemp*
 *.tcp
 *.tps
 *.asv
+
+# PyCharm project folders
+*.idea

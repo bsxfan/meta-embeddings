@@ -15,44 +15,35 @@ from MetaEmbeddings import GaussianMetaEmbedding
 from utils_test import test_model
 from Config import ConfigNetwork, ConfigFaceDatasets
 import random
-import pyro
-import pyro.distributions as dist
 
+# pyro
+from collections import namedtuple
+from observations import multi_mnist
+import pyro
+from pyro.infer import SVI
+import pyro.distributions as dist
+from pyro.util import ng_zeros, ng_ones
+from torch.nn.functional import relu, sigmoid, softplus, grid_sample, affine_grid
+
+from abc import ABC, abstractmethod
 
 __author__ = "Andreas Nautsch, Themos Stafylakis"
 __maintainer__ = "Andreas Nautsch"
 __email__ = "andreas.nautsch@h-da.de"
 __status__ = "Development"
 __docformat__ = 'reStructuredText'
-__credits__ = ["Nike Brümmer, Adrian Bulat"]
+__credits__ = ["Niko Brümmer, Adrian Bulat"]
 
 
-"""
-# TODO: enforce a clearly separated interface class, ideally sth like
-import abc
-
-class BaseNetwork(metaclass=abc.ABCMeta,nn.Module):
+class BaseLayer(nn.Module):
     def __init__(self):
-        super(NetworkBase, self).__init__()
-        self.__init_layers__()
-    
-    @abc.abstractmethod
-    sef __init_layers__()
-    
-class SiameseNetwork(BaseNetwork)
-class ResNetBase(BaseNetwork) # abstract/interface
-class ResNetSiameseNetwork(ResNetBase)
-"""
-
-
-class SiameseNetwork(nn.Module):
-    def __init__(self, embedding_size=ConfigNetwork.embedding_size, block=ConfigNetwork.basic_block, normalize=ConfigNetwork.normalize_embedding):
-        super(SiameseNetwork, self).__init__()
-        self.embedding_size = embedding_size
-        self.normalize = normalize
+        super(BaseLayer, self).__init__()
         self.inplanes = 64
-        layers = [2, 2, 2, 2]
+
+    def _make_layer(self, planes, blocks, stride=1, block=ConfigNetwork.basic_block):
         """
+        call example from ReLU:
+        layers = [2, 2, 2, 2]
         self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
@@ -62,6 +53,64 @@ class SiameseNetwork(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         """
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+        return nn.Sequential(*layers)
+
+
+class BaseNetwork(ABC,BaseLayer):
+    def __init__(self, embedding_size=ConfigNetwork.embedding_size, normalize=ConfigNetwork.normalize_embedding):
+        super(BaseNetwork, self).__init__()
+        self.embedding_size = embedding_size
+        self.normalize = normalize
+        self.register_buffer('embeddings_mean', torch.zeros(self.embedding_size))
+        if ConfigNetwork.embeddings_mean_file is not None:
+            if os.path.exists(ConfigNetwork.embeddings_mean_file):
+                self.register_buffer('embeddings_mean', torch.from_numpy(numpy.load(ConfigNetwork.embeddings_mean_file)).type(torch.FloatTensor))
+        self.__init_layers__()
+    
+    @abstractmethod
+    def __init_layers__(self):
+        ...
+
+    @abstractmethod
+    def set_ResNet_requires_grad(self, requires_grad):
+        ...
+
+    @abstractmethod
+    def forward_once(self, x):
+        ...
+
+    @abstractmethod
+    def forward(self, input1, input2):
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def net_distance(data, net, epoch):
+        ...
+
+    @staticmethod
+    @abstractmethod
+    def train_epoch(train_dataloader, net, optimizer, epoch, iteration_number):
+        ...
+    
+
+class SiameseNetwork(BaseNetwork):
+    def __init__(self):
+        super(SiameseNetwork, self).__init__()
+
+    def __init_layers__(self):
         init_res_net = ConfigNetwork.init_resnet
         self.conv1 = copy.deepcopy(init_res_net.conv1)
         self.bn1 = copy.deepcopy(init_res_net.bn1)
@@ -84,24 +133,6 @@ class SiameseNetwork(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-        self.register_buffer('embeddings_mean', torch.zeros(self.embedding_size))
-        if ConfigNetwork.embeddings_mean_file is not None:
-            if os.path.exists(ConfigNetwork.embeddings_mean_file):
-                self.register_buffer('embeddings_mean', torch.from_numpy(numpy.load(ConfigNetwork.embeddings_mean_file)).type(torch.FloatTensor))
-    def _make_layer(self, block, planes, blocks, stride=1):
-        downsample = None
-        if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * block.expansion),
-            )
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
-        self.inplanes = planes * block.expansion
-        for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes))
-        return nn.Sequential(*layers)
     def set_ResNet_requires_grad(self, requires_grad):
         self.conv1.requires_grad = requires_grad
         self.bn1.requires_grad = requires_grad
@@ -172,8 +203,8 @@ class SiameseNetwork(nn.Module):
 
 
 class SoftMaxNetwork(SiameseNetwork):
-    def __init__(self, num_train_classes, embedding_size=ConfigNetwork.embedding_size, block=ConfigNetwork.basic_block):
-        super(SoftMaxNetwork, self).__init__(embedding_size=embedding_size, block=block)
+    def __init__(self, num_train_classes):
+        super(SoftMaxNetwork, self).__init__()
         self.fc_softmax = nn.Linear(self.embedding_size, num_train_classes)
     def forward_once(self, x):
         x = super(SoftMaxNetwork, self).forward_once(x)
@@ -184,7 +215,7 @@ class SoftMaxNetwork(SiameseNetwork):
         output1 = self.forward_once(input1)
         return output1
     def to_siameseNetwork(self):
-        net = SiameseNetwork(embedding_size=self.embedding_size)
+        net = SiameseNetwork()
         net.conv1 = copy.deepcopy(self.conv1)
         net.bn1 = copy.deepcopy(self.bn1)
         net.relu = copy.deepcopy(self.relu)
@@ -228,13 +259,13 @@ class GME_SiameseNetwork(SiameseNetwork):
                  normalize=ConfigNetwork.normalize_embedding,
                  block=ConfigNetwork.basic_block,
                  ntc=None):
-        super(GME_SiameseNetwork, self).__init__(embedding_size=embedding_size, normalize=normalize, block=block)
+        super(GME_SiameseNetwork, self).__init__()
         if pretrained_siamese_net is not None:
             if os.path.exists(pretrained_siamese_net):
                 if ConfigNetwork.train_with_softmax & ntc is not None: # ntc is misused as a 'hidden parameter'
-                    init_net = SoftMaxNetwork(num_train_classes=ntc, embedding_size=embedding_size, block=block)
+                    init_net = SoftMaxNetwork(num_train_classes=ntc)
                 else:
-                    init_net = SiameseNetwork(embedding_size=embedding_size, normalize=normalize, block=block)
+                    init_net = SiameseNetwork()
                 init_net.load_state_dict(torch.load(pretrained_siamese_net))
                 self.conv1 = copy.deepcopy(init_net.conv1)
                 self.bn1 = copy.deepcopy(init_net.bn1)
@@ -334,7 +365,7 @@ class GME_SoftmaxNetwork(GME_SiameseNetwork):
         self.pretrained_net = pretrained_siamese_net
         if os.path.exists(self.pretrained_net):
             logging.debug('using softmax weights')
-            init_net = SoftMaxNetwork(num_train_classes=num_train_classes, embedding_size=embedding_size, block=block)
+            init_net = SoftMaxNetwork(num_train_classes=num_train_classes)
             # self.fc_softmax = copy.deepcopy(init_net.fc_softmax.weight)
             self.register_buffer('fc_softmax', copy.deepcopy(init_net.fc_softmax.weight.data))
         else:
@@ -344,7 +375,7 @@ class GME_SoftmaxNetwork(GME_SiameseNetwork):
             self.fc_softmax = (self.fc_softmax / fcsn) * (self.embedding_size ** 0.5)
             logging.debug('softmax normed: {}'.format(self.fc_softmax.cpu().numpy()))
     def to_softmaxNetwork(self):
-        net = SoftMaxNetwork(num_train_classes=self.num_train_classes, embedding_size=self.embedding_size)
+        net = SoftMaxNetwork(num_train_classes=self.num_train_classes)
         net.conv1 = copy.deepcopy(self.conv1)
         net.bn1 = copy.deepcopy(self.bn1)
         net.relu = copy.deepcopy(self.relu)
@@ -519,44 +550,45 @@ class ContrastiveLoss(nn.Module):
         )
         return loss_contrastive
 
-""" roadwork ahead 
-class Decoder(nn.Module):
-    def __init__(self, z_dim, hidden_dim, input_size=100**2, fudge=ConfigNetwork.vae_fudge):
-        super(Decoder, self).__init__()
-        # setup the three linear transformations used
-        self.fc1 = nn.Linear(z_dim, hidden_dim)
-        self.fc21 = nn.Linear(hidden_dim, input_size)
-        # setup the non-linearity
-        self.softplus = nn.Softplus()
-        self.sigmoid = nn.Sigmoid()
-        self.fudge = fudge
 
-    def forward(self, z):
-        # define the forward computation on the latent z
-        # first compute the hidden units
-        hidden = self.softplus(self.fc1(z))
-        # return the parameter for the output Bernoulli
-        # each is of size batch_size x 784
-        # fixing numerical instabilities of sigmoid with a fudge
-        mu_img = (self.sigmoid(self.fc21(hidden))+self.fudge) * (1-2*self.fudge)
-        return mu_img
-
-
-class Encoder(nn.Module):
-    def __init__(self, z_dim, hidden_dim):
+# define the PyTorch module that parameterizes the
+# diagonal gaussian distribution q(z|x)
+class Encoder(BaseLayer):
+    def __init__(self, input_dim=100, z_dim=ConfigNetwork.embedding_size, hidden_dim=ConfigNetwork.vae_hidden_dim):
         super(Encoder, self).__init__()
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu1 = nn.ReLU(inplace=True)
+        # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        #self.layer1 = self._make_layer(planes=64, blocks=2)
+        # self.layer2 = self._make_layer(planes=128, blocks=2)
+        self.dim = int(input_dim/2)
+        self.last_layer_dim = 64 * self.dim**2
+        if ConfigNetwork.dropouts:
+            self.dropout = nn.Dropout()
         # setup the three linear transformations used
-        self.fc1 = nn.Linear(784, hidden_dim)
+        self.fc1 = nn.Linear(self.last_layer_dim, hidden_dim)
         self.fc21 = nn.Linear(hidden_dim, z_dim)
         self.fc22 = nn.Linear(hidden_dim, z_dim)
         # setup the non-linearity
         self.softplus = nn.Softplus()
-        self.relu = nn.ReLU()
+
+    def downsample(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu1(x)
+        # x = self.maxpool(x)
+        # x = self.layer1(x)
+        # x = self.layer2(x)
+        if ConfigNetwork.dropouts:
+            x = self.dropout(x)
+        return x
 
     def forward(self, x):
         # define the forward computation on the image x
+        x = self.downsample(x)
         # first shape the mini-batch to have pixels in the rightmost dimension
-        x = x.view(-1, 784)
+        x = x.view(-1, self.last_layer_dim)
         # then compute the hidden units
         hidden = self.softplus(self.fc1(x))
         # then return a mean vector and a (positive) square root covariance
@@ -566,90 +598,171 @@ class Encoder(nn.Module):
         return z_mu, z_sigma
 
 
-class VAE(nn.Module):
-    # by default our latent space is 50-dimensional
-    # and we use 400 hidden units
-    def __init__(self, z_dim=50, hidden_dim=400, use_cuda=False):
+# define the PyTorch module that parameterizes the
+# observation likelihood p(x|z)
+class Decoder(BaseLayer):
+    def __init__(self, input_dim=100, z_dim=ConfigNetwork.embedding_size, hidden_dim=ConfigNetwork.vae_hidden_dim):
+        super(Decoder, self).__init__()
+        # setup the three linear transformations used
+        self.fc1 = nn.Linear(z_dim, hidden_dim)
+        self.dim = int(input_dim/2)
+        self.fc21 = nn.Linear(hidden_dim, 64 * self.dim**2)
+        # setup the non-linearity
+        self.softplus = nn.Softplus()
+        # self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.fudge = ConfigNetwork.vae_fudge
+        self.upsample1 = nn.Upsample(size=64, scale_factor=2, mode='nearest')
+        self.conv1 = nn.Conv2d(64, 1, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn1 = nn.BatchNorm2d(1)
+        self.relu1 = nn.ReLU(inplace=True)
+        # self.layer1 = self._make_layer(planes=64, blocks=2)
+
+    def upsample(self, y):
+        y = y.unsqueeze(2).unsqueeze(3).view(-1, 64, self.dim, self.dim)
+        y = self.upsample1(y)
+        y = self.conv1(y)
+        y = self.bn1(y)
+        #y = self.relu1(y)
+        #y = self.layer1(y)
+        return y
+
+    def forward(self, z):
+        # define the forward computation on the latent z
+        # first compute the hidden units
+        hidden = self.softplus(self.fc1(z))
+        # return the parameter for the output Bernoulli
+        # each is of size batch_size x 784
+        # fixing numerical instabilities of sigmoid with a fudge
+        y = (self.sigmoid(self.fc21(hidden)) + self.fudge) * (1 - 2*self.fudge)
+        mu_img = self.upsample(y)
+        return mu_img
+
+
+# define a PyTorch module for the VAE
+class VAE(BaseNetwork):
+    """
+    testing:
+
+    import torch
+    from torch.autograd import Variable
+    import pyro.distributions as dist
+    import importlib
+    import FaceNetworks
+
+    x = Variable(torch.randn(5, 1, 30, 30))
+
+    importlib.reload(FaceNetworks)
+    v=FaceNetworks.VAE()
+
+    z_mu, z_sigma = v.encoder(x)
+    z = dist.normal(z_mu, z_sigma)
+    mu_img = v.decoder(z)
+
+    likewise:
+
+    importlib.reload(FaceNetworks)
+    v=FaceNetworks.VAE()
+    v.reconstruct(x)
+
+
+    """
+    def __init__(self, use_cuda=False):
         super(VAE, self).__init__()
-        # create the encoder and decoder networks
-        self.encoder = Encoder(z_dim, hidden_dim)
-        self.decoder = Decoder(z_dim, hidden_dim)
 
         if use_cuda:
             # calling cuda() here will put all the parameters of
             # the encoder and decoder networks into gpu memory
             self.cuda()
         self.use_cuda = use_cuda
-        self.z_dim = z_dim
 
+    def __init_layers__(self):
+        # create the encoder and decoder networks
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+    # define the model p(x|z)p(z)
     def model(self, x):
         # register PyTorch module `decoder` with Pyro
         pyro.module("decoder", self.decoder)
-
         # setup hyperparameters for prior p(z)
-        # the type_as ensures we get CUDA Tensors if x is on gpu
-        z_mu = ng_zeros([x.size(0), self.z_dim], type_as=x.data)
-        z_sigma = ng_ones([x.size(0), self.z_dim], type_as=x.data)
-        # sample from prior
-        # (value will be sampled by guide when computing the ELBO)
+        # the type_as ensures we get cuda Tensors if x is on gpu
+        z_mu = ng_zeros([x.size(0), self.embedding_size], type_as=x.data)
+        z_sigma = ng_ones([x.size(0), self.embedding_size], type_as=x.data)
+        # sample from prior (value will be sampled by guide when computing the ELBO)
         z = pyro.sample("latent", dist.normal, z_mu, z_sigma)
-
         # decode the latent code z
-        mu_img = self.decoder(z)
+        mu_img = self.decoder.forward(z)
         # score against actual images
-        pyro.observe("obs", dist.bernoulli, x.view(-1, 784), mu_img)
+        pyro.sample("obs", dist.bernoulli, mu_img, obs=x.view(-1, 784))
 
+    # define the guide (i.e. variational distribution) q(z|x)
     def guide(self, x):
         # register PyTorch module `encoder` with Pyro
         pyro.module("encoder", self.encoder)
         # use the encoder to get the parameters used to define q(z|x)
-        z_mu, z_sigma = self.encoder(x)
+        z_mu, z_sigma = self.encoder.forward(x)
         # sample the latent code z
         pyro.sample("latent", dist.normal, z_mu, z_sigma)
+
+    # define a helper function for reconstructing images
+    def reconstruct_img(self, x):
+        return self.reconstruct_img(x)
+
+    def reconstruct(self, x):
+        # encode image x
+        z_mu, z_sigma = self.encoder(x)
+        # sample in latent space
+        z = dist.normal(z_mu, z_sigma)
+        # decode the image (note we don't sample in image space)
+        mu_img = self.decoder(z)
+        return mu_img
+
+    def model_sample(self, batch_size=1):
+        # sample the handwriting style from the constant prior distribution
+        prior_mu = Variable(torch.zeros([batch_size, self.z_dim]))
+        prior_sigma = Variable(torch.ones([batch_size, self.z_dim]))
+        zs = pyro.sample("z", dist.normal, prior_mu, prior_sigma)
+        mu = self.decoder.forward(zs)
+        xs = pyro.sample("sample", dist.bernoulli, mu)
+        return xs, mu
+
+    # network specific functions for the framework
+    def forward_once(self, x):
+        z_mu, z_sigma = self.encoder.forward(x)
+        if self.normalize:
+            z_mu = z_mu - Variable(self.embeddings_mean)
+            xn = torch.norm(z_mu, p=2, dim=1).detach().view(-1,1).expand_as(z_mu)
+            z_mu = z_mu / xn
+            z_sigma = z_sigma / xn
+        B = 1 / z_sigma
+        a = B * z_mu
+        return a, B
+
+    def forward(self, input1, input2):
+        a1, B1 = self.forward_once(input1)
+        a2, B2 = self.forward_once(input2)
+        return a1, B1, a2, B2
 
     def set_ResNet_requires_grad(self, requires_grad):
         pass
 
-    def P(self):
-        pass
-
-    def forward_once(self, x):
-        # TODO x = self.forward_once_ResNet(x)
-        x = self.fc(x)
-        if self.normalize:
-            x = x - Variable(self.embeddings_mean)
-            xn = torch.norm(x, p=2, dim=1).detach().view(-1,1).expand_as(x)
-            x = x / xn
-        return x
-
-    def forward(self, input1, input2):
-        output1 = self.forward_once(input1)
-        output2 = self.forward_once(input2)
-        return output1, output2
-
-    # network specific functions for the framework
     @staticmethod
     def net_distance(data, net, epoch):
-        output1, output2, label = data
-        distance = torch.nn.functional.pairwise_distance(output1, output2)
+        a1, B1, a2, B2, label = data
+        distance = GaussianMetaEmbedding.neg_llr_verification(a1, B1, a2, B2)
         return distance, label
 
     @staticmethod
     def train_epoch(train_dataloader, net, optimizer, epoch, iteration_number):
-        criterion = torch.nn.CrossEntropyLoss()
+        svi = SVI(net.model, net.guide, optimizer, loss="ELBO")
+        epoch_loss = 0.
         for i, data in enumerate(train_dataloader, 0):
-            img0, img1, label = data
-            output1, output2 = net(img0, img1)
-            optimizer.zero_grad()
-            loss_contrastive = criterion(output1, output2, label)
-            loss_contrastive.backward()
-            optimizer.step()
-
-            for p in params:
-                if p.grad is not None:
-                    data = p.grad.data
-                    p.grad = Variable(data.new().resize_as_(data).zero_())
+            img0, label = data
+            img0, label = Variable(img0).cuda(), Variable(label).cuda()
+            loss = svi.step(img0)
+            epoch_loss += loss
             if i % ConfigNetwork.iteration_step == 0 :
-                logging.info("Epoch number {},\t  iteration {},\t Current loss {}".format(epoch, i, loss_contrastive.data[0]))
+                logging.info("Epoch number {},\t  iteration {},\t Current loss {} (epoch: {})".format(epoch, i, loss, epoch_loss))
                 iteration_number += ConfigNetwork.iteration_step
-"""
+

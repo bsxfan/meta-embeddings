@@ -11,7 +11,8 @@ Therefore, miniconda is employed sustaining compatability to the sidekit project
 https://pelennor.univ-lemans.fr/Larcher/sidekit
 
 The code follows a save-load architecture for the sake of fast and reproducible development.
-Notably, one needs to keep track of existing files in order to avoid inconsistencies.
+Notably, one needs to keep track of existing files in order to avoid inconsistencies. <br>
+(to clean this up is an open todo @andreas)
 
 ## Framework employing PyTorch
 In order to avoid errors due to ill-maintained code redundancy, a modularized framework is set-up.

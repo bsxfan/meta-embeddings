@@ -23,7 +23,7 @@ __maintainer__ = "Andreas Nautsch"
 __email__ = "andreas.nautsch@h-da.de"
 __status__ = "Development"
 __docformat__ = 'reStructuredText'
-__credits__ = ["Nike Brümmer, Adrian Bulat"]
+__credits__ = ["Niko Brümmer, Adrian Bulat"]
 
 
 folders = [

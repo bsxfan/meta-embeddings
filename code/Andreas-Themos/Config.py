@@ -10,7 +10,7 @@ __maintainer__ = "Andreas Nautsch"
 __email__ = "andreas.nautsch@h-da.de"
 __status__ = "Development"
 __docformat__ = 'reStructuredText'
-__credits__ = ["Nike Brümmer, Adrian Bulat"]
+__credits__ = ["Niko Brümmer, Adrian Bulat"]
 
 
 def init_logging():
@@ -42,11 +42,11 @@ class ConfigNetwork():
     init_resnet = resnet18(pretrained=True)
     basic_block = BasicBlock
 
-    normalize_embedding = True
-    train_vae = False
-    train_with_softmax = True if not train_vae else False
-    dropouts = True
-    train_with_meta_embeddings = True # True # False
+    normalize_embedding = False
+    train_vae = True
+    train_with_softmax = False # if not train_vae else False
+    dropouts = False # True
+    train_with_meta_embeddings = False # True # False
 
 
     # training, validation, testing set-up
@@ -61,13 +61,12 @@ class ConfigNetwork():
     freere_ResNet_layer_depth = 5 if train_with_meta_embeddings else 4
 
     # learning_rate_scheduler = False
-    learning_rate = 0.0001 if train_with_meta_embeddings else 0.001 # 0.0005
-    if train_vae:
-        learning_rate = 0.01
+    learning_rate = 0.0001 if train_with_meta_embeddings else 0.01 if train_vae else 0.001 # 0.0005
     learning_rate_defactor = 0.8 # 0.9 # 0.8
     learning_rate_defactor_after_epoch = 10 if train_with_meta_embeddings else 15 # w/o: 5 - w/: # 2 # 10
 
-    vae_fudge = 2.718
+    vae_hidden_dim = 400
+    vae_fudge = 1e-7
 
     select_difficult_pairs_epoch = None  # 20 # None
     select_difficult_pairs_topN_per_subject = 5
@@ -75,10 +74,10 @@ class ConfigNetwork():
     # output
     storage_dir = '/export/b16/tstafylakis/'
     modelname = storage_dir + 'trained_{siamese}_network_celeba_{gme}'.format(
-        siamese='softmax' if train_with_softmax else 'siamese',
+        siamese='softmax' if train_with_softmax else 'vae' if train_vae else 'siamese',
         gme='gaussian_meta_embedding' if train_with_meta_embeddings else 'embedding'
     )
-    pretrained_siamese_net = '/export/b16/tstafylakis/171206/trained_softmax_network_celeba_embedding_epoch_118_model' # None
+    pretrained_siamese_net = None # '/export/b16/tstafylakis/171206/trained_softmax_network_celeba_embedding_epoch_118_model' # None
     embeddings_file = storage_dir + 'train_embeddings.h5'
     embeddings_file_plda = storage_dir + 'train_embeddings_plda.h5'
 
