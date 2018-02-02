@@ -20,7 +20,7 @@ function model = addME_train(R,labels,model,niters,timeout,test)
     
     
     
-    [w0_ext,w0_exp] = model.init();
+    [w0_ext,w0_exp] = model.getParams();
     w0 = [w0_ext;w0_exp];
     sz1 = length(w0_ext);
     
@@ -41,15 +41,7 @@ function model = addME_train(R,labels,model,niters,timeout,test)
     
     w = L_BFGS(@objective,w0,niters,timeout,mem,stpsz0);
     
-    [P,H,sqrtd] = unpack(w);
-    d = sqrtd.^2;
-    
-    model.logexpectation = @(A,b) SGME_logexpectation(A,b,d);
-    model.extract = @(R) SGME_extract(P,H,nu,R);
-    model.objective = @(P,H,d) objective(pack(P,H,d));
-    model.d = d;
-    
-    
+    model.getParams = @() unpack(w);    
 
     function [w_ext,w_exp] = unpack(w)
         w_ext = w(1:sz1);
@@ -93,18 +85,50 @@ function test_this()
 
     zdim = 2;
     rdim = 4;
+    delta = rdim - zdim;
+    
     n = 5;
     m = 3;
     
     prior =  create_PYCRP([],0,m,n);  
     labels = prior.sample(n);
 
-    nu = pi;
     R = randn(rdim,n);
 
     test = true;
     niters = [];
-    SGME_train(R,labels,nu,zdim,niters,test);
+    timeout = [];
+    
+    function [w_ext,w_exp] = init1()
+        P = randn(zdim,rdim);
+        H = randn(delta,rdim);
+        w_ext = [P(:);H(:)];
+        w_exp = randn(zdim,1);
+    end
+    
+    function [w_ext,w_exp] = init2()
+        nu = pi;
+        P = randn(zdim,rdim);
+        H = randn(delta,rdim);
+        w_ext = [nu;P(:);H(:)];
+        w_exp = randn(zdim,1);
+    end
+    
+    learn_nu = true;
+
+
+    if learn_nu
+        model.getParams = @init2;
+        model.extract = @(w,R) SGME_extract(w,zdim,R);
+    else
+        model.getParams = @init1;
+        model.extract = @(w,R) SGME_extract(w,zdim,R,pi);
+    end
+    model.logexpectations = @SGME_logexpectations;
+
+
+    
+    addME_train(R,labels,model,niters,timeout,test);
 
 
 end

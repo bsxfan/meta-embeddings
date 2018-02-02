@@ -341,7 +341,7 @@
 
 \emph{Embeddings} are familiar in modern machine learning. Neural nets to extract word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
 
-Embeddings are becoming popular also in speech and speaker recognition. In Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}, while a new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
+Embeddings are becoming popular also in speech and speaker recognition. At Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}, while a new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. The idea with embeddings is that they are representations of complex input patterns that live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
@@ -360,16 +360,18 @@ The idea to represent the uncertainty is not novel. Indeed, it is \emph{obvious}
 \begin{itemize}
 	\item Part of the problem is computational. For example, a point estimate for an identity variable in $\R^d$ can be represented as a $d$-dimensional vector. But for a multivariate normal meta-embedding, the covariance is a $d$-by-$d$ matrix, which is more expensive to store and manipulate. 
 	\item Then there is the added complication that covariance matrices have to be positive definite. If we use a neural net to compute our uncertainty for us, we have to specially structure the neural net to respect this requirement. 
-	\item But the problem has another facet---if a neural net manufactures meta-embeddings for us, how do we know that the uncertainty thus represented is reasonable? Given meta-embeddings extracted from some supervised database, what criterion can we apply to measure the goodness of the information and the uncertainty they contain? Such criteria are important, because we need them not only to measure performance, but could also be used for discriminative training of neural nets to extract meta-embeddings.
+	\item But the problem has another facet---if a neural net manufactures meta-embeddings for us, how do we know that the uncertainty thus represented is reasonable? Given meta-embeddings extracted from some supervised database, what criteria can we apply to measure the goodness of the information and the uncertainty they contain? Such criteria are important---we need them to measure performance, but they are also essential for any discriminative training of the neural nets that extract our meta-embeddings.
 \end{itemize}
 This document will provide some suggestions for tackling the above problems.\\ 
 
 \noindent The main purpose of the document is however to show that the meta-embeddings are themselves embeddings in the sense that they live in a vector space, equipped with geometric and algebraic structure that can be employed to compute probabilistic recognition scores (likelihood ratios). The hope is that the theoretical part of this document will help to provide the structure to guide further research into finding better solutions for the practical problems of working with this kind of uncertainty.    
 
-\section{Applications}
+\section{Application mechanisms}
 In this section, we briefly sketch how meta-embeddings might be applied. Obvious applications are speaker recognition, face recognition, fingerprint comparison and so on---we do not attempt to list all possible applications here. Rather, we are interested in the mechanisms whereby meta-embeddings are extracted and then used. 
 
-The first part of the document, chapters~\ref{chap:fp} to~\ref{chap:approx}, describes the nature of meta-embeddings and how to use them to recognize speakers, faces and so on. The next obvious question is how to extract meta-embeddings from the input data (voice recordings, images, etc.). Since meta-embeddings are probabilistic, they will be extracted using probabilistic models, which can be either generative or discriminative. 
+The first part of the document, chapters~\ref{chap:fp} to~\ref{chap:approx}, describes the nature of meta-embeddings and how to use them to recognize speakers, faces and so on. 
+
+But before we can use them, they have to be extracted from the input data (voice recordings, images, etc.). Since meta-embeddings are probabilistic, they will be extracted using probabilistic models, which can be either generative or discriminative. 
 
 PLDA is a good example of a generative model that naturally extracts meta-embeddings. The PLDA model can be trained either with maximum likelihood (the classical generative training criterion)~\cite{ht-plda,SPP}, or with discriminative methods~\cite{Sandro_pairs,Sandro_PSVM}. Once the PLDA model has been trained, extraction of meta-embeddings can be done in closed form, as will be explained in chapter~\ref{chap:generative}. More sophisticated deep generative models could also be used to extract meta-embeddings, but in those cases, we envisage the extraction would be done with a trainable neural network component, similar to that in variational autoencoders~\cite{VAE}.
 
@@ -514,7 +516,7 @@ The likelihood function, $f_j$, or indeed a product of any number of them, can b
 \label{sec:examples}
 The examples below should aid understanding of the meaning and applications of~\eqref{eq:generalLR}. We will frequently refer back to these examples in the rest of this document.\\
 
-\noindent\textbf{Simple verification.} Let $\Rset=\{r_1,r_2\}$, $A:\Sset_1=\{1,2\}$ and $B:\Sset'_1=\{1\},\Sset'_2=\{2\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the canonical (single-enroll) speaker verification LR.\\
+\noindent\textbf{Binary verification.} Let $\Rset=\{r_1,r_2\}$, $A:\Sset_1=\{1,2\}$ and $B:\Sset'_1=\{1\},\Sset'_2=\{2\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the canonical (single-enroll) speaker verification LR.\\
 
 \noindent\textbf{Multi-enroll verification.} Let $\Rset=\{r_1,r_2,r_3\}$, $A:\Sset_1=\{1,2,3\}$ and $B:\Sset'_1=\{1,2\},\Sset'_2=\{3\}$. Then $\frac{P(\Rset\mid A)}{P(\Rset\mid B)}$ is the speaker verification LR, with enrollment recordings $r_1,r_2$ and test recording $r_3$. This generalizes in the obvious way to more than two enrollments.\\
 
@@ -679,7 +681,7 @@ P(\zvec\mid\Rset,H_1,\pi) &= \frac{\pi(\zvec)f_\Rset(\zvec)}{\expv{f_\Rset(\zvec
 
 
 \subsection{Multiplicative identity}
-We define the \emph{multiplicative identity} as the constant function with value $1$ everywhere: $\onevec(\zvec)=1$. This turns out to be a (conveniently normalized) meta-embedding extracted from any  \emph{empty recording}. An empty recording is any recording that contains no speech---it could have zero duration, or otherwise contain silence, noise, or any other non-speech sounds. Since empty recordings have no speaker information, speaker identity variable posteriors conditioned on them are just equal to the prior. Letting $r_\phi$ be an empty recording, we have:
+We define the \emph{multiplicative identity} as the constant function with value $1$ everywhere: $\onevec(\zvec)=1$. This turns out to be a (conveniently normalized) meta-embedding extracted from any  \emph{empty recording}. An empty recording is a recording that contains no speech---it could have zero duration, or otherwise contain silence, noise, or any other non-speech sounds. Since empty recordings have no speaker information, speaker identity variable posteriors conditioned on them are just equal to the prior. Letting $r_\phi$ be an empty recording, we have:
 \begin{align}
 P(\zvec\mid r_\phi,\pi) &= \frac{\onevec(\zvec)\pi(\zvec)}{\expv{\onevec(\zvec)}{\zvec\sim\pi}} =  \pi(\zvec) 
 \end{align}
@@ -816,7 +818,7 @@ We start with \emph{simple LRs}, which can be used to compare any two hypotheses
 \label{sec:simpleLR}
 Here we show how to write the LR of each of the examples of section~\ref{sec:examples} as an inner product between normalized meta-embeddings.\\
 
-\noindent The \emph{simple verification} likelihood ratio~\eqref{eq:SLR}, rewritten in a variety of notations, is:
+\noindent The \emph{binary verification} likelihood ratio~\eqref{eq:SLR}, rewritten in a variety of notations, is:
 \begin{align}
 \label{eq:slrdot}
 \frac{P(r,r'\mid H_1)}{P(r,r'\mid H_2)} &= \frac{\dot{f}{f'}}{\dot{f}{\onevec}\dot{f'}{\onevec}}
@@ -1191,7 +1193,7 @@ The first two proposals below, based on exponential family distributions, meet a
 \section{GME: Gaussian meta-embedding}
 \label{sec:MVG}
 \def\dvec{\mathbf{d}}
-An obvious candidate for a practical meta-embedding is the multivariate Gaussian. A big advantage of this representation is that everything can be computed in closed form and that makes it an important building block in everything that follows. We shall refer to \emph{Gaussian meta-embeddings} with the acronym GME.
+An obvious candidate for a practical meta-embedding is the multivariate Gaussian. A big advantage of this representation is that everything can be computed in closed form, which makes it an important building block in everything that follows. We shall refer to \emph{Gaussian meta-embeddings} with the acronym GME.
 
 This representation supposes a continuous speaker identity variable, $\zvec\in\R^d$. For each recording, $r_j$, the corresponding meta-embedding, $f_j$, takes the form of a $(d+D)$-dimensional representation:
 $$r_j\mapsto\evec_j=(\avec_j,\bvec_j)$$
@@ -1255,13 +1257,13 @@ For convenience, let us repeat this formula in logarithmic form:
 \label{eq:GMElogex}
 \begin{split}
 \log E_G(\avec,\Bmat) = \log\expp{f} 
-&= \frac12\avec'(\Imat+\Bmat)^{-1}\avec - \logdet{\Imat+\Bmat} \\
-&= \frac12\avec'\muvec - \logdet{\Imat+\Bmat}
+&= \frac12\avec'(\Imat+\Bmat)^{-1}\avec - \frac12\logdet{\Imat+\Bmat} \\
+&= \frac12\avec'\muvec - \frac12\logdet{\Imat+\Bmat}
 \end{split}
 \end{align}
 Both $\muvec$ and the determinant $\abs{\Imat+\Bmat}$ can be found for example by Cholesky decomposition of the positive definite matrix $\Imat+\Bmat$. As we shall see later, other matrix factorizations, such as eigenvalue decomposition can also be used.  
 
-Our pooling and expectation operations can now be combined for LR calculation. For $f_1,f_2$ represented by $(\avec_1,\Bmat_1)$ and $(\avec_2,\Bmat_2)$, the normalized inner product is given by:
+Our pooling and expectation operations can now be combined for LR calculation. For example, when $f_1,f_2$ are represented by $(\avec_1,\Bmat_1)$ and $(\avec_2,\Bmat_2)$, the normalized inner product (binary verification LR) between them is given by:
 \begin{align}
 \label{eq:LRMVG}
 \dotn{f_1}{f_2} &= \frac{\expp{f_1f_2}}{\expp{f_1}\expp{f_2}} = \frac{E_G(\avec_1+\avec_2,\Bmat_1+\Bmat_2)}{E_G(\avec_1,\Bmat_1)E_G(\avec_2,\Bmat_2)}
@@ -1336,7 +1338,7 @@ blue & & 2.34 &
 };
 \end{tikzpicture}
 $$
-We can imagine that green was extracted from a long, clean recording; blue from a long noisy recording; and red from a short, clean recording. The short red recording gives reasonable certainty along the vertical axis, but crucial information is missing, resulting in greater uncertainty on the horizontal axis. Notice that $\LRT{blue}{green}<\LRT{red}{green}$, even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (magenta) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue and consequently increases the certainty that this speaker is \emph{not} the same as the green speaker: $\LRT{magenta}{green}$ is smaller than all the other LRs. There is enough overlap between red and blue to give some support, $\LRT{red}{blue}>1$, for the hypothesis that red and blue are of the same speaker. 
+We can imagine that green was extracted from a long, clean recording; blue from a long noisy recording; and red from a short, clean recording. The short red recording gives reasonable certainty along the vertical axis, but crucial information is missing, resulting in greater uncertainty on the horizontal axis. Notice that $\LRT{blue}{green}<\LRT{red}{green}$, even though the blue mean is closer to green than the red mean. This is due to the greater red uncertainty in the horizontal direction. Pooling (magenta) dramatically reduces the uncertainty about the location of $\zvec$ for the speaker represented by red and blue, and consequently increases the certainty that this speaker is \emph{not} the same as the green speaker: $\LRT{magenta}{green}$ is smaller than all the other LRs. There is enough overlap between red and blue to give some support for the hypothesis that red and blue are of the same speaker: $\LRT{red}{blue}>1$. 
 
 Next, we repeat the example, keeping everything the same, except that all the embeddings have smaller uncertainty. The effect is that the LRs also become more certain, moving further away from the neutral value of 1: 
 $$
@@ -1379,7 +1381,7 @@ The most dramatic effect of the above shift is on $\LRT{red}{blue}$, which has i
 
 
 \subsubsection{Food for thought}
-Let us examine pooling in more detail. In the above examples, when we pooled the suboptimal information extracted by the (short) red and (noisy) blue recordings, the result (magenta) gave less uncertainty about the value of $\zvec$ for the speaker common to red and blue. Intuition suggests that things are working properly. But now consider pooling red and blue embeddings which are far apart:
+Let us examine pooling in more detail. In the above examples, when we pooled the suboptimal information extracted by the (short) red and (noisy) blue recordings, the result (magenta) gave less uncertainty about the value of $\zvec$ for the speaker common to red and blue. Intuition suggests that things are working properly. But now consider below the pooling of red and blue embeddings that are far apart:
 $$
 \begin{tikzpicture}[xscale=1,yscale=1]
 %\draw[rotate around ={   0:(   0,   0)},black, dashed] (   0,   0) ellipse [x radius=   1, y radius=   1];
@@ -1445,7 +1447,7 @@ The apparently wayward magenta mean is the location where the blue and red distr
 
 \section{SGME: Simple Gaussian meta-embedding}
 \label{sec:SGME}
-A useful specialization of the GME, which we call \emph{simple Gaussian meta-embedding} (SGME), is obtained when $D=1$, so that precisions differ by a scale factor. As in the general case, we have $\avec_j=\R^d$, but there is only a single precision weight, which we denote with $b_j$, so that the precision is: 
+A useful specialization of the GME, which we call \emph{simple Gaussian meta-embedding} (SGME), is obtained when $D=1$, so that precisions of different meta-embeddings differ by a single scale factor. As in the general case, we have $\avec_j=\R^d$, but there is only a single precision weight, which we denote with $b_j$, so that the precision is: 
 \begin{align}
 \Bmat_j &= b_j\Emat
 \end{align}
@@ -1462,9 +1464,9 @@ where $b$ varies but $\Emat$ remains fixed. It turns out we do not have to redo 
 \end{align}  
 where $\Vmat$ is an orthonormal matrix having the eigenvectors along its columns, while $\Lambdamat$ is a diagonal matrix of real, non-negative eigenvalues. By orthonormality we have $\Vmat^{-1}=\Vmat'$, so that:
 \begin{align}
-\Imat+b\Emat &= \Vmat(\Imat+b\Lambdamat)\Vmat'
+\Bmat &= \Imat+b\Emat = \Vmat(\Imat+b\Lambdamat)\Vmat'
 \end{align}
-for any $b\ge0$, $\Bmat$ has a factorization of the same form, where we can re-use $\Vmat$. That is, the eigenvectors remain fixed. Denote the eigenvalues of $\Emat$ as $\{\lambda_i\}_{i=1}^d$, then the corresponding eigenvalues of $\Imat+b\Emat$ are $\{1+b\lambda_i\}_{i=1}^d$. The log-determinant---the second term of~\eqref{eq:GMElogex}---is just:
+This means $\Bmat$ has a factorization of the same form as $\Emat$, so that the eigenvectors remain fixed, for any $b\ge0$. Denote the eigenvalues of $\Emat$ as $\{\lambda_i\}_{i=1}^d$, then the corresponding eigenvalues of $\Imat+b\Emat$ are $\{1+b\lambda_i\}_{i=1}^d$. The log-determinant---the second term of~\eqref{eq:GMElogex}---is just:
 \begin{align}
 \logdet{\Imat+b\Emat} &= \sum_{i=1}^d \log(1+b\lambda_i)
 \end{align}
@@ -1484,7 +1486,7 @@ where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembli
 \end{align}
 
 \subsubsection{Diagonalized SGME}
-Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is:
+Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, so that it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is:
 \begin{align}
 f(\tilde\zvec)&=f(\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec] 
 \end{align}
@@ -1506,8 +1508,14 @@ The expected value of a DGME, $f(\zvec)=\exp[\zvec'\avec-\frac12\zvec'\Bmat\zvec
 
 
 \section{Autoregressive Gaussians}
-
-
+The autoregressive Gaussian GME (AR-GME) is a multivariate Gaussian represented in a way that retains the additive pooling of the GME representation, but it facilitates sampling for approximate expectation computation. In the GME representation, $f(\zvec)=\exp[\avec'\zvec -\frac12\zvec'\Bmat\zvec]$, Cholesky decomposition of $\Bmat$ is required for sampling. We define the AR-GME representation as:
+\begin{align}
+f(\zvec) &= \prod_{i=1}^d \exp\bigl[z_ia_i - z_i\sum_{k=1}^{i} \rho_{ik} z_k\bigr] \\
+&= \exp\Bigl[\sum_{i=1}^d z_ia_i - z_i\sum_{k=1}^{i} \rho_{ik} z_k\Bigr] \\
+&= \exp\bigl[\zvec'\avec - \zvec'\Rmat\zvec\bigr] \\
+&= \exp\bigl[\zvec'\avec - \frac12\zvec'(\Rmat+\Rmat')\zvec\bigr]
+\end{align}
+where $\Rmat$ is a lower triangular matrix with strictly positive entries on the diagonal. The last equality is obtained via $\zvec'\Rmat\zvec=(\zvec'\Rmat\zvec)'=\zvec'\Rmat'\zvec$.
 
 
 \section{Complex Gaussians}
@@ -1769,7 +1777,47 @@ Another option would be to change the representation. We could let:
 \begin{align}
 \Bmat_i &= \Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)\Bigl(\sum_{\ell=1}^D b_{\ell i} \Tmat_\ell \Bigr)'
 \end{align}  
-where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constrained to be non-negative. This gives a free Cholesky decomposition, and fast, approximate evaluation of LRs of the form $\dot{\normal{f_i}}{\normal{f_j}}$, but it complicates pooling for more complex LR calculations.\\
+where the $\Tmat_\ell$ are triangular and the $b_{\ell i}$ are no longer constrained to be non-negative. This gives a free Cholesky decomposition, and fast, approximate evaluation of LRs of the form $\dot{\normal{f_i}}{\normal{f_j}}$, but it complicates pooling for more complex LR calculations.
+
+
+\subsubsection{Cholesky sampling}
+The standard way to sample from a multivariate Gaussian of which the natural parameters, $\avec,\Bmat$, are given, is via Cholesky decomposition of the precision matrix, $\Bmat$. Let $\Cmat^{-1}=\Bmat=\Rmat'\Rmat$, where $\Cmat$ is covariance and $\Rmat$ is the (upper-triangular) Cholesky decomposition of $\Bmat$. This gives $\Cmat=\Rmat^{-1}(\Rmat')^{-1}$. Given natural parameter, $\avec=\Bmat\muvec$, we can recover the mean as:
+\begin{align}
+\muvec&=\Cmat\avec = \Rmat^{-1}(\Rmat')^{-1}\avec
+\end{align}
+If $\xvec\sim\ND(\nulvec,\Imat)$ is a sample from the standard normal, then 
+\begin{align}
+\muvec + \Rmat^{-1}\xvec &= \Rmat^{-1}[(\Rmat')^{-1}\avec + \xvec] \sim\ND(\muvec,\Cmat)
+\end{align} 
+is a sample from the desired distribution. This is implemented via the standard backsubstitution algorithm for the solution of linear equations involving triangular matrices.
+
+
+\subsubsection{Autoregressive sampling}
+We can do autoregressive sampling by using a cheaper \emph{additive} decomposition of the precision. Let $\Lmat$ be \emph{lower triangular}, such that:
+\begin{align}
+\Bmat &= \Lmat + \Lmat'
+\end{align} 
+We obtain $\Lmat$ by copying the lower triangle (including the diagonal) from $\Bmat$ and then dividing the diagonal by $2$, while the superdiagonal triangle remains zero. Observing that:
+\begin{align}
+\frac12\zvec'\Bmat\zvec &=  \frac12 \zvec'\Lmat\zvec + \frac12 \zvec'\Lmat'\zvec = \zvec'\Lmat\zvec
+\end{align} 
+we can rewrite the Gaussian with natural parameters, $\avec,\Bmat$ as:
+\begin{align}
+\begin{split}
+\ND(\zvec\mid\Bmat^{-1}\avec,\Bmat^{-1})&=\frac{\detm{\Bmat}^{\frac12}}{e^{\frac12\avec'\Bmat^{-1}\avec}} \exp[\zvec'\avec - \frac12\zvec'\Bmat\zvec] \\
+&= \exp[\zvec'\avec - \zvec'\Lmat\zvec] \\
+&= \exp\Bigl[\sum_{i=1}^dz_i (a_i - \sum_{j=1}^i\ell_{ij}z_j)\Bigr] \\
+&= \exp\Bigl[\sum_{i=1}^dz_i (a_i - \sum_{j=1}^{i-1}\ell_{ij}z_j) - \frac12 (2\ell_{ii})z_i^2  \Bigr] \\
+&= \exp\Bigl[\sum_{i=1}^dz_i (a_i - \sum_{j=1}^{i-1}b_{ij}z_j) - \frac12 b_{ii}z_i^2  \Bigr] \\
+&= \prod_{i=1}^d \exp\Bigl[z_i (a_i - \sum_{j=1}^{i-1}b_{ij}z_j) - \frac12 b_{ii}z_i^2  \Bigr] \\
+&\propto \prod_{i=1}^d \ND(z_i\mid b_{ii}^{-1}(a_i - \sum_{j=1}^{i-1}b_{ij}z_j), b_{ii}^{-1})
+\end{split}
+\end{align} 
+where $z_i,a_i,\ell_{ij}$ and $b_{ij}$ are elements of $\zvec,\avec,\Lmat$ and $\Bmat$. The RHS is in autoregressive form. If $\{x_i\}_{i=1}^d$ are independent standard normal samples, then sampling can be done as:
+\begin{align}
+z_i &= \frac{a_i - \sum_{j=1}^{i-1}b_{ij}z_j}{b_{ii}} + \frac{x_i}{\sqrt{b_{ii}}} 
+\end{align}
+
 
 \subsection{Stochastic L2 norm}
 \label{sec:stochL2}
@@ -1878,7 +1926,7 @@ where $\Wmat$ is $D$-by-$D$ positive definite. The expected value of the precisi
 \begin{align}
 \label{eq:noise_model}
 \begin{split}
-P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Wmat^{-1},\nu) \\
+P(\rvec\mid\zvec_i) &= \TD(\rvec\mid\Fmat\zvec_i,\Wmat,\nu) \\
 &\propto \Bigl[1+\frac{(\rvec-\Fmat\zvec_i)'\Wmat(\rvec-\Fmat\zvec_i)}{\nu}\Bigr]^{-\frac{\nu+D}{2}}
 \end{split}
 \end{align}
@@ -2426,9 +2474,10 @@ One way to handle the intractable MCL objective is via \emph{contrastive diverge
 \end{align}
 where $Z(\Rset,\theta)$ is the troublesome normalization constant. In CD we do approximate gradient ascent on the MCL objective, $\log P(\Lset^*\mid\Rset,\theta)$, where $\Lset^*$ is the true partition of $\Rset$ w.r.t.\ speaker. We make use of the fact that the required gradient can be expressed, without needing $Z(\Rset,\theta)$, as an expectation w.r.t.\ the posterior:
 \begin{align}
+\label{eq:CD}
 \begin{split}
 &\nabla_\theta \log P(\Lset^*\mid\Rset,\theta) \\
-&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta) - \nabla_\theta Z(\Rset,\theta) \\
+&= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta) - \nabla_\theta \log Z(\Rset,\theta) \\
 &= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
 - \nabla_\theta \log \sum_\Lset \tilde P(\Lset\mid\Rset,\theta) \\
 &= \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
@@ -2442,7 +2491,7 @@ where $Z(\Rset,\theta)$ is the troublesome normalization constant. In CD we do a
 &\approx \nabla_\theta \log\tilde P(\Lset^*\mid\Rset,\theta)
 - \frac1K\sum_{\Lset} \nabla_\theta\log\tilde P(\Lset\mid\Rset,\theta)\end{split}
 \end{align}
-where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The samples can be drawn by a Monte Carlo procedure, for example Gibbs sampling. The CD recipe involves (approximate) gradient descent updates to $\theta$, interleaved with sampling at a fixed $\theta$. For details, see for example~\cite{pcd}.
+where $K$ samples (partitions) are drawn from $P(\Lset\mid\Rset,\theta)$. The samples can be drawn by a Monte Carlo procedure, for example Gibbs sampling. The CD recipe involves (approximate) gradient ascent updates to $\theta$, interleaved with sampling at a fixed $\theta$. For details, see for example~\cite{pcd}.
 
 
 % Aargh! The spherical score doesn't work out in terms of an expectation
@@ -2726,8 +2775,62 @@ Bayes-error-rate plots are given in figure~\ref{fig:SGME_BXE_Train_DCF} and the 
 
 
 \chapter{Unsupervised training}
-With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of the meta-embedding extractor, without having to train a full generative model?
+With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of a discriminative the meta-embedding extractor, without having to train a full generative model? Below we consider first the generative case, before examining the discriminative case.
 
+\section{Unsupervised generative model training}
+For unsupervised training, we have a database of $n$ recordings, denoted $\Rset$, but we do not have available, $\Lset^*\in\Pset_n$, the true partition w.r.t.\ speaker. We do need to assign some prior over partitions, say $P(\Lset\mid\gamma)$, where we have parametrized the prior by $\gamma$. In some situations we might assign a fixed $\gamma$, while in others it might make sense to learn $\gamma$ as part of the training. In both cases, choice of the 
+
+The generative model provides the \emph{likelihood}, $P(\Rset\mid\Lset,\phi)$, which is parametrized by $\phi$,  For convenience, we define $\theta=(\phi,\gamma)$, where it is understood $\gamma$ might be fixed, or variable. The task of unsupervised generative training is then to solve:
+\begin{align}
+\argmax_{\theta} P(\Rset\mid\theta) &= \argmax_{\theta} \sum_{\Lset\in\Pset_n} P(\Lset\mid\gamma) P(\Rset\mid\Lset,\phi)
+\end{align} 
+We already know that the summation is hopelessly intractable. We also know that even in the simpler case of fixed $\gamma$, stochastic approximation of the optimand, done by sampling from the prior, $P(\Lset\mid\gamma)$ is a bad idea, because the likelihood, $P(\Rset\mid\Lset,\phi)$ might have a very sharp peak, which will never be discovered by an affordable number of samples from the poor, dumb, clueless prior. 
+
+It is a much better plan to sample from the posterior, $P(\Lset\mid\Rset\,\theta)$, to approximate the expectation of the much flatter \emph{log-likelihood}, rather than the sharply peaked likelihood. We discuss three closely related strategies that all give the above-mentioned benefits.
+
+\subsection{Stochastic variational Bayes}
+For stochastic variational Bayes (SVB)~\cite{SVI_Hoffman,VAE,Titsias}, we would be optimizing a stochastic approximation to the RHS of:
+\begin{align}
+\log P(\Rset\mid\theta) \ge \Expv{\log\frac{P(\Rset,\Lset\mid\theta)}{Q(\Lset\mid\tilde\theta)}}{Q(\Lset\mid\tilde\theta)}
+\end{align}
+w.r.t.\ both the model parameters, $\theta$ and the variational parameters, $\tilde\theta$.  If the constraints on the approximate posterior, $Q(\Lset\mid\tilde\theta)$ are not too restrictive, then optimization w.r.t.\ $\tilde\theta$ would give a good approximation to the true posterior. However, this recipe is only do-able if the approximate posterior can be sampled from and can be \emph{evaluated} (including its normalization constant) at every sample. At present, we are not aware of a suitable form for the approximate posterior that satisfies these requirements and therefore do not have a concrete plan to do SVB.    
+
+\subsection{Monte Carlo EM}
+The SVB recipe can be simplified to Monte Carlo EM (MCEM)~\cite{mcem_wei,mcem_levine,mcem_neath}, \emph{provided we can sample from the true posterior}, $P(\Lset\mid\Rset,\theta)$. \\
+
+\noindent Starting from the more general VB solution, we let:
+$$Q(\Lset\mid\tilde\theta)=P(\Lset\mid\Rset,\tilde\theta)$$
+which gives:
+\begin{align}
+\log P(\Rset\mid\theta) \ge \Expv{\log\frac{P(\Rset,\Lset\mid\theta)}{P(\Lset\mid\Rset,\tilde\theta)}}{P(\Lset\mid\Rset,\tilde\theta)}
+\end{align}
+with equality at $\theta=\tilde\theta$. Seen as VB, this means maximization w.r.t.\ $\tilde\theta$ is trivial and is done by choosing $\tilde\theta=\theta$. Given some initial value $\tilde\theta$, the basic MCEM algorithm proceeds by alternating the E and M steps below for a number of iterations: 
+\begin{itemize}
+	\item[]\textbf{E-step.} Draw $m$ samples, $\{\Lset_i\}_{i=1}^m$ from $P(\Lset\mid\Rset,\tilde\theta)$.
+	\item[]\textbf{M-step.} Update: $\tilde\theta = \argmax_\theta \sum_{i=1}^m \log P(\Rset,\Lset_i\mid\theta)$
+\end{itemize}
+For more detail, see the above references.
+
+\subsection{Contrastive divergence}
+The quirky \emph{candidate's formula}~\cite{cf_besag} to evaluate an inconvenient marginal likelihood, is obtained by re-arranging the product rule as:
+\begin{align}
+P(\Rset\mid\theta) &= \frac{P(\Rset,\tilde\Lset\mid\theta)}{P(\tilde\Lset\mid\Rset,\theta)}
+\end{align}
+Since the LHS is independent of $\Lset$, the RHS can be evaluated at any $\Lset=\tilde\Lset$, provided the denominator is non-zero. For contrastive divergence (CD), we want to do gradient ascent on the log marginal likelihood, so we take logs and differentiate:
+\begin{align}
+\label{eq:nablaCF}
+\nabla_\theta\log P(\Rset\mid\theta) &= \nabla_\theta\log P(\Rset,\tilde\Lset\mid\theta) - \nabla_\theta\log P(\tilde\Lset\mid\Rset,\theta)
+\end{align}
+Since the joint is also the unnormalized posterior, we can define the unnormalized posterior as:
+$$\tilde P(\Lset\mid\Rset,\theta)) = P(\Rset,\Lset\mid\theta) \propto P(\Lset\mid\Rset,\theta)$$ and plug that into~\eqref{eq:CD} to expand the second term of the RHS of~\eqref{eq:nablaCF}. The terms dependent on $\tilde\Lset$ cancel, to give:\footnote{The same result can be obtained by using the well known fact that at $\tilde\theta=\theta$, the gradients of the EM auxiliary and the log marginal likelihood coincide.}
+\begin{align}
+\nabla_\theta \log P(\Rset\mid\theta) &= \Expv{\nabla_\theta\log P(\Rset,\Lset\mid\theta)}{P(\Lset\mid\Rset,\theta)}
+\end{align}  
+As before, the RHS expectation can be approximated by sampling and the CD recipe does gradient ascent using these approximate gradients. This recipe has much in common with MCEM. The essential difference is that in MCEM, a sophisticated iterative numerical method might be used to find good optima in the M-step, while with CD, much simpler stochastic gradient ascent is used. With CD, many cheap M-steps are used compared to fewer, expensive M-steps in MCEM.
+
+
+
+   
 
 %What follows is very preliminary and is still a bit of a mess, but I believe it shows that there exist methods to do unsupervised training of meta-embedding extractors.
 %
@@ -2967,6 +3070,59 @@ Let $r(\zvec)$, be a \emph{probability density function} on $\zvec\in\R^d$. We s
 \end{split}
 \end{align}
 Since $r(\zvec)$ is normalized, we also have by~\eqref{eq:di}, that $\tilde r(\nulvec)=1$. Bochner's theorem says that the converse (although harder to prove) is also true---the FT (or IFT) of a positive definite function (which evaluates to 1 at $\nulvec$), is a probability density~\cite{SteinWeiss}.  
+
+
+\chapter{Some properties of multivariate Gaussians}
+\section{Two ways to express conditionals}
+Consider $\ND(\xvec\mid\muvec,\Sigmamat)$, with $\Lambdamat = \Sigmamat^{-1}$ and define the following partitions:
+\begin{align*}
+\xvec &= \bmat{\xvec_a \\ \xvec_b} &
+\muvec &= \bmat{\muvec_a \\ \muvec_b} \\
+\Sigmamat &= \bmat{\Sigmamat_{aa} & \Sigmamat_{ab} \\ \Sigmamat_{ba} & \Sigmamat_{bb}} &
+\Lambdamat &= \bmat{\Lambdamat_{aa} & \Lambdamat_{ab} \\ \Lambdamat_{ba} & \Lambdamat_{bb}}
+\end{align*}
+Then, Bishop~\cite{PRML} gives the following formula for the conditional, expressed in terms of the precision blocks:
+\begin{align}
+\label{eq:bishop_prec_pred}
+P(\xvec_a\mid\xvec_b) &= \ND(\xvec\mid \muvec_{a\mid b}, \Lambdamat_{aa}^{-1}), &
+\muvec_{a\mid b} &= \muvec_a - \Lambdamat_{aa}^{-1} \Lambdamat_{ab}(\xvec_b - \muvec_b)
+%\end{align} 
+\intertext{On the other hand,~\cite{GMRFbook} gives an equivalent formula in terms of the covariance blocks:}  
+%\begin{align}
+P(\xvec_a\mid\xvec_b) &= \ND(\xvec\mid \muvec_{a\mid b}, \Sigmamat_{a\mid b}), &
+\muvec_{a\mid b} &= \muvec_a + \Sigmamat_{ab}\Sigmamat_{bb}^{-1}\Sigmamat_{ba}(\xvec_b - \muvec_b)
+\end{align} 
+where
+\begin{align}
+\Sigmamat_{a\mid b} &= \Lambdamat_{aa}^{-1} = \Sigmamat_{aa} - \Sigmamat_{ab}\Sigmamat_{bb}^{-1}\Sigmamat_{ba}
+\end{align}
+
+
+\section{Predictive properties of the precision matrix}
+Let $(x_1,\ldots,x_n)\sim\ND(\muvec\mid\Sigmamat)$. The covariance matrix, $\Sigmamat$ encodes unconditional dependency: for $i\ne j$, if covariance element $i,j$ is zero (non-zero), then $x_i$ and $x_j$ are independent (dependent). The precision matrix, $\Lambdamat=\Sigmamat^{-1}$ encodes \emph{conditional} dependency. Let $\xvec_{-ij}$ denote all of the elements of $\xvec$, except $x_i$ and $x_j$. For $i\ne j$, if precision element $i,j$ is zero (non-zero), then $x_i$ and $x_j$ are conditionally independent (dependent), given $\xvec_{-ij}$. For further reading on the close association between the precision matrix and the undirected graphical model for multivariate Gaussians, see the Gaussian Markov random field (GMRF) literature, for example~\cite{GMRFbook}.
+
+\subsection{Complete conditional}
+The above conditional dependency properties of the precision matrix can be more specifically expressed in terms of the following predictive distribution (see~\cite{GMRFbook}, theorem 2.3). Let $\xvec\sim\ND(\muvec\mid\Lambdamat^{-1})$, where $x_i$, $\mu_i$ and $\lambda_{ij}$ are elements of $\xvec,\muvec$ and $\Lambdamat$. Let $\xvec_{-i}$ denote all of the elements of $\xvec$, except $x_i$. Then for any component $x_i$, we have the univariate Gaussian predictive distribution:\footnote{In fact, this is just a special case of~\eqref{eq:bishop_prec_pred}.} 
+\begin{align}
+\label{eq:fullcond_pred}
+x_i\mid\xvec_{-i}&\sim\ND(\hat x_{-i},\lambda^{-1}_{ii})& \text{where} &&
+\hat x_{-i} &= \mu_i - \lambda_{ii}^{-1}\sum_{j:j\ne i} \lambda_{ij} (x_j-\mu_j)
+\end{align}
+Notice that the product of these univariate density factors would give the pseudolikelihood, while sampling from them would be equivalent to Gibbs sampling.
+
+\subsection{Autoregressive conditional}
+Let $\xvec\sim\ND(\muvec\mid\Lambdamat^{-1})$ and let $\Lmat$ be the (lower triangular) Cholesky decomposition of $\Lambdamat$, so that $\Lmat\Lmat'=\Lambdamat$. Let $\ell_{ij}$ denote a component of $\Lmat$ and let $\xvec_{>i}$ denote all the components of $\xvec$ that have indices greater than $i$. Then for any component $x_i$, we have the univariate Gaussian predictive distribution (\cite{GMRFbook}, theorem 2.7):
+\begin{align}
+\label{eq:ar_pred}
+x_i\mid\xvec_{>i}&\sim\ND(\hat x_{>i},\ell^{-2}_{ii})& \text{where} &&
+\hat x_{>i} &= \mu_i - \ell_{ii}^{-1}\sum_{j:j> i} \ell_{ij} (x_j-\mu_j)
+\end{align}
+In contrast to~\eqref{eq:fullcond_pred}, we see that~\eqref{eq:ar_pred} gives an autoregressive predictor, because the product of all the univariate density factors gives the full multivariate density:
+\begin{align}
+\ND(\xvec\mid\muvec,\Lambdamat^{-1}) &= \prod_{i=1}^n \ND(x_i \mid \hat x_{>i},\ell^{-2}_{ii})
+\end{align} 
+With this decomposition, sampling can also be done more efficiently.\footnote{The disadvantages of Gibbs sampling includes burn-in time and samples which are not independent.} Specifically, we can use ancestral sampling, starting at $i=n$ and working back to $i=1$. (It is left as an exercise to the reader to check whether the upper triangular Cholesky variant would give a recipe that samples from $1$ to $n$.)
+
 
 
 

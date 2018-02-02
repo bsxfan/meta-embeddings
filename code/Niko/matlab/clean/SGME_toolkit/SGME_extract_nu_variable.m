@@ -9,7 +9,9 @@ function [E,back] = SGME_extract_nu_variable(w,zdim,R)
     delta = rdim-zdim; 
     szP = rdim*zdim;
     
-    nu = w(1);
+    w1 = w(1);
+    %nu = exp(w1);
+    nu = w1.^2;
     P = reshape(w(2:szP+1),zdim,rdim);
     H = reshape(w(szP+2:end),delta,rdim);
     
@@ -59,7 +61,12 @@ function [E,back] = SGME_extract_nu_variable(w,zdim,R)
         %nuprime = nu + delta;
         dnu = dnu + dnuprime;
         
-        dw = [dnu;dP(:);dH(:)];
+        %nu = exp(w1);
+        %dw1 = nu*dnu;
+        %nu = w1.^2;
+        dw1 = 2*w1*dnu;
+        
+        dw = [dw1;dP(:);dH(:)];
         
     end
     

@@ -21,6 +21,10 @@ function [y,back] = addME_pseudoscore(E,w,logexpectations,blocks,poi,num,logPrio
     end
     
     
+    n = length(poi);
+    scal = 1/(n*log(m));
+    
+    
     Et = E*blocks.';
     [LEt,back1] = logexpectations(Et,w);
     
@@ -46,7 +50,7 @@ function [y,back] = addME_pseudoscore(E,w,logexpectations,blocks,poi,num,logPrio
     
     %y = LLR;
     [logPsL,back5] = sumlogsoftmax(LLR + logPrior,num);
-    y = -logPsL;
+    y = -scal*logPsL;
     
     
     back = @back_this;
@@ -59,7 +63,7 @@ function [y,back] = addME_pseudoscore(E,w,logexpectations,blocks,poi,num,logPrio
         dEt = zeros(size(Et));
         
         %[y,back5] = sumlogsoftmax(LLR + logPrior,num);
-        dLLR = back5(-dy);
+        dLLR = back5(-dy*scal);
 
 
         for k=1:m
