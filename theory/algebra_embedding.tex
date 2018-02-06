@@ -1485,7 +1485,8 @@ where the $\tilde a_i$ are the components of $\tilde\avec=\Vmat'\avec$. Assembli
 \log E_G(\avec,b) &= \log\expp{f} = \frac12\sum_{i=1}^d \frac{\tilde a^2_i}{1+b\lambda_i} -\log(1+b\lambda_i)
 \end{align}
 
-\subsubsection{Diagonalized SGME}
+\subsection{Diagonalized SGME}
+\label{sec:diagonalization}
 Another way to derive the same calculation is to transform the hidden variable as $\tilde\zvec=\Vmat'\zvec$. The Jacobian determinant magnitude of this transform is unity, so that it leaves the standard normal prior unchanged and it diagonalizes all precision matrices. Then the meta-embedding in the transformed space is:
 \begin{align}
 f(\tilde\zvec)&=f(\zvec)=\exp[\tilde\zvec'\tilde\avec-\frac12\tilde\zvec'\tilde\Bmat\tilde\zvec] 
@@ -1508,6 +1509,8 @@ The expected value of a DGME, $f(\zvec)=\exp[\zvec'\avec-\frac12\zvec'\Bmat\zvec
 
 
 \section{Autoregressive Gaussians}
+This section is incomplete.
+
 The autoregressive Gaussian GME (AR-GME) is a multivariate Gaussian represented in a way that retains the additive pooling of the GME representation, but it facilitates sampling for approximate expectation computation. In the GME representation, $f(\zvec)=\exp[\avec'\zvec -\frac12\zvec'\Bmat\zvec]$, Cholesky decomposition of $\Bmat$ is required for sampling. We define the AR-GME representation as:
 \begin{align}
 f(\zvec) &= \prod_{i=1}^d \exp\bigl[z_ia_i - z_i\sum_{k=1}^{i} \rho_{ik} z_k\bigr] \\
@@ -1653,8 +1656,8 @@ Adapting the notation of section~\ref{sec:MVG}, for the case $D=1$, the GPLDA GM
 \label{eq:PLDAscore}
 \begin{split}
 \log\dotn{f_i}{f_j} &=\log E_G(\avec_i+\avec_j,2\Emat)  -\log E_G(\avec_i,\Emat) -\log E_G(\avec_j,\Emat) \\
-&= (\avec_i+\avec_j)' \Kmat (\avec_i+\avec_j)
--\avec_i' \Lmat \avec_i -\avec_j' \Lmat \avec_j + C
+&= \frac12(\avec_i+\avec_j)' \Kmat (\avec_i+\avec_j)
+-\frac12\avec_i' \Lmat \avec_i -\frac12\avec_j' \Lmat \avec_j + C
 \end{split}
 \end{align} 
 where $C$ is a constant representing the log-determinant terms and
@@ -1793,6 +1796,8 @@ is a sample from the desired distribution. This is implemented via the standard 
 
 
 \subsubsection{Autoregressive sampling}
+This section is incomplete.
+
 We can do autoregressive sampling by using a cheaper \emph{additive} decomposition of the precision. Let $\Lmat$ be \emph{lower triangular}, such that:
 \begin{align}
 \Bmat &= \Lmat + \Lmat'
@@ -2230,7 +2235,7 @@ In this chapter, we explore ways to discriminatively train meta-embedding extrac
 \end{itemize}
 The choices for representation and objective function are mostly orthogonal. As long as we can backpropagate derivatives through the calculations required by a given representation, we can in principle match such a representation to any of the objective functions to be discussed below. Since representations have already been treated in chapter~\ref{chap:representations}, we concentrate in this chapter on objective functions. 
 
-The optimizer could be a full batch optimizer such as L-BFGS~\cite{Nocedal}, or some variant of stochastic gradient descent, with mini-batches. The choice of optimizer is also to some extent independent of the other choices, although large optimization problems will tend to favour stochastic mini-batch methods. Moreover, as mentioned in chapter~\ref{chap:approx}, approximate stochastic expectations can play well with stochastic optimization.
+The optimizer could be a full batch optimizer such as L-BFGS~\cite{Nocedal}, or some variant of mini-batch stochastic gradient descent~\cite{SGD_review}. The objective function can influence the choice of optimizer. For mini-batch optimization, the objective function must have an additive decomposition, with independent components associated with the mini-batches. This is often possible to do, but we do encounter cases (see pseudolikelihood below), where such decompositions are apparently not possible.
 
 \section{Proper scoring rules}
 \def\Dset{\mathcal{D}}
@@ -2438,9 +2443,9 @@ To better understand this Gibbs sampling procedure and possible generalizations,
 Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker labels in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
 
 \subsection{Generalized Gibbs sampler}
-Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m\le n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m< n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
 \begin{enumerate}
-	\item Select an index subset, $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Select an index subset, $\Iset\subset\{1,\ldots,n\}$, (e.g.\ randomly) such that $\Iset$ has $m$ elements.
 	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$.
 	\item Sample a set of $m$ new speaker labels, denoted $\Lset_\Iset$, from  $P(\Lset_\Iset\mid\LI,\Rset)$.
 	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
@@ -2450,7 +2455,7 @@ Let us examine the case $m=2$. Let the number of speakers hypothesized by $\LI$ 
 \subsection{Approximate Gibbs sampler}
 For computational efficiency, we could construct an approximate Gibbs sampler and use that as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
 \begin{enumerate}
-	\item Select $\Iset\subseteq\{1,\ldots,n\}$, randomly, or in round-robin fashion, such that $\Iset$ has $m$ elements.
+	\item Select $\Iset\subset\{1,\ldots,n\}$, (e.g.\ randomly) such that $\Iset$ has $m$ elements.
 	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. Denote the number of speakers in $\Li$ by $k'$.
 	\item Sample the $m$ new speaker labels independently (and therefore efficiently), as if this were an open-set speaker recognition problem, with $k'$ enrolled speakers. This gives anywhere from $0$ to $m$ new speakers, say $k''$ of them.
 	\item If $k''>0$, sample a partition for this set of $k''$ recordings. (If this is done by some flavour of Markov chain Monte Carlo, some thought will have to be given to which initial state to use.)
@@ -2591,7 +2596,7 @@ S_C(\theta,\Lset) &= \sum_{i=1}^N -\log P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\thet
 Below we explore a few different composite scores that differ in how $\Lset^{(i)}$ and $\Lset^{[i]}$ are defined. For the pseudolikelihood construction above, we split the information in $\Lset$ according to recording index. Below we explore more general ways of splitting the information. 
 
 \subsection{Coarse conditioning}
-$\Lset\in\Pset_n$ is a partition w.r.t.\ speaker of the set of $n$ recordings. For every $i$, also let $\Lset^{[i]}\in\Pset_n$, but subject to $\Lset<\Lset^{[i]}$, meaning that $\Lset^{[i]}$ is a strictly coarser partition than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. The condition $\Lset<\Lset^{[i]}$ means that some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $\Lset^{[i]}$, the subsets do not overlap w.r.t.\ speaker. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
+$\Lset\in\Pset_n$ is a partition w.r.t.\ speaker of the set of $n$ recordings. For every $i$, also let $\Lset^{[i]}\in\Pset_n$, but subject to $\Lset<\Lset^{[i]}$, meaning that $\Lset^{[i]}$ is a strictly coarser partition than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. The condition $\Lset<\Lset^{[i]}$ means that some or all of the index subsets are the unions of more than one speaker set. The important property of this construction is that for a given $\Lset^{[i]}$, all of the recordings of a given speaker will be in the same subset. Now let $\Lset^{(i)}$ denote the \emph{complement} of the information in $\Lset^{[i]}$, such that combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. We can now further decompose~\eqref{eq:df1} as follows:
 \begin{align}
 \label{eq:df2}
 \begin{split}
@@ -2606,7 +2611,7 @@ Although at $N=1$, we do have a proper scoring rule, the to-be-trained system ne
 
 
 \subsection{Fine conditioning}
-In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but some subsets overlap w.r.t\ speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df2} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
+In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[i]}<\Lset$, meaning every $\Lset^{[i]}$ is strictly finer than $\Lset$. Denote $\Lset^{[i]}:\Iset_{i1},\Iset_{i2},\ldots,\Iset_{im_i}$. Every subset of $\Lset^{[i]}$ is pure (has exactly one speaker), but some subsets overlap w.r.t.\ speaker. Again, $\Lset^{(i)}$ is defined as the complement, so that for every $i$, combining $\Lset^{[i]}$ and $\Lset^{(i)}$ recovers $\Lset$. In this case we have $\Lset^{(i)}\in\Pset_{m_i}$, meaning it is a partition of a set of $m_i$ elements. In this case, term $i$ of~\eqref{eq:df1} is computed by first pooling the meta-embeddings according to the subsets $\Iset_{ij}$, resulting in $m_i$ pooled meta-embeddings. If $m_i$ is small enough, then all possible partitions of the set of pooled meta-embeddings can be visited, so that $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$ can be computed, complete with normalization constant. 
 
 Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets. $N>1$ seems better.
 
@@ -2812,7 +2817,7 @@ with equality at $\theta=\tilde\theta$. Seen as VB, this means maximization w.r.
 For more detail, see the above references.
 
 \subsection{Contrastive divergence}
-The quirky \emph{candidate's formula}~\cite{cf_besag} to evaluate an inconvenient marginal likelihood, is obtained by re-arranging the product rule as:
+The quirky \emph{candidate's formula}~\cite{cf_besag} can be used to evaluate an inconvenient marginal likelihood. It is obtained by re-arranging the product rule:
 \begin{align}
 P(\Rset\mid\theta) &= \frac{P(\Rset,\tilde\Lset\mid\theta)}{P(\tilde\Lset\mid\Rset,\theta)}
 \end{align}
@@ -2821,8 +2826,9 @@ Since the LHS is independent of $\Lset$, the RHS can be evaluated at any $\Lset=
 \label{eq:nablaCF}
 \nabla_\theta\log P(\Rset\mid\theta) &= \nabla_\theta\log P(\Rset,\tilde\Lset\mid\theta) - \nabla_\theta\log P(\tilde\Lset\mid\Rset,\theta)
 \end{align}
-Since the joint is also the unnormalized posterior, we can define the unnormalized posterior as:
-$$\tilde P(\Lset\mid\Rset,\theta)) = P(\Rset,\Lset\mid\theta) \propto P(\Lset\mid\Rset,\theta)$$ and plug that into~\eqref{eq:CD} to expand the second term of the RHS of~\eqref{eq:nablaCF}. The terms dependent on $\tilde\Lset$ cancel, to give:\footnote{The same result can be obtained by using the well known fact that at $\tilde\theta=\theta$, the gradients of the EM auxiliary and the log marginal likelihood coincide.}
+We now use the CD formula~\eqref{eq:CD}, where we choose the joint, $P(\Rset,\Lset\mid\theta)$, to serve as unnormalized posterior:
+$$\tilde P(\Lset\mid\Rset,\theta) = P(\Rset,\Lset\mid\theta) \propto P(\Lset\mid\Rset,\theta)$$ 
+We now use~\eqref{eq:CD} to expand the second term of the RHS of~\eqref{eq:nablaCF}. The terms dependent on $\tilde\Lset$ cancel, to give:\footnote{The same result can be obtained by using the well known fact that at $\tilde\theta=\theta$, the gradients of the EM auxiliary and the log marginal likelihood coincide.}
 \begin{align}
 \nabla_\theta \log P(\Rset\mid\theta) &= \Expv{\nabla_\theta\log P(\Rset,\Lset\mid\theta)}{P(\Lset\mid\Rset,\theta)}
 \end{align}  
@@ -3125,7 +3131,95 @@ With this decomposition, sampling can also be done more efficiently.\footnote{Th
 
 
 
+\chapter{GPLDA details}
 
+\section{The model}
+The (simple) Gaussian PLDA (GPLDA) model is defined as follows. For every new speaker, indexed by $i$, we draw $\zvec_i\sim\ND(\nulvec,\Imat)$. For every new i-vector, indexed by $j$, of this speaker, we draw a noise vector, $\etavec_j\sim\ND(\muvec,\Wmat^{-1})$. Then, the \emph{observed i-vector} is:
+\begin{align}
+\rvec_j &= \Fmat\zvec_i + \etavec_j
+\end{align}
+where $\zvec_i\in\R^d$ and $\etavec_j,\rvec_j\in\R^D$, with $D\ge d>0$. The parameters are the $D$-by-$d$ factor loading matrix, $\Fmat$, the within speaker precision, $\Wmat$ and the i-vector mean, $\muvec$. For simplicity, we set $\muvec=0$, because we have found that simple mean removal\footnote{Compute the training data mean and subtract that from both train and test data.} works just as well as formal maximum-likelihood training of $\muvec$ as a PLDA parameter. Omitting $\muvec$ helps to simplify training and scoring formulas. 
+
+\section{Scoring}
+Following~\eqref{eq:defBmuG}, we define:
+\begin{align}
+\Emat &= \Fmat'\Wmat\Fmat
+\end{align}
+since $b_j=1$, this is the (fixed) precision for the posterior, $P(\zvec_i\mid\rvec_j)$. The other natural parameter (precision times mean) for this posterior is, by~\eqref{eq:TSGME_params}:
+\begin{align}
+\avec_j &= \Fmat'\Wmat\rvec_j = \Pmat\rvec_j
+\end{align}
+where we have defined $\Pmat=\Fmat'\Wmat$ for later convenience. By~\eqref{eq:PLDAscore}, the LLR score between two i-vectors, say $\rvec_j$ and $\rvec_k$ is:
+\begin{align}
+\begin{split}
+s_{jk} &= (\avec_j+\avec_k)' \Kmat (\avec_j+\avec_k)
+-\avec_j' \Lmat \avec_j -\avec_k' \Lmat \avec_k + C \\
+&= (\rvec_j+\rvec_k)' \Rmat (\rvec_j+\rvec_k)
+-\rvec_j' \Smat \rvec_j -\rvec_k' \Smat \rvec_k + C 
+\end{split}
+\end{align} 
+where 
+\begin{align}
+C &= \logdet{\Imat+\Emat}-\frac12\logdet{\Imat+2\Emat} 
+\end{align}
+and
+\begin{align}
+\Kmat &= (\Imat+2\Emat)^{-1}&\text{and} && \Lmat &=(\Imat+\Emat)^{-1}
+\intertext{and}
+\Rmat &= \Wmat\Fmat(\Imat+2\Emat)^{-1}\Fmat'\Wmat&\text{and} && \Smat &=\Wmat\Fmat(\Imat+\Emat)^{-1}\Fmat'\Wmat
+\end{align}
+The score can be re-arranged into bilinear and quadratic terms:
+\begin{align}
+s_{jk} &= \rvec_j'(2\Rmat)\rvec_k + \rvec_j'(\Rmat-\Smat)\rvec_j + \rvec_k'(\Rmat-\Smat)\rvec_k + C
+\end{align}
+
+
+\subsection{Diagonalized representation}
+As explained in section~\ref{sec:diagonalization}, we can diagonalize the hidden variable posterior. Using the eigenanalysis, $\Emat=\Vmat\Lambdamat\Vmat'$, we can define:
+\begin{align}
+\tilde\Pmat &= \Vmat'\Pmat=\Vmat'\Fmat'\Wmat& \text{and} &&
+\tilde\Emat &= \Vmat'\Emat\Vmat = \Lambdamat
+\end{align}
+where $\Vmat$ is the orthonormal matrix of eigenvalues and $\tilde\Emat=\Lambdamat$ is the diagonal matrix of eigenvalues. This gives:
+\begin{align}
+\tilde\avec_j &= \tilde\Pmat\rvec_j
+\end{align} 
+and
+\begin{align}
+s_{jk} &= (\avec_j+\avec_k)' \tilde\Kmat (\avec_j+\avec_k)
+-\avec_j' \tilde\Lmat \avec_j -\avec_k' \tilde\Lmat \avec_k + \tilde C 
+\end{align}
+where
+\begin{align}
+\tilde\Kmat &= (\Imat+2\tilde\Emat)^{-1}&\text{and} && \tilde\Lmat &=(\Imat+\tilde\Emat)^{-1}
+\end{align}
+and 
+\begin{align}
+\tilde C &= \logdet{\Imat+\tilde\Emat}-\frac12\logdet{\Imat+2\tilde\Emat} 
+\end{align}
+
+
+\section{Scoring function parametrizations}
+In table~\ref{tab:PLDA_params}, we examine a few different parametrizations of the PLDA scoring function. We assume that a $d$-by-$d$ symmetric matrix can be represented by $\frac{1}{2}d(d+1)$ unique entries. (A symmetric positive definite martix can be similarly represented, or by its Cholesky decomposition, which has the same number of non-zero entries.) 
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{c|c}
+parameters & size \\
+\hline
+$\Fmat,\Wmat$ & $dD+\frac{1}{2}D(D+1)$\\
+\hline
+$\Pmat,\Emat$ & $dD + \frac{1}{2}d(d+1)$ \\
+$\Pmat,\Kmat,\Lmat,C$ & $dD + d(d+1) + 1$ \\
+$\Rmat,\Smat,C$ & $D(D+1) + 1$ \\ 
+$2\Rmat,\Rmat-\Smat,C$ & $D(D+1) + 1$ \\
+\hline
+$\tilde\Pmat,\tilde\Emat$ & $dD + d$ \\
+$\tilde\Pmat,\tilde\Kmat,\tilde\Lmat,C$ & $dD + 2d + 1$ 
+\end{tabular}
+\caption{Scoring function parametrizations} 
+\label{tab:PLDA_params}
+\end{table}
 
 
 
