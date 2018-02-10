@@ -35,9 +35,13 @@ function HTPLDA = create_HTPLDA_extractor(F,nu,W)
     end
     
     
-    function [A,b] = extractSGMEs(R)
+    function [A,b] = extractSGMEs(R,precisions)
         q = sum(R.*(G*R),1);
-        b = nu_prime./(nu+q);
+        if ~exist('precisions','var') || isempty(precisions)
+            b = nu_prime./(nu+q);
+        else
+            b = precisions;
+        end
         A = bsxfun(@times,b,VFW*R);
     end
     

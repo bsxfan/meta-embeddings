@@ -12,6 +12,9 @@
 \usepackage{amsmath}%
 \usepackage{amsfonts}%
 \usepackage{amssymb}%
+
+\usepackage{booktabs}
+\usepackage{placeins}
 \usepackage{graphicx}
 
 \pdfminorversion=7
@@ -1942,6 +1945,7 @@ f_j(\zvec) &\propto \Bigl[1+\frac{(\rvec_j-\Fmat\zvec)'\Wmat(\rvec_j-\Fmat\zvec)
 But if $D\ge d$ and $\Fmat'\Wmat\Fmat$ is invertible, we can conveniently rearrange this into a t-distribution for $\zvec$.
 
 \subsection{TME: T-distribution meta-embedding}
+\label{sec:TME}
 To see that $f_j(\zvec)$ is a t-distribution, we define (dropping subscripts for now): 
 \begin{align}
 \label{eq:defBmuG}
@@ -2414,7 +2418,7 @@ By doing some precomputation of some large, sparse index matrices,\footnote{Code
 \label{fig:SGME_MCL_CAL}
 \end{figure}
 
-
+\FloatBarrier
 \section{Gibbs sampling}
 As we shall see below in section~\ref{sec:CD}, the intractable MCL objective can be replaced by recipes based on Monte-Carlo sampling from the intractable partition posterior. In this section we present some recipes based on Gibbs sampling. 
 
@@ -2427,7 +2431,7 @@ If the prior, $P(\Lset)$, is the CRP of section~\ref{sec:CRP}, then a Gibbs samp
 	\item Sample a new speaker label, $\ell_i$, from  $P(\ell_i\mid\Li,\Rset)$.
 	\item Reassemble $\Lset$ from $\ell_i$ and $\Li$.
 \end{enumerate}
-In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is defined in section~\ref{sec:CRP}. Notice that $k'+1\le n$ and indeed, for a typical training database $k'\ll n$. We have:
+In contrast to the intractable full posterior, $P(\Lset\mid\Rset)$, the posterior factor $P(\ell_i\mid\Li,\Rset)$ is tractable, because there are at most $k'+1$ possibilities for $\ell_i$, where $k'$ is the number of speakers hypothesized by $\Li$. Notice that $k'+1\le n$ and indeed, for a typical training database $k'\ll n$. We have:
 \begin{align}
 \label{eq:Gibbsfactor}
 \begin{split}
@@ -2443,25 +2447,35 @@ To better understand this Gibbs sampling procedure and possible generalizations,
 Other ways to construct a Gibbs sampler are possible, where moves might be allowed that change multiple speaker labels in a single step. As long as the number of possible moves that can be done in a single step does not become too large, such Gibbs samplers are feasible. The set of possible moves must also be such that starting from any node, every other node can eventually be reached, so that sampling Markov chain is ergodic. 
 
 \subsection{Generalized Gibbs sampler}
-Let us construct a Gibbs sampler that samples multiple labels, ($m$ of them, where $m< n$) in the same step. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+Let us tentatively construct a Gibbs sampler that samples \emph{multiple} labels in the same step. Let the number of labels to be sampled be $m$, where $2\le m< n$. Given the previously sampled partition $\Lset$, the next partition is obtained as follows:
 \begin{enumerate}
-	\item Select an index subset, $\Iset\subset\{1,\ldots,n\}$, (e.g.\ randomly) such that $\Iset$ has $m$ elements.
-	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$.
+	\item (Randomly) select an index subset, $\Iset\subset\{1,\ldots,n\}$, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. 
 	\item Sample a set of $m$ new speaker labels, denoted $\Lset_\Iset$, from  $P(\Lset_\Iset\mid\LI,\Rset)$.
 	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
 \end{enumerate}
-Let us examine the case $m=2$. Let the number of speakers hypothesized by $\LI$ be $k'$. The number of possibilities for $\Lset_\Iset$ is $(k'+1)^2+1$. (Each of the two recordings can belong independently to one of $k'$ speakers, or be a new speaker, giving $(k'+1)^2$ possibilities, but there is another possibility that both recordings belong to the same new speaker.) In the general case, all partition possibilities having up to $m$ new speakers, must be included. We cannot make $m$ too large in this Gibbs sampler. 
+Let us examine the case $m=2$. If the number of speakers hypothesized by $\LI$ be $k'$, the number of possibilities for $\Lset_\Iset$ is $(k'+1)^2+1$. (Each of the two recordings can belong independently to one of $k'$ speakers, or be a new speaker, giving $(k'+1)^2$ possibilities, but there is another possibility that both recordings belong to the same new speaker.) 
+
+In the general case, all partition possibilities having up to $m$ new speakers, must be included. We do not have a closed-form expression for the number of possibilities, but it is greater than both $(k'+1)^m$ and $B_{m+1}$, where $B$ is the Bell number.\footnote{The first lower bound is the number of states, when no new speakers are pooled. The second, $B_{m+1}=\sum_{i=0}^m\binom{m}{i}B_i$ is the total number of ways to partition all the possible sets of new speakers.} In fact, as the first lower bound shows, if the number of speakers, $k'$, can get large during sampling, then even $m=2$ will not work. 
 
 \subsection{Approximate Gibbs sampler}
-For computational efficiency, we could construct an approximate Gibbs sampler and use that as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
+As an alternative, let us instead consider a more computationally efficient, \emph{approximate} Gibbs sampler, which can be used as the proposal distribution in a Metropolis-Hastings sampler, where the samples drawn from the proposal distribution are subjected to an acceptance test. Again, choose $m$ such that $2\le m< n$. Given the previously sampled partition $\Lset$, the next sample is obtained as follows:
 \begin{enumerate}
-	\item Select $\Iset\subset\{1,\ldots,n\}$, (e.g.\ randomly) such that $\Iset$ has $m$ elements.
-	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. Denote the number of speakers in $\Li$ by $k'$.
-	\item Sample the $m$ new speaker labels independently (and therefore efficiently), as if this were an open-set speaker recognition problem, with $k'$ enrolled speakers. This gives anywhere from $0$ to $m$ new speakers, say $k''$ of them.
-	\item If $k''>0$, sample a partition for this set of $k''$ recordings. (If this is done by some flavour of Markov chain Monte Carlo, some thought will have to be given to which initial state to use.)
+	\item (Randomly) select $\Iset\subset\{1,\ldots,n\}$, such that $\Iset$ has $m$ elements.
+	\item Obtain $\LI$ by removing all elements of $\Iset$ from $\Lset$. 
+	\item\label{step3} Sample the $m$ new speaker labels \emph{independently}, as if this were $m$ independent open-set speaker recognition problems, with $\LI$ indexing the data for $k'$ enrolled speakers. That is, we sample from
+	$$P(\Lset_\Iset\mid\LI,\Rset,\text{all new speakers different})$$ 
+	Denote the number of new speakers by  $k''$, where $0\le k'' \le m$.
+	\item\label{step4} If $k''>1$, randomly sample a partition for this set of $k''$ recordings. In other words, some of the $k''$ recordings can be grouped together as hypothesized speakers, so that we end up with $k'''$ new speakers in $\Lset_\Iset$, where $1\le k'''\le k''$. 
 	\item Reassemble $\Lset$ from $\Lset_\Iset$ and $\LI$.
 	\item Apply the Metropolis-Hastings acceptance criterion to the new partition $\Lset$. For details, see for example~\cite{PRML}, chapter 11, and references therein. 
 \end{enumerate}
+The sampling in step~\ref{step3} is done from an approximate conditional posterior, where we enforce independence, by assuming that all the new speakers are different. This independence allows much more efficient sampling, with cost proportional to $m(k'+1)$. Compare this to the lower bound $(k+1)^m$ for the exact recipe.
+
+The sampling in step~\ref{step4} can be done conditioned only on the subset of $\Rset$ that is indexed by $\Iset$. For this step we have a new, smaller sampling problem, although if $k''$ is still large, we might want to recursively apply this whole recipe. (If step~\ref{step4} is done with any MCMC method, it will need to be initialized and that could perhaps be done from the previous sample, $\Lset$.) On the other hand, faster approximate sampling methods could be considered instead.   
+
+The success of this method depends on the cost of computing the Metropolis-Hastings acceptance criterion, which we have not yet investigated. It also depends on the quality of the approximate Gibbs sampler. If the independence assumption causes too much damage, rejection will happen too often, thereby increasing the total computational cost. 
+
 
 
 \subsection{Deterministic annealing}
@@ -2473,7 +2487,7 @@ A problem with the Gibbs sampler, especially if only one label is changed per it
 
 \section{Contrastive divergence}
 \label{sec:CD}
-One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior be:
+One way to handle the intractable MCL objective is via \emph{contrastive divergence} (CD)~\cite{cd,pcd}. Let $\tilde P$ denote an unnormalized distribution and express the relationship between unnormalized (LHS) and normalized (RHS) partition posterior as:
 \begin{align}
 \tilde P(\Lset\mid\Rset,\theta) = Z(\Rset,\theta)  P(\Lset\mid\Rset,\theta) 
 \end{align}
@@ -2533,7 +2547,7 @@ To see that the pseudoscore forms a proper scoring rule, consider:
 =& \min_\theta\sum_i\expv{-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\ell_i\mid \Li, \Rset,\theta^*)P(\Li\mid\Rset,\theta^*)}\\
 =& \min_\theta\sum_i\Expv{\expv{-\log P(\ell_i\mid \Li, \Rset,\theta)}{P(\ell_i\mid \Li, \Rset,\theta^*)}}{P(\Li\mid\Rset,\theta^*)}\\
 =& \sum_i\Expv{\expv{-\log P(\ell_i\mid \Li, \Rset,\theta^*)}{P(\ell_i\mid \Li, \Rset,\theta^*)}}{P(\Li\mid\Rset,\theta^*)}\\
-=& \expv{S_\Psi(\theta^*)}{P(\Lset\mid\Rset,\theta^*)}
+=& \expv{S_\Psi(\theta^*,\Lset)}{P(\Lset\mid\Rset,\theta^*)}
 \end{split}
 \end{align}
 where we have used the fact that the argument of the inner expectation is the logarithmic proper scoring rule, so that the inner expectation is minimized at $\theta^*$, for every $i$ and $\Li$. 
@@ -2565,14 +2579,27 @@ In an experiment similar to that of section~\ref{sec:MCLcal}, also with 8 record
 The pseudolikelihood computational load scales as $kn$, where $k$ is the number of speakers and $n$ the number of recordings. In this respect it is similar to generative training of PLDA models and similar to discriminative cross-entropy training of multiclass classifiers. It must however be noted that pseudolikelihood may not play well with stochastic minibatch optimizers. The most important condition for stochastic optimization is that the objective function must decompose into a (large)  number of terms. This is true of pseudolikelihood---it has $n$ terms, but unfortunately every term involves statistics that are accumulated over the whole dataset. 
 
 
+\subsection{Example: Effect of degrees of freedom}
+Five synthetic datasets, each of size 5000, were generated from the HTPLDA model, with $d=2$ and $D=20$. The datasets had different degrees of freedom, $\nu\in\{1,2,3,4,5\}$. For each dataset, SGME meta-embeddings were extracted, using the formulas of section~\ref{sec:TME}. The true data generating model parameters were used, except that the degrees of freedom parameter was varied over a wide range of scales. See figure~\ref{fig:nu_experiment}, for a plot of accuracy vs the scale factor by which $\nu$ was perturbed from the true value. Accuracy is measured by pseudoscore, $S_\Psi$. To make a neater plot, the pseudoscore values were normalized by subtracting the pseudoscore of an oracle SGME extractor that used the true values of the hidden precisions, $b_j=\frac{\lambda_j}{\nu}$ in place of the regularized estimates, $b_j=\frac{\nu+D-d}{\nu+q_j}$. 
+
+\begin{figure}[htb!]
+\centering
+\includegraphics[height=6cm,trim={3cm 8cm 4cm 8cm},clip]{SGME_nu_experiment_a.pdf}        %trim parameters: left, bottom, right, top
+\includegraphics[height=6cm,trim={3cm 8cm 4cm 8cm},clip]{SGME_nu_experiment_b.pdf}        %trim parameters: left, bottom, right, top
+\caption[Accuracy vs degrees of freedom]{Accuracy as a function of misspecified $\nu$. The left and right panels show different details of the same plot. Colours indicate the true $\nu$ values, as used for data generation. The horizontal axis shows the factor by which the true $\nu$ was scaled before using it to extract SGMEs. The vertical axis is accuracy as measured by the relative pseudoscore (smaller is better).}
+\label{fig:nu_experiment}
+\end{figure}
+
+
+
 
 
 \section{Composite score}
-A family of proper scoring rules known as \emph{composite scores}~\cite{Dawid_Musio_ThApp_PSR_2014} can be constructed for our application as follows:
+A rich family of proper scoring rules known as \emph{composite scores}~\cite{Dawid_Musio_ThApp_PSR_2014} can be constructed for our application as follows:
 \begin{align}
 S_C(\theta,\Lset) &= \sum_{i=1}^N S_i(\theta,\Lset)
 \end{align}
-where each $S_i$ is a proper scoring rule operating on a conditional (or marginal) distribution of the form $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$, where $\Lset^{(i)}$ and $\Lset^{[i]}$ are subsets of the full label set, $\Lset$. For example, letting $N=n$, $\Lset^{(i)}=\ell_i$ and $\Lset^{[i]}=\Li$, together with the logarithmic scoring rule, gives the pseudoscore. For later, it is important to note that while each of the $S_i$ operates on some posterior conditioned on a subset of labels, the posterior is also  conditioned on the \emph{full} recording set $\Rset$.   
+where each $S_i$ is a proper scoring rule operating on a conditional (or marginal) distribution of the form $P(\Lset^{(i)}\mid\Lset^{[i]},\Rset,\theta)$, where $\Lset^{(i)}$ and $\Lset^{[i]}$ are subsets of the full label set, $\Lset$. For example, letting $N=n$, $\Lset^{(i)}=\ell_i$ and $\Lset^{[i]}=\Li$, together with the logarithmic scoring rule, retrieves the pseudoscore. For later, it is important to note that while each of the $S_i$ operates on some posterior conditioned on a subset of labels, the posterior is also  conditioned on the \emph{full} recording set $\Rset$.   
 
 To see that $S_C$ is proper, consider:
 \begin{align}
@@ -2780,10 +2807,10 @@ Bayes-error-rate plots are given in figure~\ref{fig:SGME_BXE_Train_DCF} and the 
 
 
 \chapter{Unsupervised training}
-With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of a discriminative the meta-embedding extractor, without having to train a full generative model? Below we consider first the generative case, before examining the discriminative case.
+With some trouble, unsupervised training recipes can be found for a generative model of the observed data, $\Rset$. But can we also do unsupervised training of a discriminative meta-embedding extractor, without having to train a full generative model? Below we consider first the generative case, before examining the discriminative case.
 
 \section{Unsupervised generative model training}
-For unsupervised training, we have a database of $n$ recordings, denoted $\Rset$, but we do not have available, $\Lset^*\in\Pset_n$, the true partition w.r.t.\ speaker. We do need to assign some prior over partitions, say $P(\Lset\mid\gamma)$, where we have parametrized the prior by $\gamma$. In some situations we might assign a fixed $\gamma$, while in others it might make sense to learn $\gamma$ as part of the training. In both cases, choice of the 
+For unsupervised training, we have a database of $n$ recordings, denoted $\Rset$, but we do not have available, $\Lset^*\in\Pset_n$, the true partition w.r.t.\ speaker. We do need to assign some prior over partitions, say $P(\Lset\mid\gamma)$, where we have parametrized the prior by $\gamma$. In some situations we might assign a fixed $\gamma$, while in others it might make sense to learn $\gamma$ as part of the training.
 
 The generative model provides the \emph{likelihood}, $P(\Rset\mid\Lset,\phi)$, which is parametrized by $\phi$,  For convenience, we define $\theta=(\phi,\gamma)$, where it is understood $\gamma$ might be fixed, or variable. The task of unsupervised generative training is then to solve:
 \begin{align}
@@ -2791,14 +2818,14 @@ The generative model provides the \emph{likelihood}, $P(\Rset\mid\Lset,\phi)$, w
 \end{align} 
 We already know that the summation is hopelessly intractable. We also know that even in the simpler case of fixed $\gamma$, stochastic approximation of the optimand, done by sampling from the prior, $P(\Lset\mid\gamma)$ is a bad idea, because the likelihood, $P(\Rset\mid\Lset,\phi)$ might have a very sharp peak, which will never be discovered by an affordable number of samples from the poor, dumb, clueless prior. 
 
-It is a much better plan to sample from the posterior, $P(\Lset\mid\Rset\,\theta)$, to approximate the expectation of the much flatter \emph{log-likelihood}, rather than the sharply peaked likelihood. We discuss three closely related strategies that all give the above-mentioned benefits.
+It is a much better plan to sample from the posterior, $P(\Lset\mid\Rset,\theta)$, to approximate the expectation of the much flatter \emph{log-likelihood}, rather than the sharply peaked likelihood. We discuss three closely related strategies that all give the above-mentioned benefits.
 
 \subsection{Stochastic variational Bayes}
-For stochastic variational Bayes (SVB)~\cite{SVI_Hoffman,VAE,Titsias}, we would be optimizing a stochastic approximation to the RHS of:
+For stochastic variational Bayes (SVB)~\cite{SVI_Hoffman,VAE,Titsias}, we would be optimizing a stochastic approximation to the \emph{evidence lower bound} (ELBO), which is the RHS of the inequality below:
 \begin{align}
 \log P(\Rset\mid\theta) \ge \Expv{\log\frac{P(\Rset,\Lset\mid\theta)}{Q(\Lset\mid\tilde\theta)}}{Q(\Lset\mid\tilde\theta)}
 \end{align}
-w.r.t.\ both the model parameters, $\theta$ and the variational parameters, $\tilde\theta$.  If the constraints on the approximate posterior, $Q(\Lset\mid\tilde\theta)$ are not too restrictive, then optimization w.r.t.\ $\tilde\theta$ would give a good approximation to the true posterior. However, this recipe is only do-able if the approximate posterior can be sampled from and can be \emph{evaluated} (including its normalization constant) at every sample. At present, we are not aware of a suitable form for the approximate posterior that satisfies these requirements and therefore do not have a concrete plan to do SVB.    
+The optimization must be done w.r.t.\ both the model parameters, $\theta$ and the \emph{variational parameters}, $\tilde\theta$.  If the constraints on the approximate posterior, $Q(\Lset\mid\tilde\theta)$ are not too restrictive, then optimization w.r.t.\ $\tilde\theta$ would give a good approximation to the true posterior. However, this recipe is only do-able if the approximate posterior can be sampled from and can be \emph{evaluated} (including its normalization constant) at every sample. At present, we are not aware of a suitable form for the approximate posterior that satisfies these requirements and therefore do not have a concrete plan to do SVB.    
 
 \subsection{Monte Carlo EM}
 The SVB recipe can be simplified to Monte Carlo EM (MCEM)~\cite{mcem_wei,mcem_levine,mcem_neath}, \emph{provided we can sample from the true posterior}, $P(\Lset\mid\Rset,\theta)$. \\
@@ -2828,11 +2855,11 @@ Since the LHS is independent of $\Lset$, the RHS can be evaluated at any $\Lset=
 \end{align}
 We now use the CD formula~\eqref{eq:CD}, where we choose the joint, $P(\Rset,\Lset\mid\theta)$, to serve as unnormalized posterior:
 $$\tilde P(\Lset\mid\Rset,\theta) = P(\Rset,\Lset\mid\theta) \propto P(\Lset\mid\Rset,\theta)$$ 
-We now use~\eqref{eq:CD} to expand the second term of the RHS of~\eqref{eq:nablaCF}. The terms dependent on $\tilde\Lset$ cancel, to give:\footnote{The same result can be obtained by using the well known fact that at $\tilde\theta=\theta$, the gradients of the EM auxiliary and the log marginal likelihood coincide.}
+Expanding the second term of the RHS of~\eqref{eq:nablaCF} with~\eqref{eq:CD}, the terms dependent on $\tilde\Lset$ cancel, to give:\footnote{The same result can be obtained by using the well known fact that at $\tilde\theta=\theta$, the gradients of the EM auxiliary and the log marginal likelihood coincide.}
 \begin{align}
 \nabla_\theta \log P(\Rset\mid\theta) &= \Expv{\nabla_\theta\log P(\Rset,\Lset\mid\theta)}{P(\Lset\mid\Rset,\theta)}
 \end{align}  
-As before, the RHS expectation can be approximated by sampling and the CD recipe does gradient ascent using these approximate gradients. This recipe has much in common with MCEM. The essential difference is that in MCEM, a sophisticated iterative numerical method might be used to find good optima in the M-step, while with CD, much simpler stochastic gradient ascent is used. With CD, many cheap M-steps are used compared to fewer, expensive M-steps in MCEM.
+As before, the RHS expectation can be approximated by sampling and the CD recipe does gradient ascent using these approximate gradients. This recipe has much in common with MCEM. The essential difference is that in MCEM, a sophisticated iterative numerical method might be used to find good optima in the M-step, while with CD, much simpler stochastic gradient ascent is used. CD relies on computationally cheap, partial M-steps, while MCEM tries to do complete (computationally expensive) M-steps.\footnote{By \emph{complete} we mean finding the optimum, rather than just moving one step uphill---MCEM \emph{tries} to do this, but the result will be less than ideal, because of the stochastic approximation and because of imperfect numerical optimization.}
 
 
 
@@ -3200,20 +3227,30 @@ and
 
 
 \section{Scoring function parametrizations}
-In table~\ref{tab:PLDA_params}, we examine a few different parametrizations of the PLDA scoring function. We assume that a $d$-by-$d$ symmetric matrix can be represented by $\frac{1}{2}d(d+1)$ unique entries. (A symmetric positive definite martix can be similarly represented, or by its Cholesky decomposition, which has the same number of non-zero entries.) 
+In table~\ref{tab:PLDA_params}, we examine a few different parametrizations of the PLDA scoring function. We assume that a $d$-by-$d$ symmetric matrix can be represented by $\frac{1}{2}d(d+1)$ unique entries. (A symmetric positive definite matrix can be similarly represented, or by its Cholesky decomposition, which has the same number of non-zero entries.) 
+
+% No longer necessary if using package booktabs.
+%\def\sp_hline{%
+%\noalign{\vskip 0.5mm}%
+%\hline%
+%\noalign{\vskip 0.5mm}%
+%}
 
 \begin{table}[htb!]
 \centering
-\begin{tabular}{c|c}
+\begin{tabular}{c c}
 parameters & size \\
-\hline
+%\sp_hline
+\midrule
 $\Fmat,\Wmat$ & $dD+\frac{1}{2}D(D+1)$\\
-\hline
+%\sp_hline
+\midrule
 $\Pmat,\Emat$ & $dD + \frac{1}{2}d(d+1)$ \\
 $\Pmat,\Kmat,\Lmat,C$ & $dD + d(d+1) + 1$ \\
 $\Rmat,\Smat,C$ & $D(D+1) + 1$ \\ 
 $2\Rmat,\Rmat-\Smat,C$ & $D(D+1) + 1$ \\
-\hline
+%\sp_hline
+\midrule
 $\tilde\Pmat,\tilde\Emat$ & $dD + d$ \\
 $\tilde\Pmat,\tilde\Kmat,\tilde\Lmat,C$ & $dD + 2d + 1$ 
 \end{tabular}

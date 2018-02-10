@@ -15,7 +15,7 @@ function SGME_train_experiment1
     [Pg,Hg,dg] = HTPLDA.getPHd(); 
     
     
-    n = 5000;
+    n = 1000;
     em = n/10;
     %prior = create_PYCRP(0,[],em,n);
     prior = create_PYCRP([],0,em,n);
@@ -65,7 +65,7 @@ function SGME_train_experiment1
     
     calplot.set_system(dtar,dnon,'disc_{min}');
     plot_dcf_curve_min(calplot,{'r--'},'train');
-    calplot.set_system(dtar,dnon,'gen');
+    calplot.set_system(dtar,dnon,'disc');
     plot_dcf_curve_act(calplot,{'r'},'train');
 
     calplot.set_system(dtar,dnon,'');
@@ -125,7 +125,7 @@ function SGME_train_experiment1
     
     calplot.set_system(dtar,dnon,'disc_{min}');
     plot_dcf_curve_min(calplot,{'r--'},'test');
-    calplot.set_system(dtar,dnon,'gen');
+    calplot.set_system(dtar,dnon,'disc');
     plot_dcf_curve_act(calplot,{'r'},'test');
 
     calplot.set_system(dtar,dnon,'');
