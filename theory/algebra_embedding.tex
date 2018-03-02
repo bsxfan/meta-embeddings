@@ -344,7 +344,7 @@
 
 \emph{Embeddings} are familiar in modern machine learning. Neural nets to extract word embeddings\footnote{\url{en.wikipedia.org/wiki/Word_embedding}} were already proposed in 2000 by Bengio~\cite{Bengio_word_embedding}. Now embeddings are used more generally, for example in state-of-the-art face recognition, e.g.\ Facenet~\cite{Facenet}.
 
-Embeddings are becoming popular also in speech and speaker recognition. At Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17}, while a new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
+Embeddings are becoming popular also in speech and speaker recognition. At Interspeech 2017, eighteen papers had the word `embedding' in the title.\footnote{\url{www.interspeech2017.org/program/technical-program/}.} In speaker recognition and spoken language recognition, we have been using i-vectors, a precursor to embeddings, for almost a decade~\cite{ivector-Brighton,ivec,BUT_ivector_language}. More general embeddings are now appearing in speaker recognition, see for example the \emph{OK Google} system~\cite{end2end_google}, the Voxceleb paper~\cite{Voxceleb} and David Snyder's work~\cite{end2end,DSIS17,DS_ICASSP18}, while a new embedding method for language recognition is proposed in~\cite{LIMSI_Language_embedding}. 
  
 Input patterns (sequences of acoustic feature vectors, images, text, \ldots) live in large, complex spaces, where probability distributions and geometrical concepts such as distance are difficult to formulate. The idea with embeddings is that they are representations of complex input patterns that live in simpler spaces, e.g.\ $\R^d$ (multidimensional Euclidean space), where distance is naturally defined and can be put to work to compare patterns. 
 
@@ -551,7 +551,7 @@ It remains to be shown in the next chapter that these meta-embeddings live in a 
 \chapter{The structure of meta-embedding space}
 Classical embeddings in machine learning live in finite-dimensional, Euclidean space, $\R^d$. When equipped with the standard scalar product, vector addition, dot-product and Euclidean distance, $\R^d$ is a vector space, inner-product space, metric space, Hilbert space, etc.\ Our meta-embeddings, the functions $f_j$, live in a slightly generalized space, which is still a vector space, inner product space, metric space and (subject to regularity conditions) a Hilbert space. 
 
-Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in the next chapter---we will consider various finite, tractable representations of our meta-embeddings.
+Depending on the nature of the hidden variable, $\zvec\in\Zset$, our meta-embeddings might live in a space with very high, or even infinite dimensionality. In the theory that follows, everything can be more elegantly described in this high/infinite-dimensional space, but in practice---to be discussed in chapter~\ref{chap:representations}---we will consider various finite, tractable representations of our meta-embeddings.
 
 In this chapter we explore first the geometric (vector space) properties of meta embeddings that establish concepts such as length, distance and angle. The vector space operations include addition, scalar multiplication and inner product. 
 
@@ -749,7 +749,7 @@ By~\eqref{eq:L1vsL2} we have:
 \begin{align}
 \norm{\normal{f}} \ge 1
 \end{align} 
-with equality at $\normal{f}=\onevec$. Using Pythagoras~\eqref{eq:Pythagoras}, we find the interesting formula:
+with equality at $\normal{f}=\onevec$. Using Pythagoras~\eqref{eq:Pythagoras}, we find the interesting formula:\footnote{We can also derive $\norm{\normal{f}}^2=\norm{\normal{f}-\boldsymbol{2}}^2$, where $\boldsymbol{2}(\zvec)=2$ everywhere.}
 \begin{align}
 \label{eq:normalnorm}
 \norm{\normal{f}}^2 &= \norm{\onevec}^2 + \norm{\normal{f}-\onevec}^2 
@@ -2012,7 +2012,7 @@ Even though $q_j$ is independent of $\zvec$, which we are trying to infer, it is
 
 To better understand what $\rvec'\Gmat\rvec$ does, consider applying an invertible linear transform to the data, such that the model for the transformed data then has $\Wmat=\Imat$. Since this transform does not change anything essential, the role played by $\Gmat$ is much the same as in the general case. For $\Wmat=\Imat$ we have:
 \begin{align*}
-\Gmat=\Imat - \Fmat(\Fmat'\Fmat)^{-1}\Fmat
+\Gmat=\Imat - \Fmat(\Fmat'\Fmat)^{-1}\Fmat'
 \end{align*}
 which is an \emph{idempotent projection matrix}, for which:
 \begin{align*}
@@ -2039,9 +2039,9 @@ LRs between TMEs are not available in closed form. However, as we found above, w
 \begin{align}
 \label{eq:fast_SGME_exp}
 \begin{split}
-\log E_G(\avec,b) &= \avec'(\Imat+b\Emat)^{-1}\avec - \logdet{\Imat+b\Emat}\\
-&= \trace\Bigl[(\tilde\avec\tilde\avec')(\Imat+b\Lambdamat)^{-1}
-\Bigr] - \logdet{\Imat+b\Lambdamat}
+\log E_G(\avec,b) &= \frac12\avec'(\Imat+b\Emat)^{-1}\avec - \frac12\logdet{\Imat+b\Emat}\\
+&= \frac12\trace\Bigl[(\tilde\avec\tilde\avec')(\Imat+b\Lambdamat)^{-1}
+\Bigr] - \frac12\logdet{\Imat+b\Lambdamat}
 \end{split}
 \end{align}
 where $\tilde\avec=\Vmat'\avec$.
@@ -2176,6 +2176,102 @@ where the role of $b_j$ becomes clear.
 \subsubsection{Doing it without Gaussians}
 As an alternative (perhaps a good idea when $D-d$ is small), both training and scoring can be done without Gaussian approximations. For training, the class representative, $\hat\zvec_i$, can be found by numerical maximization of the product of t-distributions. If in doubt about the sharpness of the peaks at the maxima, we could verify this by using the Laplace approximation as explained in section~\ref{sec:Laplace}. If all peaks are indeed sharp, we can score closed-set multiclass likelihoods by plugging the $\hat\zvec_i$ into the t-distribution meta-embeddings of the test segments, as in~\eqref{eq:Dirac_scoring}.
 
+\section{VB training of HT-PLDA}
+For generative training of the HT-PLDA model, we can consider various VB recipes. These include: 
+\begin{itemize}
+	\item Mean-field VB, where we treat both scale factors and speaker variables as hidden variables, which we force to be independent in the variational posterior.
+	\item Collapsed VB, where we integrate out the scale factors, to give heavy-tailed likelihoods. The speaker variables remain hidden. 
+  \item Collapsed VB, where we integrate out the speaker factors and the scale factors remain hidden. 
+\end{itemize}
+For a given speaker, $i$, let us denote the i-vectors as $\Rset_i=\{\rvec_{ij}\}_{j=1}^{N_i}$. They share a common speaker variable $\zvec$ and hidden scale factors, $\lambdavec = \{\lambda_j\}_{j=1}^{N_i}$. (We suppress $i$ for the hidden variables). For generality, let us use a Gamma prior, parametrized by $\alpha,\beta$, for the scale factors:
+\begin{align}
+\log P(\lambdavec) &= \sum_{j=1}^{N_i}\log\GD(\lambda_j\mid\alpha,\beta) 
+= \sum_{j=1}^{N_i} (\alpha-1)\log\lambda_j -\beta\lambda_j + \const
+\end{align} 
+The speaker variable prior is $\log P(\zvec)=-\frac12\zvec'\zvec + \const$. The likelihood is:
+\begin{align}
+P(\Rset_i\mid\zvec,\lambdavec) &= \prod_{j=1}^{N_i} \ND(\rvec_{ij}\mid \Fmat\zvec,(\lambda\Wmat)^{-1})
+\end{align}
+
+\subsection{Mean-field VB}
+\def\barB{\bar\Bmat}
+\def\bara{\bar\avec}
+\def\hatz{\hat\zvec}
+In the model, $\zvec\to\Rset_i\gets\lambdavec$, the hidden variables are dependent in the posterior, because of explaining away. The mean-field simplifying approximation uses a posterior of the form:
+\begin{align}
+Q_i(\lambdavec,\zvec) &= Q_i(\lambdavec)Q_i(\zvec) \approx P(\lambdavec,\zvec\mid\Rset_i)
+\end{align}
+The optimal mean-field factor, $Q_i(\lambdavec)$ satisfies the following further factorization:
+\begin{align}
+\begin{split}
+\log Q_i(\lambdavec) &= \expv{\log P(\Rset_i,\lambdavec,\zvec)}{Q_i(\zvec)} + \const \\
+&= \log P(\lambdavec) + \expv{\log P(\Rset_i\mid\lambdavec,\zvec)}{Q_i(\zvec)} + \const \\
+&= \sum_j \log P(\lambda_j) + \expv{\log P(\rvec_{ij}\mid\lambda_j,\zvec)}{Q_i(\zvec)} + \const \\
+&= \sum_j \log Q_{ij}(\lambda_j)
+\end{split}
+\end{align}
+Given this factorization, the second factor, $Q_i(\zvec)$ is found as:
+\begin{align}
+\begin{split}
+\log Q_i(\zvec) &= \expv{\log P(\Rset_i,\lambdavec,\zvec)}{Q_i(\lambdavec)} + \const \\
+&= \log P(\zvec) + \expv{\log P(\Rset_i\mid\lambdavec,\zvec)}{Q_i(\lambdavec)} + \const \\
+&= \log P(\zvec) + \sum_j \expv{\log P(\rvec_{ij}\mid\lambda,\zvec)}{Q_{ij}(\lambda)} + \const \\
+&= -\frac12\zvec'\zvec + \sum_j \hat\lambda_{ij} \bigl(\zvec'\Fmat'\Wmat\rvec_{ij}-\frac12\zvec'\Fmat'\Wmat\Fmat\zvec\bigr) + \const \\
+&= \log \ND(\zvec\mid \barB_i^{-1}\bara_j,\barB_i^{-1}) 
+\end{split}
+\end{align}
+where $\hat\lambda_{ij}$ is the expected value of $Q_{ij}(\lambda)$ and where we have defined the posterior natural parameters:
+\begin{align}
+\barB_i &= \Imat + \bigl(\sum_j \hat\lambda_{ij}\bigr)\Fmat'\Wmat\Fmat, &
+\bara_i &= \sum_j \lambda_{ij}\Fmat'\Wmat\rvec_{ij}  
+\end{align}
+The first factor can now be expanded as:
+\begin{align}
+\begin{split}
+\log Q_{ij}(\lambda) &= \log \GD(\lambda\mid\alpha,\beta) + \expv{\log \ND(\rvec_{ij}\mid\lambda,\zvec)}{Q_i(\zvec)} + \const \\
+&= (\alpha^*_{ij}-1)\log\lambda -\beta^*_{ij}\lambda + \const \\
+&= \log \GD(\lambda\mid\alpha^*_{ij},\beta^*_{ij})
+\end{split}
+\end{align}
+where
+\begin{align}
+\alpha^*_{ij} &= \alpha+\frac{D}{2} \\
+\beta^*_{ij} &= \beta -\hatz_i'\Fmat'\Wmat\rvec_{ij} +\frac12\trace\left[\Fmat'\Wmat\Fmat(\hatz_i'\hatz_i+\barB_i^{-1})\right]
+\end{align}
+where $\hatz_i=\barB_i^{-1}\bara_i$ is the expected value of $Q_i(\zvec)$.
+
+\subsubsection{VB lower bound}
+\def\KL#1#2{D_{KL}\left[#1\Vert#2\right]}
+The VB lower bound term for speaker $i$ is:
+\begin{align}
+\begin{split}
+L_i &= \expv{\log \frac{P(\Rset_i,\zvec,\lambdavec)}{Q_i(\zvec,\lambdavec)}}{Q_i(\zvec,\lambdavec)} \\
+&= \expv{\log P(\Rset_i\mid\zvec,\lambdavec)}{Q_i(\zvec,\lambdavec)} - \KL{Q_i(\zvec)}{P(\zvec)} - \KL{Q_i(\lambdavec)}{P(\lambdavec)}
+\end{split}
+\end{align}
+of which the first term can be expanded as:
+\begin{align}
+\begin{split}
+&\expv{\log P(\Rset_i\mid\zvec,\lambdavec)}{Q_i(\zvec,\lambdavec)} \\
+&= \expv{\sum_j \log P(\rvec_{ij}\mid\zvec,\hat\lambda_{ij})}{Q_i(\zvec)} \\
+&= \sum_j \frac{D}{2}\log\hat\lambda_{ij} +\frac12\logdet{\Wmat}
+-\frac{\hat\lambda_{ij}}{2} \expv{(\rvec_{ij}-\Fmat\zvec)'\Wmat(\rvec_{ij}-\Fmat\zvec)}{Q_i(\zvec)} \\
+&= \frac{N_i}{2}\logdet{\Wmat} +\frac{D}{2}\sum_j \log\hat\lambda_{ij} -\frac12\sum_j \hat\lambda_{ij}\rvec'_{ij}\Wmat\rvec_{ij}
++\hat\zvec'_i \sum_j \hat\lambda_{ij}\Fmat'\Wmat\rvec_{ij} \\
+&-\frac12\bigl(\sum_j\hat\lambda_{ij}\bigr)\trace[\expv{\zvec\zvec'}{i}\Fmat'\Wmat\Fmat] 
+\end{split}
+\end{align}
+
+
+\subsection{VB collapsed w.r.t.\ speaker variables}
+\begin{align}
+\begin{split}
+P(\zvec\mid\rvec) &= \int_0^\infty P(\lambda\mid \rvec) P(\zvec\mid\lambda,\rvec)\,d\lambda \\
+&= P(\zvec) \int_0^\infty P(\lambda\mid \rvec) \frac{P(\zvec\mid\lambda,\rvec)}{P(\zvec)}\,d\lambda \\
+&= P(\zvec) \int_0^\infty P(\lambda\mid \rvec) \frac{P(\rvec\mid\zvec,\lambda)}{P(\rvec\mid\lambda)}\,d\lambda 
+\end{split}
+\end{align}
+
 
 
 
@@ -2211,7 +2307,7 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k \sqrt{\detm{\Wmat_k}}\exp\bigl[-\frac12(\rv
 where $\tilde\Gmat_k$ is defined below and simplified with the Woodbury identity:\footnote{\url{http://en.wikipedia.org/wiki/Woodbury_matrix_identity}} 
 \begin{align}
 \tilde\Gmat_k &= \Wmat_k-\Wmat_k\Fmat_k(\Imat+\Bmat_k)^{-1}\Fmat_k'\Wmat_k
-= (\Wmat^{-1}+\Fmat\Fmat')^{-1}
+= (\Wmat_k^{-1}+\Fmat_k\Fmat_k')^{-1}
 \end{align}
 The RHS shows that $\tilde\Gmat_k^{-1}$ is the variance of $\rvec$, when sampled from: 
 \begin{align*}
@@ -2228,6 +2324,10 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1}
 &\propto \sum_{k=1}^K P(k\mid\rvec_j)\,\normal{g_{jk}}(\zvec)  
 \end{split}
 \end{align} 
+
+
+
+
 
 \chapter{Objective functions for discriminative training}
 \label{chap:discrim}
@@ -2803,7 +2903,10 @@ Bayes-error-rate plots are given in figure~\ref{fig:SGME_BXE_Train_DCF} and the 
 
 
 
-
+\section{Note on triplet loss}
+C. Zhang and K. Koishida, “End-to-end text-independent
+speaker verification with triplet loss on short utterances,” Proc.
+Interspeech, pp. 1487–1491, 2017.
 
 
 \chapter{Unsupervised training}
