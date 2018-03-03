@@ -2190,7 +2190,7 @@ For a given speaker, $i$, let us denote the i-vectors as $\Rset_i=\{\rvec_{ij}\}
 \end{align} 
 The speaker variable prior is $\log P(\zvec)=-\frac12\zvec'\zvec + \const$. The likelihood is:
 \begin{align}
-P(\Rset_i\mid\zvec,\lambdavec) &= \prod_{j=1}^{N_i} \ND(\rvec_{ij}\mid \Fmat\zvec,(\lambda\Wmat)^{-1})
+P(\Rset_i\mid\zvec,\lambdavec) &= \prod_{j=1}^{N_i} \ND(\rvec_{ij}\mid \Fmat\zvec,(\lambda_j\Wmat)^{-1})
 \end{align}
 
 \subsection{Mean-field VB}
@@ -2228,7 +2228,7 @@ where $\hat\lambda_{ij}$ is the expected value of $Q_{ij}(\lambda)$ and where we
 The first factor can now be expanded as:
 \begin{align}
 \begin{split}
-\log Q_{ij}(\lambda) &= \log \GD(\lambda\mid\alpha,\beta) + \expv{\log \ND(\rvec_{ij}\mid\lambda,\zvec)}{Q_i(\zvec)} + \const \\
+\log Q_{ij}(\lambda) &= \log \GD(\lambda\mid\alpha,\beta) + \expv{\log \ND(\rvec_{ij}\mid\Fmat\zvec,(\lambda\Wmat)^{-1})}{Q_i(\zvec)} + \const \\
 &= (\alpha^*_{ij}-1)\log\lambda -\beta^*_{ij}\lambda + \const \\
 &= \log \GD(\lambda\mid\alpha^*_{ij},\beta^*_{ij})
 \end{split}

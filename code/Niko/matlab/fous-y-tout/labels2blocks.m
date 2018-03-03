@@ -28,6 +28,6 @@ end
 
 function test_this()
 
-    labels = [2,3,3,3,4];
+    labels = [1,1,2,3,3,3,4]
     [subsets,counts] = labels2blocks(labels)
 end

@@ -6,6 +6,12 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
 %   R: D-by-N i-vector data matrix (centered)
 %   labels: M-by-N, one hot columns, labels for M speakers and N i-vectors
 
+
+    if nargin==0
+        test_this;
+        return;
+    end
+
     scaling_mindiv = true;
     Z_mindiv = true;
 
@@ -15,9 +21,9 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     
     % E-step
     
-    P = F.'*W;   % d-by-D
-    B0 = P*F;    %common precision (up to scaling)
-    [V,L] = eig(B0);  % eigendecomposition B0 = V*L*V'; L is diagonal, V is orthonormal  
+    P = F.'*W;         % d-by-D
+    B0 = P*F;          % d-by-d common precision (up to scaling)
+    [V,L] = eig(B0);   % eigendecomposition B0 = V*L*V'; L is diagonal, V is orthonormal  
     L = diag(L);
     VP = V.'*P;
     
@@ -25,7 +31,7 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     G = W - VP.'*bsxfun(@ldivide,L,VP);   % inv(B0) = V*inv(L)*V'
     
     
-    q = sum(R.*G*R,1);
+    q = sum(R.*(G*R),1);
     b = (nu+D-d)./(nu+q);  %scaling         %1-by-N
     
     bR = bsxfun(@times,b,R);
@@ -37,10 +43,10 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     
     LPP = 1 + bsxfun(@times,n,L);        % d-by-M eigenvalues of posterior precisions
     LPC = 1./LPP;                        % d-by-M eigenvalues of posterior covariances
-    logdetPP = log(prod(Lpost,1));       % logdets of posterior precisions
+    logdetPP = log(prod(LPP,1));         % logdets of posterior precisions
     tracePC = sum(LPC,1);                % and the traces
-    Z = V*(Lpost.\(VP*f));               % d-by-M posterior means
-    T = Z*f;                             % d-by-D
+    Z = V*(LPP.\(VP*f));                 % d-by-M posterior means
+    T = Z*f.';                             % d-by-D
     
     R = bsxfun(@times,n,Z)*Z.' + V*bsxfun(@times,LPC*n(:),V.');
     C = ( Z*Z.' + V*bsxfun(@times,sum(LPC,2),V.') ) / M;
@@ -48,8 +54,8 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     
     
     logdetW = 2*sum(log(diag(chol(W))));
-    logLH = (N/2)*logdetW + (D/2)*sum(log(b)) - 0.5*W(:).'*S(:) ...
-             + T(:).'*P(:) -0.5*B0(:).'*R(:);  
+    logLH = (N/2)*logdetW + (D/2)*sum(log(b)) - 0.5*trprod(W,S) ...
+             + trprod(T,P) -0.5*trprod(B0,R);  
     
     obj = logLH - KLGauss(logdetPP,tracePC,Z) - KLgamma(nu,D,d,b);
     
@@ -79,11 +85,15 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
 
 end
 
+function y = trprod(A,B)
+    y = A(:).'*B(:);
+end
+
 
 function kl = KLGauss(logdets,traces,Means)
-    d = length(mu);
+    d = size(Means,1);
     M = length(logdets);
-    kl = ( sum(traces) - sum(logets) + Means(:).'*Means(:) - d*M)/2;
+    kl = ( sum(traces) - sum(logdets) + trprod(Means,Means) - d*M)/2;
     
 end
 
@@ -106,5 +116,46 @@ function kl = KLgamma(nu,D,d,lambdahat)
     kl = sum(gammaln(a0) - gammaln(a) + a0*log(b/b0) + psi(a)*(a-a0) + a*(b0-b)./b);
 
 end
+
+function test_this()
+
+    d = 2;
+    D = 20;      %required: xdim > zdim
+    nu = 3;         %required: nu >= 1, integer, DF
+    fscal = 3;      %increase fscal to move speakers apart
+    
+    F0 = randn(D,d)*fscal;
+
+    W0 = randn(D,D+1); W0 = W0*W0.';
+    
+%     HTPLDA = create_HTPLDA_extractor(F,nu,W);
+%     [Pg,Hg,dg] = HTPLDA.getPHd(); 
+    
+    
+    N = 5000;
+    em = N/10;
+    %prior = create_PYCRP(0,[],em,n);
+    prior = create_PYCRP([],0,em,N);
+    [R,Z,precisions,labels] = sample_HTPLDA_database(nu,F0,prior,N,W0);
+    M = max(labels);
+    labels = sparse(labels,1:N,true,M,N); 
+    
+    
+    
+    F = randn(D,d);
+    W = eye(D);
+    niters = 100;
+    y = zeros(1,niters);
+    for i=1:niters
+        [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels);
+        fprintf('%i: %g\n',i,obj);
+        y(i) = obj;
+    end
+
+    plot(y);
+    
+
+end
+
 
 
