@@ -5,6 +5,8 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
 %   W: within-speaker precision, D-by-D, pos. def,
 %   R: D-by-N i-vector data matrix (centered)
 %   labels: M-by-N, one hot columns, labels for M speakers and N i-vectors
+%           This is a large matrix and it is best represented as a sparse
+%           logical matrix. 
 
 
     if nargin==0
