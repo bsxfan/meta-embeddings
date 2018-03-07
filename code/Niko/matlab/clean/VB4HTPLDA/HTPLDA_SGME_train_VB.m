@@ -1,19 +1,20 @@
 function  [backend,obj] = HTPLDA_SGME_train_VB(R,labels,nu,zdim,niters,F,W)
-% HTPLDA_SGME_train_VB, implements a mean-field VB algorithm to train the 
+% HTPLDA_SGME_train_VB implements a mean-field VB algorithm to train the 
 % parameters of a heavy-tailed PLDA model. 
 %
 % The generative model fantasy goes as follows: 
 % - The speaker identity variable, z \in R^zdim, is sampled (once) 
-% independently for every speaker, from the, standard multivariate normal 
-% distribution of dimensionality zdim. 
+%   independently for every speaker, from the standard Gaussian of 
+%   dimensionality d.  
 % - For a speaker represented by z, every new i-vector, r \in R^D, is 
-% sampled from the t-distribution, T(F*z, nu, W), where nu is degrees of 
-% freedom and W is within-speaker precision.
+%   sampled from the t-distribution, T(F*z, nu, W), where nu is degrees of 
+%   freedom; F (D-by-zdim) is the factor loading matrix; and W is within-speaker 
+%   precision.
 %
 % A clever shortcut is used to compute the approximate, variational hidden 
 % variable posteriors in closed form. This speeds up the algorithm. 
-% - The shortcut causes the algorithm to be more like EM, than VBEM (which
-%   also has an iterative E-step).
+% - The shortcut causes the algorithm to behave more like EM, rather than 
+%   full mean-field VBEM (which also has an iterative E-step).
 % - The shortcut does not give the same solution as the full mean-field 
 %   solution, but since the same shortcut is used in runtime scoring it may 
 %   give better results than full mean-field VB.

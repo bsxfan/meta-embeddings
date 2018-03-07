@@ -1,16 +1,19 @@
 function VB4HTPLDA_demo
 % Demo and test code for VB training and SGME scoring of HT-PLDA model.
-% Model parameters are randomly generated. Training and evaluation data
-% are (independently) sampled from this model. The accuracy of the 
-% trained (VB) model is compared against the (oracle) model that generated 
-% the data.
+%
+% Training and evaluation data are (independently) sampled from a model with 
+% randomly generated data. A VB algorithm is used to estimate the parameters
+% of this model from the training data. The accuracy of the trained (VB) 
+% model is compared (on both train and evaluation data) against the 
+% (oracle) model that generated the data.
 %
 % The accuracy is given in terms of the calibration-sensitive binary cross
 % entropy (BXE) and (if available) also equal-error-rate EER.
 % 
 % If the BOSARIS Toolkit (https://sites.google.com/site/bosaristoolkit/) is
-% available, BXE is shown for the 'raw' scores as given by this model, as
-% well as PAV-recalibrated scores, to give 'minBXE'.
+% available, BXE is shown not only for the 'raw' scores as given by this 
+% model, but also for PAV-recalibrated scores, to give 'minBXE'. The latter
+% is what BXE could have been if calibration had been ideal.
 
 
 
