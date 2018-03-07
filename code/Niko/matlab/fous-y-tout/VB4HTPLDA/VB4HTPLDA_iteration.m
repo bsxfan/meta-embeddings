@@ -1,4 +1,7 @@
 function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
+% Iteration of VB algorithm for HTPLDA training. See HTPLDA_SGME_train_VB
+% for details. The model parameters F and W are updated. 
+%
 % Inputs:
 %   nu: scalar, df > 0
 %   F: D-by-d factor loading matrix, D > d

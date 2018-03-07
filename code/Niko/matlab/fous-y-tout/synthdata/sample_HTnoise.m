@@ -25,7 +25,7 @@ function [X,precisions] = sample_HTnoise(nu,dim,n,W)
     precisions = mean(randn(nu,n).^2,1);  
     std = 1./sqrt(precisions);
     
-    X = cholW*bsxfun(@times,std,randn(dim,n));
+    X = cholW\bsxfun(@times,std,randn(dim,n));
 
 
 

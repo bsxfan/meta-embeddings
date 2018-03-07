@@ -8,42 +8,54 @@ function SGME_train_experiment_VB
     F = randn(rdim,zdim)*fscal;
 
     
-    W = eye(rdim);
+    W = randn(rdim,rdim+1);W = W*W.'; W = (rdim/trace(W))*W;
+    %W = eye(rdim);
     
     HTPLDA = create_HTPLDA_extractor(F,nu,W);
-    %SGME = HTPLDA.SGME;
-    [Pg,Hg,dg] = HTPLDA.getPHd(); 
     
     
-    n = 5000;
+    n = 10000;
     em = n/10;
     %prior = create_PYCRP(0,[],em,n);
     prior = create_PYCRP([],0,em,n);
-    [R,Z,precisions,labels] = sample_HTPLDA_database(nu,F,prior,n);
+    [R,Z,precisions,labels] = sample_HTPLDA_database(nu,F,prior,n,W);
     m = max(labels);
 
-    niters = 10;
-    [HTPLDA2,obj] = SGME_train_VB(R,labels,nu,zdim,niters);
+    niters = 30;
+    %[backend,obj] = SGME_train_VB(R,labels,nu,zdim,niters);
+    [backend,HTPLDA2,obj] = SGME_train_VB(R,labels,nu,zdim,niters);
     close all;
     plot(obj);title('VB lower bound');
+
+    %[nu2,F2,W2] = backend.getParams();
+    %HTPLDA3 = create_HTPLDA_extractor(F2,nu2,W2);
     
     
     
     fprintf(' ****** Train objectives ******** \n')
     
-    [Ag,Bg] = HTPLDA.extractSGMEs(R);
+    [Ag,Bg,dg] = HTPLDA.extractSGMEs(R);
     logPsL0 = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA.SGME.log_expectations,[],labels);
     BXE0 = calc.BXE(Ag,Bg) / log(2)
-    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
-    EER0 = eer(gtar,gnon)
+    %[gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    %EER0 = eer(gtar,gnon)
     
-    [Ag,Bg] = HTPLDA2.extractSGMEs(R);
-    logPsL = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
+    [Ag,Bg,dg] = HTPLDA2.extractSGMEs(R);
+    logPsL2 = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA2.SGME.log_expectations,[],labels);
     BXE = calc.BXE(Ag,Bg) / log(2)
-    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
-    EER = eer(gtar,gnon)
+    %[gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    %EER = eer(gtar,gnon)
+
+    %me = backend.extract(R,true);
+    %e3 = backend.log_expectations(me);
+    %e2 = HTPLDA2.SGME.log_expectations(me.A,me.b);
+    %figure;plot(e2,e3);
+    
+    %logPsL3 = -SGME_logPsL(me.A,me.b,me.L,[],labels,[],prior) / (n*log(m))
+    
+    
     
 %     close all;
 %     
@@ -78,22 +90,22 @@ function SGME_train_experiment_VB
 
     
     %Get fresh test data from same model 
-    [R,Z,precisions,labels] = sample_HTPLDA_database(nu,F,prior,n);
+    [R,Z,precisions,labels] = sample_HTPLDA_database(nu,F,prior,n,W);
     m = max(labels);
 
-    [Ag,Bg] = HTPLDA.extractSGMEs(R);
+    [Ag,Bg,dg] = HTPLDA.extractSGMEs(R);
     logPsL0 = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA.SGME.log_expectations,[],labels);
     BXE0 = calc.BXE(Ag,Bg) / log(2)
-    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
-    EER0 = eer(gtar,gnon)
+    %[gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    %EER0 = eer(gtar,gnon)
     
-    [Ag,Bg] = HTPLDA2.extractSGMEs(R);
+    [Ag,Bg,dg] = HTPLDA2.extractSGMEs(R);
     logPsL = -SGME_logPsL(Ag,Bg,dg,[],labels,[],prior) / (n*log(m))
     calc = create_BXE_calculator(HTPLDA2.SGME.log_expectations,[],labels);
     BXE = calc.BXE(Ag,Bg) / log(2)
-    [gtar,gnon] = calc.get_tar_non(Ag,Bg);
-    EER = eer(gtar,gnon)
+    %[gtar,gnon] = calc.get_tar_non(Ag,Bg);
+    %EER = eer(gtar,gnon)
     
 %     plot_obj.set_system(dtar,dnon,'disc');
 %     plot_obj.plot_rocch_det({'r--'},'test');    

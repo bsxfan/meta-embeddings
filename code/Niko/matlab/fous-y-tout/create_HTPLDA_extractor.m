@@ -27,15 +27,9 @@ function HTPLDA = create_HTPLDA_extractor(F,nu,W)
     HTPLDA.plot_database = @plot_database;
     HTPLDA.getPHd = @getPHd;
     
-    function [P,H,d] = getPHd()
-        P = VFW;
-        H = G;
-        %HH = H'*H;
-        d = SGME.d;
-    end
     
     
-    function [A,b] = extractSGMEs(R,precisions)
+    function [A,b,d] = extractSGMEs(R,precisions)
         q = sum(R.*(G*R),1);
         if ~exist('precisions','var') || isempty(precisions)
             b = nu_prime./(nu+q);
@@ -43,6 +37,7 @@ function HTPLDA = create_HTPLDA_extractor(F,nu,W)
             b = precisions;
         end
         A = bsxfun(@times,b,VFW*R);
+        d = SGME.d;
     end
     
     matlab_colours = {'r','g','b','m','c','k',':r',':g',':b',':m',':c',':k'}; 
