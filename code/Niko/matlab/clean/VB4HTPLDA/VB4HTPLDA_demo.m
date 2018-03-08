@@ -18,10 +18,18 @@ function VB4HTPLDA_demo
 
 
     % Assemble model to generate data
-    zdim = 2;       %speaker identity variable size 
-    rdim = 20;      %i-vector size. required: rdim > zdim
+%     zdim = 2;       %speaker identity variable size 
+%     rdim = 20;      %i-vector size. required: rdim > zdim
+%     nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+%     fscal = 3;      %increase fscal to move speakers apart
+
+    zdim = 100;       %speaker identity variable size 
+    rdim = 512;      %i-vector size. required: rdim > zdim
     nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
-    fscal = 3;      %increase fscal to move speakers apart
+    fscal = 1/100;      %increase fscal to move speakers apart
+    
+    
+    
     F = randn(rdim,zdim)*fscal;
     W = randn(rdim,rdim+1);W = W*W.'; W = (rdim/trace(W))*W;
     model1 = create_HTPLDA_SGME_backend(nu,F,W);  %oracle model
@@ -44,7 +52,7 @@ function VB4HTPLDA_demo
     
     %train
     fprintf('*** Training on %i i-vectors of %i speakers ***\n',N,nspeakers);
-    niters = 10;
+    niters = 40;
     [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters);
     close all;
     plot(obj);title('VB lower bound');
@@ -101,6 +109,7 @@ function VB4HTPLDA_demo
     
     else  % no BOSARIS
 
+        tic
         BXE = zeros(2,2);
         Scores = model1.score_trials(Enroll1,[],Test);
         BXE(1,1) = calcBXE(Scores,hlabels);
@@ -110,9 +119,12 @@ function VB4HTPLDA_demo
         BXE(2,1) = calcBXE(Scores,hlabels);
         Scores = model2.score_trials(Enroll2,Flags,Test);
         BXE(2,2) = calcBXE(Scores,hlabels);
+        toc
 
         fprintf('oracle: single enroll BXE = %g, double enroll BXE = %g\n',BXE(1,1),BXE(1,2));
         fprintf('VB    : single enroll BXE = %g, double enroll BXE = %g\n',BXE(2,1),BXE(2,2));
+    
+    
     end
         
 end

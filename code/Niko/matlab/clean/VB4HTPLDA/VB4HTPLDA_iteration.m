@@ -46,12 +46,12 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     n = b*labels.';                      % 1-by-M  weighted 0-order stats
     tot_n = sum(n);
     
-    LPP = 1 + bsxfun(@times,n,L);        % d-by-M eigenvalues of posterior precisions
-    LPC = 1./LPP;                        % d-by-M eigenvalues of posterior covariances
-    logdetPP = log(prod(LPP,1));         % logdets of posterior precisions
+    logLPP = log1p(bsxfun(@times,n,L));  % d-by-M log eigenvalues of posterior precisions
+    LPC = exp(-logLPP);                  % d-by-M eigenvalues of posterior covariances
+    logdetPP = sum(logLPP,1);            % logdets of posterior precisions
     tracePC = sum(LPC,1);                % and the traces
-    Z = V*(LPP.\(VP*f));                 % d-by-M posterior means
-    T = Z*f.';                             % d-by-D
+    Z = V*(LPC.*(VP*f));                 % d-by-M posterior means
+    T = Z*f.';                           % d-by-D
     
     R = bsxfun(@times,n,Z)*Z.' + V*bsxfun(@times,LPC*n(:),V.');
     C = ( Z*Z.' + V*bsxfun(@times,sum(LPC,2),V.') ) / M;

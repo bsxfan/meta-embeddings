@@ -1,4 +1,4 @@
-function be = create_HTPLDA_SGME_backend(nu,F,W)
+function be = create_HTPLDA_SGME_backend_prod(nu,F,W)
 % Constructs a fast, approximate HT-PLDA backend for i-vector scoring.  
 %
 % The generative model fantasy goes as follows: 
@@ -92,6 +92,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     G = W - VP.'*bsxfun(@ldivide,L,VP);   % inv(B0) = V*inv(L)*V'
 
     
+    
 %%%%%%   Method definitions %%%%%%%    
     
     function [nu1,F1,W1] = getParams()             
@@ -145,9 +146,9 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
         A = meta_embeddings.A;
         b = meta_embeddings.b;
 
-        logbL1 = log1p(bsxfun(@times,b,L));
-        logdets = sum(logbL1,1);
-        Q = sum(A.^2.*exp(-logbL1),1);    
+        bL1 = 1 + bsxfun(@times,b,L);
+        logdets = log(prod(bL1,1));
+        Q = sum(A.^2./bL1,1);    
         e = (Q-logdets)/2;
         if isfield(meta_embeddings,'logscal')
             e = e + meta_embeddings.logscal;
@@ -274,4 +275,3 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 
     
 end
-
