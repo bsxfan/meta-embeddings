@@ -1,4 +1,4 @@
-function  [backend,obj] = HTPLDA_SGME_train_VB(R,labels,nu,zdim,niters,F,W)
+function  [backend,obj] = HTPLDA_SGME_train_VB(R,labels,nu,zdim,niters,F,W,weights)
 % HTPLDA_SGME_train_VB implements a mean-field VB algorithm to train the 
 % parameters of a heavy-tailed PLDA model. 
 %
@@ -69,15 +69,19 @@ function  [backend,obj] = HTPLDA_SGME_train_VB(R,labels,nu,zdim,niters,F,W)
     end
     
     
-    if ~exist('F','var')
+    if ~exist('F','var') || isempty(F)
         F = randn(D,d);
         W = eye(D);
     end
 
     
+    if ~exist('weights','var')
+        weights = [];
+    end
+    
     obj = zeros(1,niters);
     for i=1:niters
-        [F,W,obj(i)] = VB4HTPLDA_iteration(nu,F,W,R,labels);
+        [F,W,obj(i)] = VB4HTPLDA_iteration(nu,F,W,R,labels,weights);
         fprintf('%i: %g\n',i,obj(i));
     end
 

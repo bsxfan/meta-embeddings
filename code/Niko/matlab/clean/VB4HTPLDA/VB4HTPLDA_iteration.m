@@ -1,4 +1,4 @@
-function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
+function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels,weights)
 % Iteration of VB algorithm for HT-PLDA training. See HTPLDA_SGME_train_VB()
 % for details. The model parameters F and W are updated. 
 %
@@ -38,6 +38,9 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels)
     
     q = sum(R.*(G*R),1);
     b = (nu+D-d)./(nu+q);  %scaling         %1-by-N
+    if exist('weights','var') && ~isempty(weights)
+        b = b.*weights;
+    end
     
     bR = bsxfun(@times,b,R);
     S = bR*R.';                          % D-by-D  weighted 2nd-order stats 

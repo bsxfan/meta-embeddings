@@ -11,7 +11,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 %
 % For small nu, this model has D-dimensional, heavy-tailed 'channel noise'. 
 % The speaker identity likelihoods, P(r | z) as a function of z, are 
-% proportional to t-distributions in z. But for D >> d these t-distytibutions
+% proportional to t-distributions in z. But for D >> d these t-distributions
 % are almost Gaussian, with increased degrees of freedom = nu+D-d. 
 % Approximating these likelihoods as Gaussians gives our shortcut, which 
 % gives fast scoring.
@@ -34,7 +34,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 %   between normalized meta-embeddings give likelihood-ratios. 
 %  
 %
-% Inputs (HT-PLDA model parameters:
+% Inputs (HT-PLDA model parameters):
 %   nu: scalar > 0, degrees of freedom
 %   F: D-by-d speaker factor loading matrix, D >> d, where D is i-vector
 %      dimension and d is speaker factor dimension.
@@ -47,22 +47,22 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 %      the form of function handles.  
 % 
 %      For documentation on these methods, see the m-file source of this
-%      function.
+%      function (or scroll down if you are already in the m-file).
 %
 % Typical simple usage:
 %
 %   > be = HTPLDA_SGME_train_VB(Training,labels,nu,zdim,niters); 
 %   > scores = be.score_trials(Enroll,[],Test);
 %
-%   - HTPLDA_SGME_train_VB invokes create_HTPLDA_SGME_backend.
-%   - Training, Enroll and Test are matrices of i-vectors.
+%   Note: - HTPLDA_SGME_train_VB invokes create_HTPLDA_SGME_backend().
+%         - Training, Enroll and Test are matrices of i-vectors.
 %
 %
 % Advanced usage allows: 
-% - (By-the-book) pooling of multiple enrollment i-vectors per target
-%   speaker.
 % - Representation of i-vectors by meta-embeddings, which are more compact
-%   than i-vectors.
+%   than i-vectors. The space saving factor is: (d+1) / D.
+% - (By-the-book) pooling of the meta-embeddings that represent multiple 
+%   enrollment i-vectors per target speaker.
 % - Very generally, scoring of likelihood-ratios between any propositions that
 %   can be represented as partitions (w.r.t. speaker) of a set of i-vectors.
 
@@ -96,7 +96,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     
     function [nu1,F1,W1] = getParams()             
     % Returns the parameters of the generative HT-PLDA model. See details 
-    % model and parameters above.    
+    % about the model and its parameters above.    
         [nu1,F1,W1] = deal(nu,F,W);
     end
     
@@ -113,8 +113,8 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     % 
     % Output:
     %   meta-embeddings: A struct containing the N meta-embeddings
-    %                    extracted from the N inpputs i-vectors.
-    %     meta_embedings.A: D-by-N natural parameters (precision * mean)
+    %                    extracted from the N input i-vectors.
+    %     meta_embedings.A: d-by-N natural parameters (precision * mean)
     %     meta_embedings.B: 1-by-N natrual parameters (precision scaling factors)
     %     meta_embedings.logscal: 1-by-N (optional, if normalized)
     %     meta_embeddings.L: d-by-1 eigenvectors of common precision 
@@ -133,13 +133,13 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 
 
     function e = log_expectations(meta_embeddings)  
-    % The (log) expected value of the meta-embedding likelihood function
-    % w.r.t. the standard normal prior. This is a fundamental building
+    % The (log) expected values of the given meta-embedding likelihood
+    % functions, w.r.t. the standard normal prior. This is a fundamental building
     % block in all scoring operations. For meta-embeddings representing
-    % singleton or pooled sets of i-vectors, this return the log-likelihood
-    % that the set of i-vectors belong to a common speaker.
+    % singleton or pooled sets of i-vectors, this returns the
+    % log-likelihood that each set belongs to a common speaker.
     %
-    % Input: meta-embeddings: struct for N meta-embeddings
+    % Input: meta-embeddings: struct containing N meta-embeddings
     % Output: e: 1-by-N: log-expectations for the input meta-embeddings
     
         A = meta_embeddings.A;
@@ -178,9 +178,9 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     %          optional: can be [], in which case identity is implied: outputs = inputs.
     %   do_norm: [optional, default = true] logical flag to request 
     %            normalization of the outputs after pooling. (Pooling
-    %            destroys normalization
+    %            destroys normalization.)
     %
-    % Output: pooled_meta_embeddings:  struct containing M of them
+    % Output: pooled_meta_embeddings: struct containing M of them
     
         if ~exist('Flags','var') || isempty(Flags)
             pooled_meta_embeddings = meta_embeddings;
@@ -199,23 +199,23 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     % Computes m-by-n matrix of (log) inner products between each of 
     % m meta-embeddings with each of n meta-embeddings. The inner product
     % between two meta-embeddings (which are functions) is the expected
-    % value w.r.t. the standard normal pof the product of the two
+    % value w.r.t. the standard normal of the product of the two
     % functions.
     %
     % This is useful for scoring binary verification trials.
-    % (Multi-enrollment is done by pooling of one of the inpout arguments.)
+    % (Multi-enrollment is done by pooling of one of the input arguments.)
     % 
     % Inner products could be calculated via pooling and expectation, but this
     % method does the calculation conveniently and efficiently for the whole matrix.
     %
     % Inputs:
-    %   Left: struct containing m of them
-    %   Right: struct containing n of them
+    %   Left: struct containing m meta-embeddings
+    %   Right: struct containing n meta-embeddings
     %
     % Output: X: m-by-n matrix of log inner products
     % 
-    % Note: if the inputs have all been normalized, then the inner products are also
-    % likelihood ratios.
+    % Note: If the inputs have all been normalized, then the inner products are also
+    %       likelihood ratios.
      
         
         B = bsxfun(@plus,Left.b.',Right.b);

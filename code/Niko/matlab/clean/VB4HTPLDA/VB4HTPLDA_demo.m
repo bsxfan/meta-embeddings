@@ -1,5 +1,5 @@
 function VB4HTPLDA_demo
-% Demo and test code for VB training and SGME scoring of HT-PLDA model.
+% Demo and test code for VB training and SGME scoring of HT-PLDA model. 
 %
 % Training and evaluation data are (independently) sampled from a model with 
 % randomly generated data. A VB algorithm is used to estimate the parameters
@@ -18,15 +18,15 @@ function VB4HTPLDA_demo
 
 
     % Assemble model to generate data
-%     zdim = 2;       %speaker identity variable size 
-%     rdim = 20;      %i-vector size. required: rdim > zdim
-%     nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
-%     fscal = 3;      %increase fscal to move speakers apart
-
-    zdim = 100;       %speaker identity variable size 
-    rdim = 512;      %i-vector size. required: rdim > zdim
+    zdim = 2;       %speaker identity variable size 
+    rdim = 20;      %i-vector size. required: rdim > zdim
     nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
-    fscal = 1/100;      %increase fscal to move speakers apart
+    fscal = 3;      %increase fscal to move speakers apart
+
+%    zdim = 100;       %speaker identity variable size 
+%    rdim = 512;      %i-vector size. required: rdim > zdim
+%    nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+%    fscal = 1/100;      %increase fscal to move speakers apart
     
     
     
@@ -53,6 +53,9 @@ function VB4HTPLDA_demo
     %train
     fprintf('*** Training on %i i-vectors of %i speakers ***\n',N,nspeakers);
     niters = 40;
+    % Weights can be used to change relative importance of subsets of the training data
+    % weights = 1 + rand(1,N);  %In practice, obviously not like this! This is just a quick and dirty test.
+    % [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters,[],[],weights);
     [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters);
     close all;
     plot(obj);title('VB lower bound');
