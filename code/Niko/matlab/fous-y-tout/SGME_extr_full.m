@@ -1,15 +1,10 @@
-function [A,b,d,reg,back] = SGME_extr(T,F,H,nu,R)
+function [A,b,B,back] = SGME_extr_full(T,F,nu,R)
 
     if nargin==0
         test_this();
         return;
     end
 
-    assert(isreal(T));
-    assert(isreal(F));
-    assert(isreal(H));
-    assert(isreal(R));
-    
     
     
     [rdim,zdim] = size(F);
@@ -20,56 +15,12 @@ function [A,b,d,reg,back] = SGME_extr(T,F,H,nu,R)
     
     A0 = F.'*TR;
     B0 = F.'*F;
-    d = diag(B0);
     
-    
-    %G = speye(rdim) - F*bsxfun(@ldivide,d,F.');
-    %HH = H.'*H  This must be regularized to equal G
-    
-    
-    %B0 must be diagonal
-    delta1 = mdot(B0) - d.'*d;
-    reg1 = 0.5*delta1^2;  %tr([B0-diag(d)]^2)
-    
-    %G=HH
-    BF = bsxfun(@ldivide,d,F.');  % inv(B)*F'
-    FFB = F.'*BF.';  % F'*F*inv(B)
-    HF = H*F;
-    BFH = BF*H.';    % inv(B)*F.'*H.'
-    HH = H*H.';      
-    trGG = rdim  -  2*mdot(F,BF.') + mdot(FFB);
-    trGHH = mdot(H) - mdot(HF,BFH.');
-    trHHHH = mdot(HH);
-    reg2 = (trGG - 2*trGHH + trHHHH)/2;
-    
-    %H'H*F = 0
-    HHHF = HH*HF;
-    reg3 = mdot(HHHF,HF);
-    
-    %tr(H'H)=D-d
-    delta4 = mdot(H) - rdim + zdim;
-    reg4 = 0.5*delta4^2;
-    
-    
-    reg = reg1 + reg2 + reg3 + reg4;
-    
-    HTR = H*TR;
-    q = sum(HTR.^2,1);
-
-    den = nu + q;
-    b = nuprime./den;
-
-    A = bsxfun(@times,b,A0);
-    
-    
-    assert(all(b>=0));
-    
-    assert(isreal(A)&&isreal(b)&&isreal(reg));
     
     back = @back_this;
     
     
-    function [dT,dF,dH] = back_this(dA,db,dd,dreg)
+    function [dT,dF] = back_this(dA,db,dd,dreg)
         
         assert(isreal(dA));
         assert(isreal(db));

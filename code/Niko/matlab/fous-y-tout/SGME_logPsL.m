@@ -1,5 +1,11 @@
 function [y,back] = SGME_logPsL(A,B,d,blocks,poi,num,logPrior)
         
+    assert(isreal(A));
+    assert(isreal(B));
+    assert(isreal(d));
+    assert(isreal(logPrior));
+
+
     if nargin==0
         test_this();
         return;
@@ -50,7 +56,7 @@ function [y,back] = SGME_logPsL(A,B,d,blocks,poi,num,logPrior)
     %y = LLR;
     [y,back5] = sumlogsoftmax(LLR + logPrior,num);
     
-    
+    assert(isreal(y));
     
     back = @back_this;
     function [dA,dB,dd] = back_this(dy)
@@ -124,6 +130,11 @@ function [y,back] = SGME_logPsL(A,B,d,blocks,poi,num,logPrior)
         %Bt = B*blocks.';
         dA = dA + dAt*blocks;
         dB = dB + dBt*blocks;
+        
+        assert(isreal(dA));
+        assert(isreal(dB));
+        assert(isreal(dd));
+        
     end
 
 

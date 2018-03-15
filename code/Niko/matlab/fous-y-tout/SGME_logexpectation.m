@@ -19,6 +19,10 @@ function [y,back] = SGME_logexpectation(A,b,d)
     end
 
     
+    assert(isreal(A));
+    assert(isreal(b));
+    assert(isreal(d));
+    
 
     bd = bsxfun(@times,b,d);
     logdets = sum(log1p(bd),1);
@@ -29,7 +33,9 @@ function [y,back] = SGME_logexpectation(A,b,d)
 
     back = @back_this;
 
-
+    assert(isreal(y));
+    
+    
     function [dA,db,dd] = back_this(dy)
         dQ = dy/2;
         %dlogdets = - dQ;
