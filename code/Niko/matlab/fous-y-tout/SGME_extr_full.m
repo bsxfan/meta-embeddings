@@ -1,4 +1,4 @@
-function [A,b,B,back] = SGME_extr_full(T,F,nu,R)
+function [A,b,B0,back] = SGME_extr_full(T,F,nu,R)
 
     if nargin==0
         test_this();
@@ -16,114 +16,47 @@ function [A,b,B,back] = SGME_extr_full(T,F,nu,R)
     A0 = F.'*TR;
     B0 = F.'*F;
     
+    S = B0\A0;
+    den = nu + sum(TR.^2,1) - sum(A0.*S,1);
+    b = nuprime ./ den;
+    A = bsxfun(@times,b,A0);
     
     back = @back_this;
     
     
-    function [dT,dF] = back_this(dA,db,dd,dreg)
-        
-        assert(isreal(dA));
-        assert(isreal(db));
-        assert(isreal(dd));
-        assert(isreal(dreg));
-        
+    function [dT,dF] = back_this(dA,db,dB0)
         
         %A = bsxfun(@times,b,A0)
-        db = db + sum(dA.*A0,1);
-        dA0 = bsxfun(@times,b,dA);
+        db = db + sum(dA.*A0,1);                   
+        dA0 = bsxfun(@times,b,dA);                 
         
-        %b = nuprime./den
-        dden = -db.*b./den;
-
-        %den = nu + q
-        dq = dden;
-
-        %q = sum(HTR.^2,1)
-        dHTR = bsxfun(@times,2*dq,HTR);
+        %b = nuprime ./ den
+        dden = -(db.*b)./den;                      
         
         
-        %HTR = H*TR
-        dH = dHTR*TR.';
-        dTR = H.'*dHTR;
-
-        
-        %reg4 = 0.5*delta4^2;
-        ddelta4 = dreg*delta4;
-        %delta4 = mdot(H) - D + d;
-        dH = dH + (2*ddelta4)*H;
+        %den = nu + sum(TR.^2,1) - sum(A0.*S,1) 
+        dTR = bsxfun(@times,(2*dden),TR);          
+        dA0 = dA0 - bsxfun(@times,dden,S);         
+        dS = -bsxfun(@times,dden,A0);              
         
         
-        %reg3 = mdot(HHHF,HF);
-        dHHHF = dreg*HF;
-        dHF = dreg*HHHF;
-        %HHHF = HH*HF;
-        dHH = dHHHF*HF.';
-        dHF = dHF + HH.'*dHHHF;
+        
+        %S = B0\A0
+        dA0_2 = B0\dS;                             
+        dA0 = dA0 + dA0_2;                         
+        dB0 = dB0 - dA0_2*S.';
+        
+        %B0 = F.'*F
+        dF = F*(dB0+dB0.');  
         
         
-        %reg2 = (trGG - 2*trGHH + trHHHH)/2
-        dtrGG = dreg/2;
-        dtrGHH = -dreg;
-        dtrHHHH = dreg/2;
-        
-        
-        %trHHHH = mdot(HH)
-        dHH = dHH + (2*dtrHHHH)*HH;
-        
-        
-        %trGHH = mdot(H) - mdot(HF,BFH.')
-        dH = dH + (2*dtrGHH)*H;
-        dHF = dHF - dtrGHH*BFH.';
-        dBFH = (-dtrGHH)*HF.';
-        
-        %trGG = rdim  -  2*mdot(F,BF.') + mdot(FFB)
-        dF = (-2*dtrGG)*BF.';
-        dBF = (-2*dtrGG)*F.';
-        dFFB = (2*dtrGG)*FFB;
-
-        %HH = H*H.'   
-        dH = dH + (2*dHH)*H;
-
-        %BFH = BF*H.'
-        dBF = dBF + dBFH*H;
-        dH = dH + dBFH.'*BF;
-        
-        %HF = H*F
-        dH = dH + dHF*F.';
-        dF = dF + H.'*dHF;
-        
-        %FFB = F.'*BF.'
-        dF = dF + BF.'*dFFB.';
-        dBF = dBF + dFFB.'*F.';
-        
-        %BF = bsxfun(@ldivide,d,F.')
-        dF = dF + bsxfun(@ldivide,d,dBF).';
-        dd = dd - sum(bsxfun(@ldivide,d,BF.*dBF),2);
-        
-        %reg1 = 0.5*delta1^2;  
-        ddelta1 = dreg*delta1;
-        %delta1 = mdot(B0) - d.'*d;
-        dB0 = (2*ddelta1)*B0;
-        dd = dd - (2*ddelta1)*d;
-
-        %d = diag(B0);
-        dB0 = dB0 + diag(dd);
-        
-        %B0 = F.'*F;
-        dF = dF + 2*F*dB0;  
-        
-        
-        %A0 = F.'*TR;
+        %A0 = F.'*TR
         dF = dF + TR*dA0.';
-        dTR = dTR + F*dA0;
+        dTR = dTR + F*dA0;            
         
-        %TR = T*R;
-        dT = dTR*R.';
+        %TR = T*R
+        dT = dTR*R.';                
         
-        
-        assert(isreal(dT));
-        assert(isreal(dF));
-        assert(isreal(dH));
         
         
     end
@@ -132,15 +65,6 @@ function [A,b,B,back] = SGME_extr_full(T,F,nu,R)
 
 end
 
-%trace(A*B.')
-function y = mdot(A,B)
-    if exist('B','var')
-        assert(all(size(A)==size(B)));
-        y = A(:).'*B(:);
-    else
-        y = sum(A(:).^2,1);
-    end
-end
 
 
 function test_this()
@@ -150,13 +74,12 @@ function test_this()
     n = 4;
     F = randn(rdim,zdim);
     T = randn(rdim,rdim);
-    H = randn(rdim-zdim,rdim);
     
     nu = pi;
     R = randn(rdim,n);
     
-    f = @(T,F,H) SGME_extr(T,F,H,nu,R);
+    f = @(T,F) SGME_extr_full(T,F,nu,R);
     
-    testBackprop_multi(f,4,{T,F,H});
+    testBackprop_multi(f,3,{T,F},{1,1});
 
 end

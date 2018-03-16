@@ -5,12 +5,6 @@ function [A,b,d,reg,back] = SGME_extr(T,F,H,nu,R)
         return;
     end
 
-    assert(isreal(T));
-    assert(isreal(F));
-    assert(isreal(H));
-    assert(isreal(R));
-    
-    
     
     [rdim,zdim] = size(F);
     nuprime = nu + rdim - zdim;
@@ -62,19 +56,11 @@ function [A,b,d,reg,back] = SGME_extr(T,F,H,nu,R)
     A = bsxfun(@times,b,A0);
     
     
-    assert(all(b>=0));
-    
-    assert(isreal(A)&&isreal(b)&&isreal(reg));
     
     back = @back_this;
     
     
     function [dT,dF,dH] = back_this(dA,db,dd,dreg)
-        
-        assert(isreal(dA));
-        assert(isreal(db));
-        assert(isreal(dd));
-        assert(isreal(dreg));
         
         
         %A = bsxfun(@times,b,A0)
@@ -170,9 +156,6 @@ function [A,b,d,reg,back] = SGME_extr(T,F,H,nu,R)
         dT = dTR*R.';
         
         
-        assert(isreal(dT));
-        assert(isreal(dF));
-        assert(isreal(dH));
         
         
     end
