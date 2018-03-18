@@ -3,7 +3,7 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels,weights)
 % for details. The model parameters F and W are updated. 
 %
 % Inputs:
-%   nu: scalar, df > 0
+%   nu: scalar, df > 0 (nu=inf is allowed: it signals G-PLDA)
 %   F: D-by-d factor loading matrix, D > d
 %   W: within-speaker precision, D-by-D, pos. def,
 %   R: D-by-N i-vector data matrix (centered)
@@ -32,12 +32,16 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels,weights)
     L = diag(L);
     VP = V.'*P;
     
-    %G = W - P.'*(B0\P);
-    G = W - VP.'*bsxfun(@ldivide,L,VP);   % inv(B0) = V*inv(L)*V'
-    
-    
-    q = sum(R.*(G*R),1);
-    b = (nu+D-d)./(nu+q);  %scaling         %1-by-N
+    if isinf(nu)
+        b = ones(1,N);
+    else
+        %G = W - P.'*(B0\P);
+        G = W - VP.'*bsxfun(@ldivide,L,VP);   % inv(B0) = V*inv(L)*V'
+
+
+        q = sum(R.*(G*R),1);
+        b = (nu+D-d)./(nu+q);  %scaling         %1-by-N
+    end
     if exist('weights','var') && ~isempty(weights)
         b = b.*weights;
     end
@@ -65,7 +69,11 @@ function [F,W,obj] = VB4HTPLDA_iteration(nu,F,W,R,labels,weights)
     logLH = (N/2)*logdetW + (D/2)*sum(log(b)) - 0.5*trprod(W,S) ...
              + trprod(T,P) -0.5*trprod(B0,R);  
     
-    obj = logLH - KLGauss(logdetPP,tracePC,Z) - KLgamma(nu,D,d,b);
+    if isinf(nu)
+        obj = logLH - KLGauss(logdetPP,tracePC,Z);
+    else
+        obj = logLH - KLGauss(logdetPP,tracePC,Z) - KLgamma(nu,D,d,b);
+    end
     
     
     

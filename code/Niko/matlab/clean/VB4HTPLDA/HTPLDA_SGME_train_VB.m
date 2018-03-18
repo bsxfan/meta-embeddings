@@ -34,6 +34,7 @@ function  [backend,obj] = HTPLDA_SGME_train_VB(R,labels,nu,zdim,niters,F,W,weigh
 %   nu: scalar, positive, degrees of freedom. This parameter is notlearnt 
 %       and must be given. Small values give a heavy-tailed model, while 
 %       large values give an almost Gaussian model.
+%       nu=inf is allowed: it signals G-PLDA
 %
 %   zdim: size of speaker identity variable. It is required that zdim < D,
 %         but the accuracy of our shortcut depends on zdim << D. If for

@@ -35,7 +35,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
 %  
 %
 % Inputs (HT-PLDA model parameters):
-%   nu: scalar > 0, degrees of freedom
+%   nu: scalar > 0, degrees of freedom (nu=inf is allowed: it signals G-PLDA)
 %   F: D-by-d speaker factor loading matrix, D >> d, where D is i-vector
 %      dimension and d is speaker factor dimension.
 %   W: D-by-D, positive definite within-class precision
@@ -120,8 +120,12 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     %     meta_embeddings.L: d-by-1 eigenvectors of common precision 
     %                        (currently not used in any other methods)
     
-        q = sum(R.*(G*R),1);
-        b = (nu+D-d)./(nu+q);  
+        if isinf(nu)
+            b = ones(1,size(R,2));
+        else
+            q = sum(R.*(G*R),1);
+            b = (nu+D-d)./(nu+q);  
+        end
         A = bsxfun(@times,b,VP*R); 
         meta_embeddings.A = A;
         meta_embeddings.b = b;

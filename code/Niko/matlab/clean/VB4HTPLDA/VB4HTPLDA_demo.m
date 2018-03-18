@@ -18,25 +18,28 @@ function VB4HTPLDA_demo
 
 
     % Assemble model to generate data
-    zdim = 2;       %speaker identity variable size 
-    rdim = 20;      %i-vector size. required: rdim > zdim
-    nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
-    fscal = 3;      %increase fscal to move speakers apart
-
-%    zdim = 100;       %speaker identity variable size 
-%    rdim = 512;      %i-vector size. required: rdim > zdim
-%    nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
-%    fscal = 1/100;      %increase fscal to move speakers apart
+    big = true;
+    if ~big
+        zdim = 2;       %speaker identity variable size 
+        rdim = 20;      %i-vector size. required: rdim > zdim
+        nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+        fscal = 3;      %increase fscal to move speakers apart
+    else
+        zdim = 100;       %speaker identity variable size 
+        rdim = 512;      %i-vector size. required: rdim > zdim
+        nu = 3;         %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+        fscal = 1/20;      %increase fscal to move speakers apart
+    end
     
     
     
     F = randn(rdim,zdim)*fscal;
-    W = randn(rdim,rdim+1);W = W*W.'; W = (rdim/trace(W))*W;
+    W = randn(rdim,2*rdim); W = W*W.';W = (rdim/trace(W))*W;
     model1 = create_HTPLDA_SGME_backend(nu,F,W);  %oracle model
     
     
     %Generate synthetic labels
-    nspeakers = 1000;
+    nspeakers = 10000;
     recordings_per_speaker = 10;
     N = nspeakers*recordings_per_speaker;
     ilabels = repmat(1:nspeakers,recordings_per_speaker,1);
@@ -52,13 +55,28 @@ function VB4HTPLDA_demo
     
     %train
     fprintf('*** Training on %i i-vectors of %i speakers ***\n',N,nspeakers);
-    niters = 40;
+    niters = 50;
     % Weights can be used to change relative importance of subsets of the training data
     % weights = 1 + rand(1,N);  %In practice, obviously not like this! This is just a quick and dirty test.
     % [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters,[],[],weights);
     [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters);
     close all;
     plot(obj);title('VB lower bound');
+    
+    [~,~,oracle_obj] = VB4HTPLDA_iteration(nu,F,W,Train,hlabels);    
+    fprintf('\n\nfinal train objective: %g\n',obj(end));
+    fprintf('oracle      objective: %g\n',oracle_obj);
+    fprintf('delta                : %g\n',obj(end)-oracle_obj);
+    
+    %and some new validation data
+    Zv = randn(zdim,nspeakers);
+    Validation = F*Zv*hlabels + sample_HTnoise(nu,rdim,N,W);
+    [~,~,oracle_val_obj] = VB4HTPLDA_iteration(nu,F,W,Validation,hlabels);    
+    [~,F2,W2] = model2.getParams();  
+    [~,~,val_obj] = VB4HTPLDA_iteration(nu,F2,W2,Validation,hlabels);    
+    fprintf('\n\validation  objective: %g\n',val_obj);
+       fprintf('oracle val. objective: %g\n',oracle_val_obj);
+       fprintf('delta                : %g\n',val_obj-oracle_val_obj);
     
     
     %Generate independent evaluation data with new speakers
@@ -138,14 +156,15 @@ function [bxe,min_bxe,EER] = calcBXE(Scores,labels)
 % proportion, normalized so that llr = 0 gives bxe = 1.
     tar = Scores(labels);
     non = Scores(~labels);
-    ofs = log(length(tar)) - log(length(non));
-    bxe = mean([softplus(-tar - ofs).',softplus(non + ofs).']) / log(2);
+    %ofs = log(length(tar)) - log(length(non));
+    %bxe = mean([softplus(-tar - ofs).',softplus(non + ofs).']) / log(2);
+    bxe = ( mean(softplus(-tar)) + mean(softplus(non)) ) / (2*log(2));  %ofs = 0
 
     if nargout>=2
         [tar,non] = opt_loglr(tar.',non.','raw');
         tar = tar';
         non = non.';
-        min_bxe = mean([softplus(-tar - ofs).',softplus(non + ofs).']) / log(2);
+        min_bxe = ( mean(softplus(-tar)) + mean(softplus(non)) ) / (2*log(2));  
     end
     
     if nargout >=3
@@ -172,7 +191,11 @@ function X = sample_HTnoise(nu,dim,n,W)
 %   X: dim-by-n samples
 
     cholW = chol(W);    
-    precisions = mean(randn(nu,n).^2,1);  
+    if isinf(nu)
+        precisions = ones(1,n);
+    else
+        precisions = mean(randn(nu,n).^2,1);
+    end
     std = 1./sqrt(precisions);
     X = cholW\bsxfun(@times,std,randn(dim,n));
 end
