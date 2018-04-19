@@ -62,11 +62,18 @@ function VB4HTPLDA_demo
     [model2,obj] = HTPLDA_SGME_train_VB(Train,hlabels,nu,zdim,niters);
     close all;
     plot(obj);title('VB lower bound');
+
+    
+    [model3,obj3] = HTPLDA_SGME_train_VB(Train,hlabels,nu*10,zdim,niters);
+    [model4,obj4] = HTPLDA_SGME_train_VB(Train,hlabels,nu/10,zdim,niters);
+    
     
     [~,~,oracle_obj] = VB4HTPLDA_iteration(nu,F,W,Train,hlabels);    
     fprintf('\n\nfinal train objective: %g\n',obj(end));
-    fprintf('oracle      objective: %g\n',oracle_obj);
-    fprintf('delta                : %g\n',obj(end)-oracle_obj);
+        fprintf('nu*10 train objective: %g\n',obj3(end));
+        fprintf('nu/10 train objective: %g\n',obj4(end));
+        fprintf('oracle      objective: %g\n',oracle_obj);
+        fprintf('delta                : %g\n',obj(end)-oracle_obj);
     
     %and some new validation data
     Zv = randn(zdim,nspeakers);
@@ -74,9 +81,9 @@ function VB4HTPLDA_demo
     [~,~,oracle_val_obj] = VB4HTPLDA_iteration(nu,F,W,Validation,hlabels);    
     [~,F2,W2] = model2.getParams();  
     [~,~,val_obj] = VB4HTPLDA_iteration(nu,F2,W2,Validation,hlabels);    
-    fprintf('\n\validation  objective: %g\n',val_obj);
-       fprintf('oracle val. objective: %g\n',oracle_val_obj);
-       fprintf('delta                : %g\n',val_obj-oracle_val_obj);
+    fprintf('\nvalidation  objective: %g\n',val_obj);
+      fprintf('oracle val. objective: %g\n',oracle_val_obj);
+      fprintf('delta                : %g\n',val_obj-oracle_val_obj);
     
     
     %Generate independent evaluation data with new speakers

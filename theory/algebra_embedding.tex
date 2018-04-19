@@ -2325,6 +2325,78 @@ f_j(\zvec) &\propto \sum_{k=1}^K w_k\, \ND(\rvec_j\mid\nulvec,\tilde\Gmat_k^{-1}
 \end{split}
 \end{align} 
 
+\section{Generative model for augmented i-vectors}
+\emph{Augmented i-vectors} are i-vectors augmented with the zero order stats given by the extractor. Can we find a workable generative model that would allow us to extract meta-embeddings from augmented i-vectors? 
+
+Let $\rvec_j\in\R^D$ represent the observed i-vector and $\svec_j\in\R^K_+$ the vector of (non-negative) zero-order stats. Let $\zvec\in\R^d$ represent the hidden speaker identity variable. Our end-goal is to extract the meta-embedding $f_j(\zvec)\propto P(\rvec_j,\svec_j\mid\zvec)$. In order to decide on a model configuration, we use graphical model notation to reason about conditional independencies. Let us assume the following requirements for our model:
+\begin{enumerate}
+	\item We \emph{do} want $\svec_j$ to play a role in the inference for $\zvec$. We require:
+	$$ P(\zvec\mid \rvec_j,\svec_j) \ne P(\zvec\mid\rvec_j)$$
+	This excludes, for example, the configurations $\zvec\to\rvec_j\to\svec_j$ and $\zvec\gets\rvec_j\gets\svec_j$.
+	\item We want to limit the role of $\svec_j$ to be ancillary: when only $\svec_j$ and not $\rvec_j$ is given, then $\svec_j$ should not give any information about $\zvec$. We require:
+	$$P(\zvec\mid\svec_j)=P(\zvec)$$
+	This excludes any arcs between $\zvec$ and the $\svec_j$.
+\end{enumerate}
+These two requirements are met by the configuration $\zvec\to\rvec_j\gets\svec_j$. In full graphical model notation, the model (for a single speaker) can be specified as below:%specification is given in figure~\ref{fig:aug_model}. 
+
+%\begin{figure}[htb!]
+%\centerline{
+\begin{align}
+\begin{tikzpicture}
+\node[obs] (r) {$\rvec_{j}$};
+\node[const, outer sep = 5pt, above left = 4 pt of r] (ldummy) {};
+\node[const, outer sep = 3pt, above right = 4 pt of r] (rdummy) {};
+\node[latent, left = of r] (z) {$\zvec$};
+\node[obs, right = of r] (lambda) {$\svec_{j}$};
+\node[const, above = 2 em of lambda, inner sep = 5pt] (Gamma) {$\phi$};
+\node[const, inner sep = 5pt] at(Gamma-|r)  (FW) {$\theta$};
+\node[const, inner sep = 5pt] at(Gamma-|z)  (pi) {$\pi$};
+\plate[draw=red,inner sep = 5pt] {red} {(ldummy)(r)(lambda)} {$j$};
+\edge {z}{r};
+\edge {lambda}{r};
+\edge {Gamma}{lambda};
+\edge {FW}{r};
+\edge {pi}{z};
+\end{tikzpicture}
+\end{align}
+%} %centerline
+%\caption{Generative model for augmented i-vectors of a single speaker.}
+%\label{fig:aug_model}
+%\end{figure}
+The model parameters are $\pi,\theta,\phi$. Both $\pi$ and $\phi$ are priors on respectively $\zvec$ and $\svec_j$, while $\theta$ parametrizes $P(\rvec_j\mid\svec_j,\zvec,\theta)$. Inspection of the diagram reveals that in inferences for $\zvec$, parameter $\phi$ is irrelevant:
+\begin{align}
+P(\zvec\mid\rvec_j,\svec_j,\pi,\theta,\phi) &= P(\zvec\mid\rvec_j,\svec_j,\pi,\theta) 
+\end{align}
+This means we can simply take the $\svec_j$ as given and condition everything on it, both at training time and at run time. To convince yourself that $\phi$ is not needed to train $\theta$, notice that these parameter sets are conditionally independent when all the $s_j$ are given.
+
+
+\subsection{Linear Gaussian model}
+A linear-Gaussian model gives closed-form Gaussian posteriors for $\zvec$ and indeed also closed-form Gaussian meta-embeddings. We let:
+\begin{align}
+P(\rvec_j\mid\zvec,\svec_j) &= \ND(\rvec_j\mid \muvec(\svec_j) + \Fmat(\svec_j)\zvec,\Wmat(\svec_j)^{-1})
+\end{align} 
+where $\muvec_j=\muvec(\svec_j)\in\R^D$; $\Fmat_j=\Fmat(\svec_j)$ is a $D$-by-$d$ factor loading matrix; and $\Wmat_j=\Wmat(\svec_j)$ is a positive definite precision matrix. (The dependence of $\muvec_j,\Fmat_j,\Wmat_j$ on $\theta$ is omitted to avoid clutter.) The meta-embedding is:
+\begin{align}
+\begin{split}
+f_j(\zvec) &\propto \exp\bigl[
+-\frac12(\rvec_j-\muvec_j-\Fmat_j\zvec)'\Wmat_j(\rvec_j-\muvec_j-\Fmat_j\zvec)\bigr]\\
+&\propto \exp\bigl[-\frac12\zvec'\Fmat'_j\Wmat_j\Fmat_j\zvec +\zvec'\Fmat'_j\Wmat_j(\rvec_j-\muvec_j)
+\bigr]
+\end{split}
+\end{align}
+Some choices can be made:
+\begin{itemize}
+	\item Do we let $\rvec_j$ be the i-vector, or do we let it be the projected first-order statistic?
+	\item How do we let $\muvec_j,\Fmat_j,\Wmat_j$ depend on $\svec_j$? In general, we will need for the precision, $\Fmat'_j\Wmat_j$\Fmat_j to grow with the first-order stats, but that growth should saturate, because when there are channel effects, the precision cannot become infinite.
+\end{itemize}
+
+
+
+\section{Parallel PLDA}
+Tied hidden variables for parallel observed i-vectors and x-vectors. (Mention Prince's (and Sandro's) tied PLDA and Luciana's JPLDA.) What happens when we have different hidden scale factors for the two observations? Do we still get diagonalizable meta-embeddings?
+
+
+
 
 
 
@@ -2743,11 +2815,11 @@ In a dual recipe, we still have $\Lset,\Lset^{[i]}\in\Pset_n$, but now $\Lset^{[
 Again, at $N=1$ we do have a proper scoring rule, but the system never gets to demonstrate that it can match the meta-embeddings within subsets. $N>1$ seems better.
 
 \subsection{Hybrid recipe}
-The coarse conditioning recipe will still be computationally demanding if there are too many recordings per speaker. Conversely, the fine conditioning recipe remains challenging when there are too may speakers. The two strategies can however be combined. Below we sketch an example of how to do this to get a stochastic gradient descent training recipe: 
+The coarse conditioning recipe will still be computationally demanding if there are too many recordings per speaker. Conversely, the fine conditioning recipe remains challenging when there are too many speakers. The two strategies can however be combined. Below we sketch an example of how to do this to get a stochastic gradient descent training recipe: 
 \begin{itemize}
   \item Require: 
 	\begin{itemize}
-		\item Integers $s,t$, such that $2\le s \le t$ and where the $t$-th Bell number, $B_t$ is small.
+		\item Integers $s,t$, such that $2\le s < t$ and where the Bell number, $B_t$, is not too large (depending on your computational budget).
 		\item Training data: a set of recordings and their true speaker labels.
 		\item A partition prior, $P(\Lset)$, e.g.\ the CRP prior. The prior parameters can be fixed, or they can be optimized too.
 	\end{itemize}
