@@ -2384,10 +2384,10 @@ f_j(\zvec) &\propto \exp\bigl[
 \bigr]
 \end{split}
 \end{align}
-Some choices can be made:
+Some choices need to be made:
 \begin{itemize}
 	\item Do we let $\rvec_j$ be the i-vector, or do we let it be the projected first-order statistic?
-	\item How do we let $\muvec_j,\Fmat_j,\Wmat_j$ depend on $\svec_j$? In general, we will need for the precision, $\Fmat'_j\Wmat_j$\Fmat_j to grow with the first-order stats, but that growth should saturate, because when there are channel effects, the precision cannot become infinite.
+	\item How do we let $\muvec_j,\Fmat_j,\Wmat_j$ depend on $\svec_j$? In general, we will need for the precision, $\Fmat'_j\Wmat_j\Fmat_j$ to grow with the first-order stats, but that growth should saturate, because when there are channel effects, the precision cannot become infinite.
 \end{itemize}
 
 
@@ -2395,7 +2395,41 @@ Some choices can be made:
 \section{Parallel PLDA}
 Tied hidden variables for parallel observed i-vectors and x-vectors. (Mention Prince's (and Sandro's) tied PLDA and Luciana's JPLDA.) What happens when we have different hidden scale factors for the two observations? Do we still get diagonalizable meta-embeddings?
 
+\subsection{Linear-Gaussian case}
+In the diagrams below, the hidden speaker identity variable is $\zvec\in\R^d$. The observations are, say, an i-vector, $\rvec_j\in\R^{D_1}$ and also, say, an x-vector, $\svec_j\in\R^{D_2}$. We consider two models:
+\begin{align}
+&\begin{tikzpicture}
+\node[obs] (r) {$\rvec_{j}$};
+\node[latent, below left = of r] (z) {$\zvec$};
+\node[obs, below right = of z] (s) {$\svec_{j}$};
+\node[const, outer sep = 10pt] at(r-|r) (rdummy) {};
+\node[const, outer sep = 10pt] at(s-|s) (sdummy) {};
+\plate[draw=red,inner sep = 5pt] {red} {(rdummy)(sdummy)} {$j$};
+\edge {z}{r};
+\edge {z}{s};
+\end{tikzpicture}
+&\text{or}&&
+\begin{tikzpicture}
+\node[obs] (r) {$\rvec_{j}$};
+\node[latent, below left = of r] (z) {$\zvec$};
+\node[obs, below right = of z] (s) {$\svec_{j}$};
+\node[latent, below right = of r] (y) {$\yvec_j$};
+\node[const, outer sep = 10pt] at(r-|r) (rdummy) {};
+\node[const, outer sep = 10pt] at(s-|s) (sdummy) {};
+\node[const, outer sep = 10pt] at(y-|y) (ydummy) {};
+\plate[draw=red,inner sep = 5pt] {red} {(rdummy)(sdummy)(ydummy)} {$j$};
+\edge {z}{r,s};
+\edge {y}{r,s};
+\end{tikzpicture}
+\end{align}
+The left model is simpler, but the right one is more realistic. The left one says the observations have nothing in common, except the speaker. The right one allows an additional `channel' hidden variable to induce dependency between the two vectors. If we make the model linear-Gaussian, we can handle the more complex model much the same as the simpler one, without having to explicitly deal with the additional hidden variable. In addition to the usual standard normal prior on $\zvec$, the model is defined as:
+\begin{align}
+P(\rvec_j,\svec_j\mid\zvec) &= \ND\Bigl(\bmat{\rvec_j\\ \svec_j}\mid\bmat{\Fmat\\ \Gmat}\zvec,\Wmat^{-1}\Bigr)
+\end{align}
+If the off-diagonal blocks of the precision, $\Wmat$ (equivalently of the covariance, $\Wmat^{-1}$) are zero, we have the simpler LHS model, otherwise we have the RHS model.
 
+If a parallel database, with both vectors available for every recording is given, the standard EM algorithm for SPLDA training can be used to train the RHS model on the stacked vectors. At runtime, if both observations are available, they can be stacked and scored with the standard SPLDA procedure. If however, only one vector (either one of $\rvec_j$, or $\svec_j$) is available for a given recording, the meta-embedding can still be extracted by marginalization over the missing one. 
+ 
 
 
 
