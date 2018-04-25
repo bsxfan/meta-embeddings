@@ -2424,12 +2424,17 @@ In the diagrams below, the hidden speaker identity variable is $\zvec\in\R^d$. T
 \end{align}
 The left model is simpler, but the right one is more realistic. The left one says the observations have nothing in common, except the speaker. The right one allows an additional `channel' hidden variable to induce dependency between the two vectors. If we make the model linear-Gaussian, we can handle the more complex model much the same as the simpler one, without having to explicitly deal with the additional hidden variable. In addition to the usual standard normal prior on $\zvec$, the model is defined as:
 \begin{align}
-P(\rvec_j,\svec_j\mid\zvec) &= \ND\Bigl(\bmat{\rvec_j\\ \svec_j}\mid\bmat{\Fmat\\ \Gmat}\zvec,\Wmat^{-1}\Bigr)
+\label{eq:rsgivenz}
+P(\rvec_j,\svec_j\mid\zvec) &= \ND\Bigl(\bmat{\rvec_j\\ \svec_j}\mid\bmat{\Fmat\\ \Gmat}\zvec,\bmat{\Rmat& \Xmat \\ \Xmat' & \Smat}^{-1}\Bigr)
 \end{align}
-If the off-diagonal blocks of the precision, $\Wmat$ (equivalently of the covariance, $\Wmat^{-1}$) are zero, we have the simpler LHS model, otherwise we have the RHS model.
+If the off-diagonal block of the precision, $\Xmat$, is zero, we have the simpler LHS model, otherwise we have the RHS model.
 
-If a parallel database, with both vectors available for every recording is given, the standard EM algorithm for SPLDA training can be used to train the RHS model on the stacked vectors. At runtime, if both observations are available, they can be stacked and scored with the standard SPLDA procedure. If however, only one vector (either one of $\rvec_j$, or $\svec_j$) is available for a given recording, the meta-embedding can still be extracted by marginalization over the missing one. 
- 
+If a parallel database, with both vectors available for every recording, is given, the standard EM algorithm for SPLDA training can be used to train the RHS model on the stacked vectors. At runtime, if both observations are available, they can be stacked and scored with the standard SPLDA procedure. If however, only one vector (either one of $\rvec_j$, or $\svec_j$) is available for a given recording, the meta-embedding can still be extracted by marginalization over the missing one. To marginalize~\eqref{eq:rsgivenz}, we simply need to pick the corresponding blocks of the mean and covariance---see e.g.\ equation B.51 in~\cite{PRML}. Using block matrix inversion, we get the required marginals:
+\begin{align}
+P(\rvec_j\mid\zvec) &= \ND\bigl(\rvec_j\mid\Fmat\zvec,(\Rmat-\Xmat\Smat^{-1}\Xmat')^{-1}\bigr)\\
+P(\svec_j\mid\zvec) &= \ND\bigl(\svec_j\mid\Gmat\zvec,(\Smat-\Xmat'\Rmat^{-1}\Xmat)^{-1}\bigr)
+\end{align}
+where the precisions are respectively $\Rmat-\Xmat\Smat^{-1}\Xmat'$ and $\Smat-\Xmat'\Rmat^{-1}\Xmat$.   
 
 
 
@@ -3467,7 +3472,35 @@ $\tilde\Pmat,\tilde\Kmat,\tilde\Lmat,C$ & $dD + 2d + 1$
 \label{tab:PLDA_params}
 \end{table}
 
-
+\chapter{Generalized Gibbs sampling}
+Let's consider an MCMC sampler for a \emph{target distribution}, $P(\Lset)$, with transition probability defined as the mixture:\footnote{For our application, $P(\Lset)$ is a posterior distriution, but we omit the conditioning for brevity.} 
+\begin{align}
+Q(\Lset'\mid \Lset) &= \sum_{i=1}^n q_i\, Q(\Lset'\mid\Lset,i)
+\end{align}
+For every, $i$, let the transition component satisfy \emph{detailed balance} w.r.t.\ the target:
+\begin{align}
+\label{eq:detbal}
+P(\Lset)Q(\Lset'\mid\Lset,i) &= P(\Lset')Q(\Lset\mid\Lset',i) 
+\end{align}
+Then, by taking expectations of the LHS and RHS, w.r.t.\ the mixture weights, $q_i$, we see that detailed balance is also achieved for the mixture: 
+\begin{align}
+P(\Lset)Q(\Lset'\mid\Lset) &= P(\Lset')Q(\Lset\mid\Lset') 
+\end{align}
+If we have detailed balance, it is easy to verify that the transition leaves the target distribution invariant:
+\begin{align}
+\sum_{\Lset} P(\Lset)Q(\Lset'\mid\Lset) &= P(\Lset') 
+\end{align}
+If we want to design a sampler where the proposals are always accepted, is is sufficient to satisfy detailed balance for every $i$. The usual Gibbs sampler does this by defining for every $i$, the decomposition: $\Lset=(\ell_i,\Li)$, where $1\le i\le n$ and $n$ is the number of `speaker labels' in the partition $\Lset\in\Pset_n$. For a fixed $i$, the MCMC transition from $\Lset$ to $\Lset'$ changes only $\ell_i$, so that $\Lset'=(\ell'_i,\Li)$, where $\Li$ is common to both $\Lset$ and $\Lset'$. We can now define the family of transition rules as:
+\begin{align}
+\label{eq:GibbsF}
+Q(\Lset'\mid\Lset,i) &= P(\ell'_i\mid\Li) = \frac{P(\ell'_i,\Li)}{P(\Li)} = \frac{P(\Lset')}{P(\Li)}
+\end{align}
+which can be reversed as:
+\begin{align}
+\label{eq:GibbsR}
+Q(\Lset\mid\Lset',i) &= P(\ell_i\mid\Li) = \frac{P(\ell_i,\Li)}{P(\Li)} = \frac{P(\Lset)}{P(\Li)}
+\end{align}
+It is straight-forward to verify that~\eqref{eq:GibbsF} and~\eqref{eq:GibbsR} satisfy detailed balance, \eqref{eq:detbal}.  
 
 \bibliographystyle{IEEEtran}
 \bibliography{embeddings}

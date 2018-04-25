@@ -35,6 +35,7 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     PYCRP.getParams = @getParams;
     PYCRP.GibbsMatrix = @GibbsMatrix;
     PYCRP.slowGibbsMatrix = @slowGibbsMatrix;
+    PYCRP.merge = @merge;
     
     function [concentration,discount] = getParams()
         concentration = alpha;
@@ -141,6 +142,33 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     end
 
     
+    function deltalogP = merge(i,j,counts)
+        if i==j % no merge
+            deltalogP = 0;
+            return;
+        end
+        if isinf(alpha) || (beta==1) || (alpha==0 && beta==0)
+            error('degenerate cases not handled');
+        end
+        K = length(counts);
+        T = sum(counts);
+        if alpha>0 && beta>0
+            deltalogP = gammaln(counts(i) + counts(j) - beta) ...
+                        - gammaln(counts(i) - beta) - gammaln(counts(j) - beta) ...
+                        - log(beta) + gammaln(1-beta) ...
+                        - log(alpha/beta + K-1);
+        elseif beta==0 && alpha>0
+            deltalogP = -log(alpha) + gammaln(counts(i)+counts(j)) ...
+                        - gammaln(counts(i)) - gammaln(counts(j));
+        elseif alpha==0 && beta>0
+            deltalogP = -log(beta) -log(K-1) + gammaln(1-beta) ...
+                        - gammaln(counts(i) - beta) - gammaln(counts(j) - beta) ...
+                        + gammaln(counts(i) + counts(j) - beta);
+        end
+        
+    end
+
+
     function logP = logprob(counts)  %Wikipedia
 
 
