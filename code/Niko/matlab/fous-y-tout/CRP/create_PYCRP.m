@@ -36,6 +36,7 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
     PYCRP.GibbsMatrix = @GibbsMatrix;
     PYCRP.slowGibbsMatrix = @slowGibbsMatrix;
     PYCRP.merge = @merge;
+    PYCRP.merge_all_pairs = @merge_all_pairs;
     
     function [concentration,discount] = getParams()
         concentration = alpha;
@@ -167,6 +168,49 @@ function PYCRP = create_PYCRP(alpha,beta,e,n)
         end
         
     end
+
+
+    function Y = mergeConst(K)
+        if isinf(alpha) || (beta==1) || (alpha==0 && beta==0)
+            error('degenerate cases not handled');
+        end
+        if alpha>0 && beta>0 
+            %Y = K*log(beta) + gammaln(alpha/beta + K) - K*gammaln(1-beta);
+            Y = log(beta) + log(alpha/beta + K-1) - gammaln(1-beta);
+        elseif beta==0 && alpha>0
+            %Y = K*log(alpha);
+            Y = log(alpha);
+        elseif beta>0 && alpha==0
+            %Y = (K-1)*log(beta) + gammaln(K) - K*gammaln(1-beta);
+            Y = log(beta) + log(K-1) - gammaln(1-beta);
+        end
+    end
+
+
+    %vectorization helps a lot (loopy version below is much slower)
+    function deltalogP = merge_all_pairs(counts)
+        K = length(counts);
+        delta = counts-beta;
+        gammalndelta = gammaln(delta);
+        deltaC = mergeConst(K);%-mergeConst(K-1);
+        oldlogP = bsxfun(@plus,gammalndelta+deltaC,gammalndelta.');
+        deltalogP = gammaln(bsxfun(@plus,counts-beta,counts.')) - oldlogP;
+        deltalogP(1:K+1:end) = 0;
+    end
+
+      %loopy version is much, much slower
+%     function deltalogP = merge_all_pairs2(counts)
+%         K = length(counts);
+%         delta = counts-beta;
+%         gammalndelta = gammaln(delta);
+%         deltaC = mergeConst(K-1)-mergeConst(K);
+%         deltalogP = zeros(K,K);
+%         for i=1:K-1
+%             for j=i+1:K
+%                 deltalogP(i,j) = deltaC + gammaln(delta(i)+counts(j)) - gammalndelta(i) - gammalndelta(j);
+%             end
+%         end
+%     end
 
 
     function logP = logprob(counts)  %Wikipedia
