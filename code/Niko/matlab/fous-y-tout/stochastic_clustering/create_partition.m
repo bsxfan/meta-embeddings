@@ -5,7 +5,7 @@ function part = create_partition(alpha,beta,llhfun,Emb,HL)
 %           log-likelihoods
 %   Emb: M-by-N matrix of additive meta-embeddings, for N recordings
 %   HL: 'one-hot labels': sparse, logical, K-by-N matrix, with one-hot 
-%       columns. Encodes K hyppothesized speakers for the N recordings.
+%       columns. Encodes K hypothesized speakers for the N recordings.
 %       [Optional: default is finest partition: logical(speye(N))]
 
 
@@ -25,17 +25,22 @@ function part = create_partition(alpha,beta,llhfun,Emb,HL)
         HL = logical(speye(N));
     end
     
+    llh_fine = llhfun(Emb);   %may be useful for deciding which cluster to split
+
     counts = sum(HL,2);
     K = sum(counts);
     llh_K = CRP_Kterm(K);
+    llh_counts = gammaln(counts-beta);
+    
     PE = Emb*HL.';  % pooled embeddings
-    llh_subsets = gammaln(counts-beta) + llhfun(PE);
+    llh_subsets = llhfun(PE);
     
     
     part.getLabels = @getLabels;
-    part.merge = @merge;
-    part.getPtilde = @getPtilde;
+    part.test_merge = @test_merge;
+    part.getlogPtilde = @getlogPtilde;
     part.getPtilde_merge = @getPtilde_merge;
+    part.test_split = @test_split;
     
     
     
@@ -45,30 +50,33 @@ function part = create_partition(alpha,beta,llhfun,Emb,HL)
 
 
     %unnormalized partition posterior
-    function Ptilde = getPtilde()
-        Ptilde = llh_K + sum(llh_subsets);
+    function logPtilde = getlogPtilde()
+        logPtilde = llh_K + sum(llh_counts) + sum(llh_subsets);
     end
 
     %tentative merge for MH acceptance test
-    function [Ptilde,llh_mergedset] = getPtilde_merge(i,j)
+    function [logPtilde,commit] = test_merge(i,j)
         if i==j
-            Ptilde = getPtilde();
-            llh_mergedset = [];
+            logPtilde = getlogPtilde();
+            state = [];
         else
             w = true(K,1);
             w([i,j]) = false;
-            llh_mergedset = gammaln(counts(i)+counts(j)-beta) + llhfun(PE(:,i)+PE(:,j));
-            Ptilde = CRP_Kterm(K-1) + llh_mergedset + llh_subsets*w;
+            state.llh_counts = gammaln(counts(i)+counts(j)-beta);
+            state.PE = PE(:,i) + PE(:,j);
+            state.llh_subsets = llhfun(state.PE);
+            state.llh_K = CRP_Kterm(K-1);
+            logPtilde = state.llh_K + llh_counts*w + state.llh_counts + llh_subsets*w + state.llh_subsets;
         end
+        commit = @() commit_merge(i,j,state);
     end
     
 
-    %commit to merge
-    function merge(i,j,llh_mergedset)
+    function commit_merge(i,j,state)
         if i ~= j  %merge
             
             K = K-1;
-            llh_K = CRP_Kterm(K);
+            llh_K = state.llh_K;
             
             k = min(i,j);     %put merged cluster here
             ell = max(i,j);   %delete this cluster
@@ -76,16 +84,15 @@ function part = create_partition(alpha,beta,llhfun,Emb,HL)
             counts(k) = counts(i) + counts(j);
             counts(ell) = [];
             
-            PE(:,k) = PE(:,i) + PE(:,j);
+            PE(:,k) = state.PE;
             PE(:,ell) = [];
             
-            if ~exist('llh_mergedset','var') || isempty(llh_mergedset) 
-                llh_subsets(k) = gammaln(counts(k)-beta) + llhfun(PE(:,k));
-            else
-                llh_subsets(k) = llh_mergedset;
-            end
+            llh_subsets(k) = state.llh_subsets;
             llh_subsets(ell) = [];
             
+            llh_counts(k) = state.llh_counts;
+            llh_counts(ell) = [];
+
             HL(k,:) = HL(i,:) | HL(j,:);
             HL(ell,:) = [];
             
@@ -93,8 +100,53 @@ function part = create_partition(alpha,beta,llhfun,Emb,HL)
         %else do nothing
     end
 
+    function [logPtilde,commit] = test_split(i,labels)
+    % i: cluster to split
+    % labels: one hot label matrix: 
+    %   row indices are new cluster indices (starting at 1)
+    %   column indices are original recording (embedding) indices  
+        if size(labels,1)>1 
+            state.counts = sum(labels,2);
+            state.K = K-1 + sum(state.counts);
+            state.llh_K = CRP_Kterm(state.K);
+            state.PE = Emb*labels.';  
+            state.llh_subsets = llhfun(state.PE);
+            state.llh_counts = gammaln(scounts-beta);
+            logPtilde = state.llh_K + sum(state.llh_counts) + sum(state.llh_subsets);
+        else  %no split
+            logPtilde = getlogPtilde();        
+            state = [];
+        end
+        commit = @() commit_split(i,labels,state);
+    end
 
-    function split(i,)
+
+    function commit_split(i,labels,state)
+        if size(labels,1)==1 % no split
+            return;
+        end
+        
+        
+        HL(i,:) = [];
+        HL = [HL;labels];  
+        
+        PE(:,i) = [];
+        PE = [PE,state.PE];
+        
+        llh_subsets(i) = [];
+        llh_subsets = [llh_subsets,state.llh_subsets];
+        
+        llh_counts(i) = [];
+        llh_counts = [llh_counts,state.llh_counts];
+        
+        counts(i) = [];
+        counts = [counts;state.counts];
+
+        llh_K = state.llh_K;
+        K = state.K;
+        
+        
+    end
 
 
 
