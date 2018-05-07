@@ -215,20 +215,55 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
             r = part.HL(i,:);
             N = length(r);
             jj = rand(1,N)>0.5;
-            labels = [r & jj; r & ~jj];  %given i (and n): there are 2^n/2 equiprobable choices 
-                                         %(labels has 2^n states, but we can swap the 2 rows, which halves the choices) 
+            labels = [r & jj; r & ~jj];  % 1 + S(n,2) equiprobable states, 
+                                         % where S(n,k) = 2^(n-1) - 1 is
+                                         % the Stirling number of the 2nd
+                                         % kind: the number of ways to
+                                         % partition n items into 2
+                                         % non-empty subsets. We add 1
+                                         % because we allow one subset to
+                                         % be empty.
         else
             n = part.counts(i);
         end
-        logQ = -log(K) - (n-1)*log(2);  
+        logQ = -log(K) - (n-1)*log(2);  % Q = (1/K) * ( S(n,2) + 1 )
+    end
+
+
+    function [logQ,i,j] = smart_merge(part,i,j)
+
+        K = part.K;
+        sample =  nargin==1 || isempty(i);
+
+        if sample
+            i = randi(K);
+        end    
+        logQ = -log(K);
+
+        scounts = (part.counts(i)-beta) + part.counts;
+        scounts(i) = part.counts(i);
+        log_prior = gammaln(scounts).';
+        lpi = log_prior(i);
+        log_prior =  log_prior + CRP_Kterm(K-1);
+        log_prior(i) = lpi + CRP_Kterm(K);
+
+        sEi = part.PE(:,i);
+        sE = bsxfun(@plus,part.PE(:,i),part.PE);
+        sE(:,i) = sEi;
+        log_post = log_prior + llhfun(sE);
+        mx = max(log_post);
+        norm = mx + log(sum(exp(log_post-mx)));
+        if sample
+            [~,j] = max(log_post + randgumbel(K,1) );
+        end
+        logQ = logQ + log_post(j) - norm;
+
+
     end
 
 
 
-
-
 end
-
 
 
 function test_this()
