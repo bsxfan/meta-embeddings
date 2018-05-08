@@ -18,7 +18,7 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
 
   
     llh_fine = llhfun(Emb);   %may be useful for deciding which cluster to split
-    T = length(llh_fine);
+    [D,T] = size(Emb);
 
     % ignores all terms not dependent on K (i.e. terms dependent just on
     % alpha,beta and T)
@@ -39,7 +39,7 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
     pp.create_partition = @create_partition;
 
 
-    function po = create_partition(HL)
+    function part = create_partition(HL)
         
         if ~exist('HL','var') || isempty(HL)
             HL = logical(speye(T));
@@ -56,17 +56,22 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
         part.llr = part.llh_subsets - llh_fine*part.HL.';  % LLRs for each cluster: coarse vs fine
         part.logPtilde = getlogPtilde(part);
         
-        po = wrap(part);
+        %po = wrap(part);
         
     end
 
     function po = wrap(part)
         
         po.part = part;
+        
         po.test_merge = @(i,j) test_merge(part,i,j);
         po.test_split = @(i,labels) test_split(part,i,labels);
+        
         po.dumb_merge = @(i,j) dumb_merge(part,i,j);
+        po.smart_merge = @(i,j) smart_merge(part,i,j);
+        
         po.dumb_split = @(i,labels) dumb_split(part,i,labels);
+        po.smart_split = @(i,labels) smart_split(part,i,labels);
         
     end
 
@@ -94,14 +99,14 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
     % labels: one hot label matrix: 
     %   row indices are new cluster indices (starting at 1)
     %   column indices are original recording (embedding) indices  
-        if min(sum(labels,2))==0  % no split 
+        if isempty(labels) % no split 
             logPtilde = part.logPtilde;        
             state = [];
         else % split
             w = true(part.K,1);
             w(i) = false;
             state.counts = full(sum(labels,2));
-            state.K = part.K - 1 + length(state.counts);
+            state.K = part.K + 1;
             state.llh_K = CRP_Kterm(state.K);
             state.PE = Emb*labels.';  
             state.llh_subsets = llhfun(state.PE);
@@ -114,9 +119,9 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
     end
 
 
-    function po = commit_merge(part,i,j,state)
+    function mpart = commit_merge(part,i,j,state)
         if i == j  %no merge
-            po = wrap(part);
+            mpart = part;
             return;
         end
             
@@ -152,15 +157,15 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
         mpart.HL = HL;
 
         mpart.logPtilde = state.logPtilde;
-            
-        po = wrap(mpart);
+        
+        mpart.llr = llh_subsets - llh_fine*HL.';
         
     end
 
 
-    function po = commit_split(part,i,labels,state)
-        if min(sum(labels,2))==0 % no split
-            po = wrap(part);
+    function spart = commit_split(part,i,labels,state)
+        if isempty(labels) % no split
+            spart = part;
             return;
         end
         
@@ -194,7 +199,8 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
         spart.K = state.K;
         spart.logPtilde = state.logPtilde;
         
-        po = wrap(spart);
+        spart.llr = llh_subsets - llh_fine*HL.';
+        
     end
 
 
@@ -206,29 +212,6 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
         end
         logQ = -2*log(K);  %K^2 equiprobable states
     end
-
-    function [logQ,i,labels] = dumb_split(part,i,labels)
-        K = part.K;
-        if nargin==1 || isempty(i)
-            i = randi(K);          %K equiprobable choices for i
-            n = part.counts(i);
-            r = part.HL(i,:);
-            N = length(r);
-            jj = rand(1,N)>0.5;
-            labels = [r & jj; r & ~jj];  % 1 + S(n,2) equiprobable states, 
-                                         % where S(n,k) = 2^(n-1) - 1 is
-                                         % the Stirling number of the 2nd
-                                         % kind: the number of ways to
-                                         % partition n items into 2
-                                         % non-empty subsets. We add 1
-                                         % because we allow one subset to
-                                         % be empty.
-        else
-            n = part.counts(i);
-        end
-        logQ = -log(K) - (n-1)*log(2);  % Q = (1/K) * ( S(n,2) + 1 )
-    end
-
 
     function [logQ,i,j] = smart_merge(part,i,j)
 
@@ -262,7 +245,207 @@ function pp = create_partition_posterior(alpha,beta,llhfun,Emb)
     end
 
 
+    function [logQ,i,labels] = dumb_split(part,i,labels)
+        K = part.K;
+        if nargin==1 || isempty(i)
+            i = randi(K);          %K equiprobable choices for i
+            n = part.counts(i);
+            r = part.HL(i,:);
+            kk = randi(2,1,n);
+            labels = sparse(kk,find(r),true); % 1 + S(n,2) equiprobable states, 
+                                         % where S(n,k) = 2^(n-1) - 1 is
+                                         % the Stirling number of the 2nd
+                                         % kind: the number of ways to
+                                         % partition n items into 2
+                                         % non-empty subsets. We add 1
+                                         % because we allow one subset to
+                                         % be empty.
+                                         
+            if min(sum(labels,2))==0  % one cluster is empty
+                labels = []; %signal no split
+            end
+        else
+            n = part.counts(i);
+        end
+        logQ = -log(K) - (n-1)*log(2);  % Q = (1/K) * ( S(n,2) + 1 )
+    end
 
+    function [logQ,i,labels] = smart_split(part,i,labels)
+        K = part.K;
+        
+        % choose cluster to be split
+        llh = -part.llh_subsets;     %alternative is to use llr
+        sample = nargin==1 || isempty(i);
+        if sample
+            [~,i] = max( llh + randgumbel(1,K) );
+        end
+        mx = max(llh);
+        norm = mx + log(sum(exp(llh-mx)));
+        logQ = llh(i) - norm;
+        
+        %split
+        n = part.counts(i);
+        r = part.HL(i,:);
+        
+        if n==1 %no split
+            if sample
+                labels = [r;zeros(1,n)];
+            end
+            return;
+        end
+        
+        E = Emb(:,r);
+        
+        %assign first one arbitrarily (no effect on Q)
+        PE = [E(:,1),zeros(D,1)];
+        counts = [1;0];
+        nt = 1; %number of tables
+        
+        if sample
+            kk = zeros(1,n);
+            kk(1) = 1;
+        else
+            kk = ones(1,n);
+            kk(labels(2,r)) = 2;
+        end
+        
+        
+        for j=2:n
+            if nt == 1  % table 2 still empty
+                logPrior = log([counts(1)-beta;nt*beta+alpha]);    
+            else
+                logPrior = log(counts-beta);
+            end
+            SE = bsxfun(@plus,E(:,j),PE);
+            logPost = logPrior.' + llhfun(SE);
+            mx = max(logPost);
+            norm = mx + log(sum(exp(logPost-mx)));
+            if sample
+                [~,k] = max(logPost + randgumbel(1,2) );
+            else
+                k = kk(j);
+            end
+            logQ = logQ + logPost(k) - norm;
+            PE(:,k) = SE(:,k);
+            counts(k) = counts(k) + 1;
+            if k==2
+                nt = 2;
+            end
+        end
+        
+        if sample && nt==2
+            labels = sparse(kk,find(r),true); 
+        elseif sample && nt==1
+            labels = [];  %signal no split
+        end
+        
+        
+    end
+
+
+
+    function part1 = smart_split_dumb_merge(part0)
+        logP0 = part0.logPtilde;
+        if flip_coin() % split
+            
+            %fwd
+            [logQ,i,labels] = smart_split(part0);
+            logQfwd = logQ - log(2);
+            [logP1,commit] = test_split(part0,i,labels);
+            part1 = commit();
+            
+            %reverse
+            [i,j] = merge_from_split(part,i,labels);
+            logQrev = dumb_merge(part1,i,j) - log(2);
+
+        else % merge
+            
+            %fwd
+            [logQ,i,j] = dumb_merge(part0);
+            logQfwd = logQ - log(2);
+            [logP1,commit] = test_merge(part0,i,j);
+            part1 = commit();
+            
+            %reverse
+            [i,labels] = split_from_merge(i,j);
+            logQrev = smart_split(part1,i,labels) - log(2);
+        end
+        
+        MH = exp(logP1 - logP0 + logQrev - logQfwd);
+        if rand > MH
+            part1 = part0;  % reject
+        end
+        
+        
+    end
+
+
+
+    function part1 = smart_merge_dumb_split(part0)
+        logP0 = part0.logPtilde;
+        if flip_coin() % split
+            
+            %fwd
+            [logQ,i,labels] = dumb_split(part0);
+            logQfwd = logQ - log(2);
+            [logP1,commit] = test_split(part0,i,labels);
+            part1 = commit();
+            
+            %reverse
+            [i,j] = merge_from_split(part,i,labels);
+            logQrev = smart_merge(part1,i,j) - log(2);
+
+        else % merge
+            
+            %fwd
+            [logQ,i,j] = smart_merge(part0);
+            logQfwd = logQ - log(2);
+            [logP1,commit] = test_merge(part0,i,j);
+            part1 = commit();
+            
+            %reverse
+            [i,labels] = split_from_merge(i,j);
+            logQrev = dumb_split(part1,i,labels) - log(2);
+        end
+        
+        MH = exp(logP1 - logP0 + logQrev - logQfwd);
+        if rand > MH
+            part1 = part0;  % reject
+        end
+        
+        
+    end
+
+
+
+
+
+    function [i,j] = merge_from_split(part,i,labels)
+        if isempty(labels) % no split
+            j = i; % no merge
+        else
+            K = part.K;
+            i = K;
+            j = K+1;
+        end
+    end
+
+    function [i,labels] = split_from_merge(part,i,j)
+        if i==j % no split
+            labels = [];
+        else
+            i = min(i,j);
+            labels = part.HL([i,j],:);
+        end
+    end
+
+
+
+end
+
+
+function heads = flip_coin()
+    heads = rand >= 0.5;
 end
 
 
