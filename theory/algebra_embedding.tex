@@ -2391,9 +2391,8 @@ Some choices need to be made:
 \end{itemize}
 
 
-
 \section{Parallel PLDA}
-Tied hidden variables for parallel observed i-vectors and x-vectors. (Mention Prince's (and Sandro's) tied PLDA and Luciana's JPLDA.) What happens when we have different hidden scale factors for the two observations? Do we still get diagonalizable meta-embeddings?
+%Tied hidden variables for parallel observed i-vectors and x-vectors. (Mention Prince's (and Sandro's) tied PLDA and Luciana's JPLDA.) What happens when we have different hidden scale factors for the two observations? Do we still get diagonalizable meta-embeddings?
 
 \subsection{Linear-Gaussian case}
 In the diagrams below, the hidden speaker identity variable is $\zvec\in\R^d$. The observations are, say, an i-vector, $\rvec_j\in\R^{D_1}$ and also, say, an x-vector, $\svec_j\in\R^{D_2}$. We consider two models:
@@ -2437,7 +2436,21 @@ P(\svec_j\mid\zvec) &= \ND\bigl(\svec_j\mid\Gmat\zvec,(\Smat-\Xmat'\Rmat^{-1}\Xm
 where the precisions are respectively $\Rmat-\Xmat\Smat^{-1}\Xmat'$ and $\Smat-\Xmat'\Rmat^{-1}\Xmat$.   
 
 
-
+\section{Semi-discrete PLDA}
+Let the hidden speaker identity variable, $z$, be discrete with $K$ states: $z\in\{1,\ldots,K\}$. Let the observed data be a continuous vector, $\rvec_j\in\R^D$. The likelihood for $z$ (meta-embedding) is linear-Gaussian:
+\begin{align}
+P(\rvec_j\mid z) &= \ND(\rvec_j\mid\mvec_z,\Wmat^{-1})
+\end{align}
+which is parametrized by state dependent means, $\mvec_1,\ldots\mvec_K\in\R^D$ and a common, $D$-by-$D$ precision matrix, $\Wmat$. The meta-embedding, extracted from $r_j$ is:
+\begin{align}
+f_j(z) &\propto \exp[\rvec_j'\Wmat\mvec_z - \frac12 \mvec_z'\Wmat\mvec_z]
+\end{align}
+Possibilities for representing the meta-embedding are:
+\begin{itemize}
+	\item The $K$-vector, $\frac{f_j(z)}{\max_{z'} f_j(z')}$. For large $K$ we could approximate the smaller values with zeros, to give a sparse vector. (The exponent should give a large dynamic range for components and therefore good sparsity.) Pooling is multiplicative. For a flat prior on $z$, expectation is a (sparse) sum over $K$ values, otherwise it is a (sparse) dot product.
+	\item The $K$-vector, $\log f_j(z)$. Pooling is additive and expectation is log-sum-exp.
+	\item If $K>D$
+\end{itemize}
 
 
 \chapter{Objective functions for discriminative training}
