@@ -2448,10 +2448,41 @@ f_j(z) &\propto \exp[\rvec_j'\Wmat\mvec_z - \frac12 \mvec_z'\Wmat\mvec_z]
 Possibilities for representing the meta-embedding are:
 \begin{itemize}
 	\item The $K$-vector, $\frac{f_j(z)}{\max_{z'} f_j(z')}$. For large $K$ we could approximate the smaller values with zeros, to give a sparse vector. (The exponent should give a large dynamic range for components and therefore good sparsity.) Pooling is multiplicative. For a flat prior on $z$, expectation is a (sparse) sum over $K$ values, otherwise it is a (sparse) dot product.
-	\item The $K$-vector, $\log f_j(z)$. Pooling is additive and expectation is log-sum-exp.
-	\item If $K>D$
+	\item The $K$-vector, $\log f_j(z)$. Pooling is additive and expectation is log-sum-exp. For large $K$, a sparse approximation can be used to speed up the log-sum-exp.
+	\item If $K\gg D$, we can use the linearity of $\log f_j(z)$ w.r.t.\ $\rvec_j$ and instead use the $(D+1)$-vector, $(\rvec_j,1)$ as representation. Pooling is additive. The augmentation in the last element serves to counting the number of pooled embeddings, giving the factor by which $\mvec_z'\Wmat\mvec_z$ should be multiplied to recover $\log f_j(z)$. As above, expectation is log-sum-exp, which can also be accelerated by using approximate sparsity.
 \end{itemize}
+For a good speaker recognizer, we would need a large $K$, because log likelihood-ratios are limited on the positive side by $\log K$. This makes the last option attractive.
 
+
+\subsection{Taylor series expansion}
+For a (pooled) representation, $(\rvec,n)$, the log-expectation (for a flat prior on $\zvec$) is:
+\begin{align}
+E(\rvec,n) &= \log\sum_{k=1}^K \exp[\rvec'\Wmat\mvec_k -\frac{n}2\mvec_k\Wmat\mvec_k] -\log K
+\end{align}
+As $n$ grows, this function may become very non-linear (basically a linear function, followed by a max). First and second-order Taylor-series approximation may not be accurate.
+
+\subsection{Multicomponent discrete case}
+For large $K$, we consider structuring $z$, such that the structure can save on parameters and computation. Let's try $z=(s,t)$, where $s,t\in\{1,\ldots,K\}$. Now $z$ has $K^2$ states. Let the likelihood be:
+\begin{align}
+P(\rvec_j\mid z) &= \ND(\rvec_j\mid \mvec_s+\muvec_t,\Wmat^{-1})
+\end{align}
+The parameter $\Wmat$ is $D$-by-$D$ as before. The parameters, $\{\mvec_i,\muvec_i\}_{i=1}^K$ together have $2KD$ components, instead of the $K^2D$, we would have had in an unconstrained model. The meta-embedding is:
+\begin{align}
+f_j(s,t) &\propto \exp[\rvec_j'\Wmat\mvec_s + \rvec_j'\Wmat\muvec_t -\frac12\mvec_s\Wmat\mvec_s -\frac12\muvec_t\Wmat\muvec_t
+- \mvec_s\Wmat\muvec_t]
+\end{align}
+As before, we can use the representation, $(\rvec_j,1)$, with additive pooling. Unfortunately, by explaining away ($s,t$ are joint causes of $\rvec_j$), observation of $\rvec_j$ makes $s$ and $t$ dependent in the likelihood (and posterior), as can be seen from the term $\mvec_s\Wmat\muvec_t$. This means that we cannot do separate expectations of $K$ terms each, but instead we have a sum over $K^2$ terms, which for a pooled representation, $(\rvec,n)$ looks like this:
+\begin{align}
+\sum_{s=1}^K\sum_{t=1}^K \exp[\rvec'\Wmat\mvec_s -\frac12\mvec_s\Wmat\mvec_s] 
+\exp[- \mvec_s\Wmat\muvec_t] 
+\exp[\rvec'\Wmat\mvec_t -\frac12\mvec_t\Wmat\mvec_t]
+\end{align}
+This is a bilinear form (vector $\times$ matrix $\times$ vector). We can simplify this product by: 
+\begin{itemize}
+	\item Using sparse approximations of all three factors.  
+	\item Using a low-rank approximation of the matrix factor, for example nonnegative matrix factorization. (Also notice that a sensible model could be obtained by constraining $\mvec_s=\muvec_s$ for all $s$ and that would make this matrix symmetric.)\footnote{Also positive definite?}
+\end{itemize}
+In both cases, the matrix can be simplified offline, before runtime, because it is not dependent on $\rvec_j$.
 
 \chapter{Objective functions for discriminative training}
 \label{chap:discrim}
