@@ -14,15 +14,24 @@ function model = create_semi_discrete_plda2(N,dim,scal)
     WMeans = W*Means;
     offs = -sum(Means.*WMeans,1)/2;
     
-    thr = -2*log(N);    % to controll sparsity
+    thr = -30; %-2*log(N);    % to controll sparsity
     
-    B = Means.'*Wmeans;
-    b = max(B(:));
-    B = B-b;
-    B(B<thr) = -inf;
-    B = sparse(exp(B));
+    B0 = -Means.'*WMeans;
+    b = max(B0(:));
+    B0 = B0-b;
+    B1 = B0;
+    B1(B1<thr) = -inf;
+    B1 = sparse(exp(B1));
+    B1 = exp(B1);
+    B{1} = B1;
     
-    F = [Wmeans.';offs];
+    B1 = 2*B0;
+    B1(B1<thr) = -inf;
+    B1 = sparse(exp(B1));
+    B{2} = B1;
+    
+    
+    F = [WMeans.',offs.'];
     
     model.sample = @sample;
     model.extract_me = @extract_me;
@@ -34,7 +43,7 @@ function model = create_semi_discrete_plda2(N,dim,scal)
     
         [K,T] = size(HL);
 
-        if ~exist('S','var') || isempty(S)
+        if ~exist('Z1','var') || isempty(Z1)
             %sample Z from flat prior
             Z1 = sparse(randi(N,1,K),1:K,true);  % N-by-K: speaker identity variables (1-hot columns)
             Z2 = sparse(randi(N,1,K),1:K,true);  % N-by-K: speaker identity variables (1-hot columns)
@@ -50,7 +59,7 @@ function model = create_semi_discrete_plda2(N,dim,scal)
 
     function E = extract_me(D)
         T = size(D,2);
-        E = [D,ones(1,T)];
+        E = [D;ones(1,T)];
     end
 
 
@@ -59,8 +68,16 @@ function model = create_semi_discrete_plda2(N,dim,scal)
         mx = max(V,[],1);
         V = bsxfun(@minus,V,mx);
         V(V<thr) = -inf;
-        V = sparse(exp(V));
-        L = prior + b + mx + log(sum(V.*(B*V),1));  
+        V = exp(V);
+
+        n = E(end,:);
+        T = length(n);
+        L = zeros(1,T);
+        for i=1:max(n)
+            f = n==i;
+            Vi = V(:,f);
+            L(f) = prior + i*b + 2*mx(f) + log(sum(Vi.*(B{i}*Vi),1));  
+        end
     end
 
 
@@ -74,16 +91,16 @@ function test_this()
 
     N = 1000;
     dim = 100;
-    scal = 0.2;
-    model = create_semi_discrete_plda(N,dim,scal);
+    scal = 0.1;
+    model = create_semi_discrete_plda2(N,dim,scal);
     llhfun = @model.log_expectations;
     extr = @model.extract_me;
 
     n = 10000;
     HL = logical(speye(n));
-    [Enroll,Z] = model.sample(HL);
+    [Enroll,Z1,Z2] = model.sample(HL);
     Enroll = extr(Enroll);
-    Tar = extr(model.sample(HL,Z));
+    Tar = extr(model.sample(HL,Z1,Z2));
     Non = extr(model.sample(HL));
     
     llr = @(enr,test) llhfun(enr + test) - llhfun(enr) - llhfun(test);
@@ -92,15 +109,15 @@ function test_this()
     non = llr(Enroll,Non);
     
     fprintf('EER = %g%%\n',100*eer(tar,non));
-    fprintf('Cllr,minCllr = %g, %g\n',cllr(tar,non),min_cllr(tar,non));
-    
-    hist([tar,non],300);
-    
-    plot_type = Det_Plot.make_plot_window_from_string('old');
-    plot_obj = Det_Plot(plot_type,'SEMI-DISCRETE-PLDA');
-
-    plot_obj.set_system(tar,non,'sys1');
-    plot_obj.plot_steppy_det({'b','LineWidth',2},' ');
+%     fprintf('Cllr,minCllr = %g, %g\n',cllr(tar,non),min_cllr(tar,non));
+%     
+%     hist([tar,non],300);
+%     
+%     plot_type = Det_Plot.make_plot_window_from_string('old');
+%     plot_obj = Det_Plot(plot_type,'SEMI-DISCRETE-PLDA');
+% 
+%     plot_obj.set_system(tar,non,'sys1');
+%     plot_obj.plot_steppy_det({'b','LineWidth',2},' ');
     
     
 end

@@ -148,6 +148,7 @@
 
 
 \def\KL#1#2{D_{KL}\bigl[#1\|#2\bigr]}
+\def\Hdiv#1#2{D_H\bigl[#1\|#2\bigr]}
 
 \def\LRT#1#2{\text{LR}(\text{#1},\text{#2})}
 \def\R{\mathbb{R}}
@@ -430,7 +431,7 @@ P(\Rset_1,\ldots,\Rset_m\mid\text{$m$ speakers}) &= \prod_{i=1}^m P(\Rset_i\mid 
 \end{align}
 where we have expanded $P(\Rset_i\mid H_1)$ using~\eqref{eq:exch}.
 
-According to this model, the hidden variable, $\zvec\in\Zset$, contains everything that is to be known about recordings of a speaker. Patrick Kenny calls $\zvec$ the \emph{speaker identity variable}. At this stage, we are not committing ourselves to the nature of the hidden variables and therefore we leave $\Zset$ undefined---after all, $\zvec$ is hidden so there is much freedom in choosing its nature. (If you need something concrete to shape your thoughts, $\Zset=\R^d$ is a good choice.) 
+According to this model, the hidden variable, $\zvec\in\Zset$, contains everything that is to be known about the recordings of a speaker. Patrick Kenny calls $\zvec$ the \emph{speaker identity variable}. At this stage, we are not committing ourselves to the nature of the hidden variables and therefore we leave $\Zset$ undefined---after all, $\zvec$ is hidden so there is much freedom in choosing its nature. (If you need something concrete to shape your thoughts, $\Zset=\R^d$ is a good choice.) 
 
 Think of the identity variable, $\zvec$, as the ideal embedding that an oracle could extract. If we were given $\zvec$, the problem would be instantly solved. Unfortunately, there is noise, distortion, occlusion and all kinds of other mechanisms that induce uncertainty, so we can never exactly extract $\zvec$. Let's not pretend that we can do this. Let us not extract some point-estimate for $\zvec$ and call that our embedding. Let's instead extract a \emph{meta-embedding}, which is \emph{information about} the ideal embedding, $\zvec$, where the information has a probabilistic form. We derive this form below.
 
@@ -573,7 +574,7 @@ However, for the continuous case, when $\zvec\in\R^d$, the function $f(\zvec)$ i
 \label{eq:vsops}
 h &= \alpha f + \beta g & \Leftrightarrow && h(\zvec) &= \alpha f(\zvec) + \beta g(\zvec)
 \end{align} 
-As long as we choose $\Fset$ such that it is closed under these operations and to include the constant function with value $0$, then $\Fset$ is a vector space, even though the vectors are infinite-dimensional. To quality as a vector space, the properties required of the addition and scalar multiplication operators ---commutativity, associativity and distributivity---follow directly from~\eqref{eq:vsops}.
+As long as we choose $\Fset$ such that it is closed under these operations and to include the constant function with value $0$, then $\Fset$ is a vector space, even though the vectors are infinite-dimensional. To qualify as a vector space, the properties required of the addition and scalar multiplication operators ---commutativity, associativity and distributivity---follow directly from~\eqref{eq:vsops}.
 
 \subsection{Inner product}
 We already have that $\Fset$ is a vector space. To further make it an \emph{inner product space}, we need to define the inner product, which is a function, $\Fset\times\Fset\to\R$. For $f,g,h\in\Fset$, and $\alpha,\beta\in\R$, we define our inner product as:
@@ -983,31 +984,70 @@ Each upward step (join) contributes a normalized inner product below the line, w
 \end{align}
 Again, each upward step (join) contributes a normalized inner product below the line, while the downward step (split) contributes another above. This rule applies in general. If we follow a path from the numerator (hypothesis $A$), to the denominator (hypothesis $B$), joins contribute below the line, while splits contribute above. (If we go from denominator to numerator, this rule is reversed.)  
 
-\subsubsection{Equivalence of paths}
+\subsection{Equivalence of paths}
 As the two paths that we examined in example 2 demonstrate, there may be many different paths and therefore many different decompositions of a given LR in terms of normalized inner products. Nevertheless, as long as our calculations are exact, all such decompositions must give the same numerical result. This may serve as a useful regularization constraint if we are training neural nets to approximate inner products between meta-embeddings. (As we shall see in the next chapter, there may be various practical reasons to prefer approximate calculations.) 
 
 The equivalence of paths is not limited to shortest paths. The products and ratios of the normalized inner products of any path between two nodes must give the same numerical result, irrespective of the path. This is also true in particular of \emph{cycles}. If we start and end at the same node, the LR we calculate thus is \emph{unity}. The interesting thing about this is that if we are given a set of unlabelled recordings, we can use this fact to manufacture a (very) large set of constraints on the values of normalized inner products. (If we work with logarithms, this becomes a homogeneous system of linear equations.) These constraints may perhaps help to regularize neural nets in both labelled and unlabelled training regimes.      
 
-\subsubsection{Primitive operations}
-Which primitive building blocks do we need to compute general LRs of the form~\eqref{eq:generalLR}? Let's assume we can always extract raw (unnormalized) meta-embeddings from any recording. Then, as~\eqref{eq:generalLR} shows, we can compute any LR if we can:
+\subsection{Primitive operations}
+Let's assume we can always extract raw (unnormalized) meta-embeddings from any recording. Which primitive building blocks do we need to compute general LRs of the form~\eqref{eq:generalLR}? Below we suggest a few alternative sets of primitive operations. 
+
+\subsubsection{Pooling and expectation}
+As~\eqref{eq:generalLR} shows, we can compute any LR if we can:
 \begin{itemize}
 	\item arbitrarily pool meta-embeddings (do elementwise multiplication) and
 	\item compute arbitrary expectations of single or pooled meta-embeddings.
 \end{itemize}
-Alternatively, as we have shown in this section, we can compute arbitrary LRs if we can
+
+\subsubsection{Pooling and inner product}
+Alternatively, as we have shown earlier in this chapter, we can compute arbitrary LRs if we can
 \begin{itemize}
 	\item pool and
-	\item compute arbitrary normalized inner products.\footnote{The combination of pooling and inner products happens every day in our own vision. A light source has a spectrum, which is a function from $\R$ to $\R$. Every time the light reflects off a surface, the modified spectrum of the relected light is the product of the incoming spectrum and a similar function that represents the properties of the reflecting surface. Finally, each colour receptor in the eye has a similar function. Inner products between the light that reaches the retina and the receptors determine how much of each colour we see.}
+	\item compute arbitrary normalized inner products.\footnote{The combination of pooling and inner products happens every day in our own vision. A light source has a spectrum, which is a function from $\R$ to $\R$. Every time the light reflects off a surface, the modified spectrum of the reflected light is the product of the incoming spectrum and a similar function that represents the properties of the reflecting surface. Finally, each colour receptor in the eye has a similar function. Inner products between the light that reaches the retina and the receptors determine how much of each colour we see.}
 \end{itemize}
 We can however somewhat restrict the requirement on normalized inner products. We can get away with inner products where \emph{one of the arguments is always a single (unpooled) meta-embedding}. To do normalization, we need $\dot{f}{\onevec}$, which respects this restriction. To further enforce this restriction, look again at the lattice in figure~\ref{fig:lattice} and convince yourself that you can traverse between any two nodes by always adding or removing but a single element of some subset in the partition. For example, the red path does not respect this restriction, but the blue and green ones do. For such paths, all the inner product factors will have at least one unpooled argument.
 
 When we discuss practical representations of meta-embeddings in the next chapter, we will see that for some of the representations, pooling may change the form of the representation. The form may have implications on how easy it is to do inner products. If one of the arguments is always unpooled, this may facilitate calculations.
 
-Finally, we mention another interesting building block. It is not difficult to show that we can form arbitrary LRs from factors of the form:
+
+\subsubsection{Coarse vs fine}
+It is not difficult to show that we can form arbitrary LRs from factors of the form:
 \begin{align}
 \frac{\expp{\prod_{i=1}^m f_i}}{\prod_{i=1}^m\expp{f_i}} &= \expvb{\prod_{i=1}^m \normal{f_i}}{}
 \end{align}  
 for $m=1,2,\ldots$. This factor is just the LR comparing the coarsest to the finest partition of a set of $m$ recordings. It can be argued that this building block is not primitive, because it can be assembled via pooling and expectation (or pooling and inner products).
+
+
+\subsubsection{KL divergence}
+\label{sec:KLdivLR}
+We return to the general formula~\eqref{eq:generalLR}, which gives the LR between two partitions $A:\Sset_1,\ldots,\Sset_m$ and $B:\Sset'_1\,\ldots,\Sset_{m'}$, where the $\Sset_i,\Sset'_i\subseteq\Rset$ are the blocks of these partitions. We re-arrange the log-LR by using the \emph{candidate's formula} (CF)~\cite{cf_besag}. The CF can be used to compute marginal likelihoods in terms of posteriors and is valid here for any arbitrary $\zvec^*$, provided that the posteriors remain non-zero. (It is sufficient that our meta-embeddings are everywhere non-zero in the support of $\pi(\zvec)$.) The log of~\eqref{eq:generalLR} is rearranged as:
+\begin{align}
+\label{eq:KLdivLR}
+\begin{split}
+\log\frac{P(\Rset\mid A)}{P(\Rset\mid B)} 
+&=\log\frac{\prod_{i=1}^m \expvb{\prod_{j\in\Sset_i} P(r_j\mid\zvec)}{\zvec\sim\pi}}
+{\prod_{i=1}^{m'} \expvb{\prod_{j\in\Sset'_i} P(r_j\mid\zvec)}{\zvec\sim\pi}} \\
+&=\log\frac{\prod_{i=1}^m \expvb{P(\Sset_i\mid\zvec,H_1)}{\zvec\sim\pi}}
+{\prod_{i=1}^{m'} \expvb{P(\Sset'_i\mid\zvec,H_1)}{\zvec\sim\pi}} \\
+&=\log\frac{\prod_{i=1}^{m} P(\Sset_i\mid H_1,\pi)}{\prod_{i=1}^{m'} P(\Sset'_i\mid H_1,\pi)} \\
+&=\log\frac{\prod_{i=1}^{m} \frac{P(\Sset_i\mid\zvec^*)\pi(\zvec^*)}{P(\zvec^*\mid\Sset_i,H_1,\pi)}}
+{\prod_{i=1}^{m'} \frac{P(\Sset_i\mid\zvec^*)\pi(\zvec^*)}{P(\zvec^*\mid\Sset'_i,H_1,\pi)}} \;\;\;\text{(candidate's formula)}\\
+&=\log\frac{\prod_{i=1}^{m} \frac{\pi(\zvec^*)}{P(\zvec^*\mid\Sset_i,H_1,\pi)}}
+{\prod_{i=1}^{m'} \frac{\pi(\zvec^*)}{P(\zvec^*\mid\Sset'_i,H_1,\pi)}} 
++\log\frac{\prod_{j\in\Rset}P(r_j\mid\zvec^*)}{\prod_{j\in\Rset}P(r_j\mid\zvec^*)} \\
+&= \sum_{i=1}^m \log\frac{\pi(\zvec^*)}{P(\zvec^*\mid\Sset_i,H_1,\pi)}
+- \sum_{i=1}^{m'} \log\frac{\pi(\zvec^*)}{P(\zvec^*\mid\Sset'_i,H_1,\pi)}\\
+&= \expvb{\sum_{i=1}^m \log\frac{\pi(\zvec)}{P(\zvec\mid\Sset_i,H_1,\pi)}
+- \sum_{i=1}^{m'} \log\frac{\pi(\zvec)}{P(\zvec\mid\Sset'_i,H_1,\pi)}}{\zvec\sim\pi}\\
+&= \sum_{i=1}^m \KL{\pi(\zvec)}{P(\zvec\mid\Sset_i,H_1,\pi)}
+- \sum_{i=1}^{m'} \KL{\pi(\zvec)}{P(\zvec\mid\Sset'_i,H_1,\pi)}
+\end{split}
+\end{align}
+In the line after the CF, we have made use of the fact that the union of the blocks in each partition is the whole set, $\Rset$. In the penultimate line, we have made use of the fact that the RHS is independent of $\zvec^*$, so we can take the expected value of the whole RHS w.r.t.\ $\pi(\zvec)$. The final result is that the log-LR breaks down into a number of KL divergences, one for each block of interest. Each KL divergence is from the prior to the posterior conditioned on the data in that block.
+
+The KL divergence representation not only gives an interesting new interpretation of the LR, it also suggests we can use alternative kinds of divergence functions as computationally cheaper approximations to the KL divergence. This is explored in section~\ref{sec:Hdiv} below. 
+
+
 
 \section{Note on cosine similarity}
 \def\evec{\mathbf{e}}
@@ -1866,6 +1906,47 @@ In a variant of this recipe, we could also compute $\norm{\normal{f}}^2$ and $\n
 which is just a symmetrized application of~\eqref{eq:cross_sampling}. If the matched sampling recipe~\eqref{eq:matched_sampling} is beneficial, then the above symmetrized cross-sampling should presumably enjoy the same benefits.
 
 
+\section{The Hyv\"arinen divergence}
+\label{sec:Hdiv}
+As mentioned in section~\ref{sec:KLdivLR}, the KL-divergence recipe for computing log-likelihoods~\eqref{eq:KLdivLR} could perhaps be approximated via other kinds of divergences. An attractive candidate is the Hyv\"arinen divergence (H-divergence), because it can compare Gaussians by using only their natural parameters, without needing the computationally expensive normalization constants~\cite{score_matching,Dawid_Musio_PSR_ModelSelec_2015}. One way to define the KL-divergence is via expected values of the logarithmic scoring rule. This can be generalized by replacing the scoring rule. The expected value of a proper scoring rule applied to some probability distribution, whete the expectatiojn is taken w.r.t.\ a different distribution gives generalized cross-entropy. If both distributions are the same that gives generalized entropy. The difference between cross-entropy and entropy gives generalized divergence (also called discrepancy)~\cite{Dawid_Musio_ThApp_PSR_2014}. The H-divergence from $P(\zvec)$ to $Q(\zvec)$, where both are continuous probability densities, is defined as the expected value of the squared Euclidean distance between the gradients of the two distributions:
+\begin{align}
+\Hdiv{P}{Q} &= \frac12\int \norm{\nabla\log P(\zvec)-\nabla\log Q(\zvec)}^2 P(\zvec)\,d\zvec
+\end{align}
+This is \emph{independent} of the normalization constant of $Q(\zvec)$. In the case of multivariate Gaussians, where $P$ has natural parameters, $\avec_p,\Bmat_p$ and $Q$ has $\avec_q,\Bmat_q$, this gives~\cite{Dawid_Musio_PSR_ModelSelec_2015}:
+\begin{align}
+\Hdiv{P}{Q} &= \frac12\trace(\Bmat_p-2\Bmat_q+\Bmat_p^{-1}\Bmat_q^2) + \frac12\norm{\Bmat_q\Bmat_p^{-1}\avec_p-\avec_q}^2
+\end{align}
+To mimic~\eqref{eq:KLdivLR}, for the case of multivariate Gaussian meta-embeddings and standard normal prior, using H-divergences, we let $P(\zvec)=\pi(\zvec)=\ND(\zvec\mid\nulvec,\Imat)$ and the divergence simplifies to: 
+\begin{align}
+\Hdiv{\pi}{Q} &= \frac12\trace(\Imat-2\Bmat_q+\Bmat_q^2) + \frac12\norm{\avec_q}^2
+\end{align}
+
+\subsection{Log-LR}
+For Gaussian meta-embeddings, $f_1$ and $f_2$, represented by the natural parameters $a_1,B_1$ and $a_2,B_2$, the normalized inner product (binary verification likelihood-ratio)~\eqref{eq:LRMVG} can be rewritten using~\eqref{eq:KLdivLR} as:
+\begin{align}
+\label{eq:KLLR}
+\begin{split}
+\log\dotn{f_1}{f_2} = &\KL{\pi(\zvec)}{P(\zvec\mid f_1,f_2)}\\
+-&\KL{\pi(\zvec)}{P(\zvec\mid f_1)}-\KL{\pi(\zvec)}{P(\zvec\mid f_2)}
+\end{split}
+\end{align}
+If we use H-divergences instead, we find after some algebra the beautifully simple dot product between the natural parameters of the two sides:
+\begin{align}
+\begin{split}
+&\Hdiv{\pi(\zvec)}{P(\zvec\mid f_1,f_2)}
+-\Hdiv{\pi(\zvec)}{P(\zvec\mid f_1)}-\Hdiv{\pi(\zvec)}{P(\zvec\mid f_2)} \\
+=& \trace(\Bmat_1\Bmat_2) + \avec_1'\avec_2 
+\end{split}
+\end{align} 
+Without further analysis, it is not immediately clear in what sense this is an approximation to the true log-LR~\eqref{eq:KLLR}. We can however see that it has some of the same qualitative properties. For example:
+\begin{itemize}
+	\item If $\Bmat_1=\nulvec$ and $\avec_1=\nulvec$, we get zero.
+	\item The log-LR increases as the precisions increase.
+	\item The log-LR increases as the meta-embeddings move further away from the prior.
+\end{itemize}
+
+
+
 \section{Laplace approximation for pooling}
 \label{sec:Laplace}
 Here we show how the \emph{Laplace approximation}~\cite{ITILA,PRML} can be applied to continuous unimodal meta-embeddings, where closed-form pooling is unavailable, but where we can afford an iterative calculation to find an approximate pooled meta-embedding. An example would be the t-distribution meta-embeddings which will be discussed in section~\ref{sec:TPLDA} below. 
@@ -2473,16 +2554,31 @@ f_j(s,t) &\propto \exp[\rvec_j'\Wmat\mvec_s + \rvec_j'\Wmat\muvec_t -\frac12\mve
 \end{align}
 As before, we can use the representation, $(\rvec_j,1)$, with additive pooling. Unfortunately, by explaining away ($s,t$ are joint causes of $\rvec_j$), observation of $\rvec_j$ makes $s$ and $t$ dependent in the likelihood (and posterior), as can be seen from the term $\mvec_s\Wmat\muvec_t$. This means that we cannot do separate expectations of $K$ terms each, but instead we have a sum over $K^2$ terms, which for a pooled representation, $(\rvec,n)$ looks like this:
 \begin{align}
-\sum_{s=1}^K\sum_{t=1}^K \exp[\rvec'\Wmat\mvec_s -\frac12\mvec_s\Wmat\mvec_s] 
-\exp[- \mvec_s\Wmat\muvec_t] 
-\exp[\rvec'\Wmat\mvec_t -\frac12\mvec_t\Wmat\mvec_t]
+\sum_{s=1}^K\sum_{t=1}^K \exp[\rvec'\Wmat\mvec_s -\frac{n}2\mvec_s\Wmat\mvec_s] 
+\exp[- n\mvec_s\Wmat\muvec_t] 
+\exp[\rvec'\Wmat\mvec_t -\frac{n}2\mvec_t\Wmat\mvec_t]
 \end{align}
 This is a bilinear form (vector $\times$ matrix $\times$ vector). We can simplify this product by: 
 \begin{itemize}
 	\item Using sparse approximations of all three factors.  
 	\item Using a low-rank approximation of the matrix factor, for example nonnegative matrix factorization. (Also notice that a sensible model could be obtained by constraining $\mvec_s=\muvec_s$ for all $s$ and that would make this matrix symmetric.)\footnote{Also positive definite?}
 \end{itemize}
-In both cases, the matrix can be simplified offline, before runtime, because it is not dependent on $\rvec_j$.
+In both cases, the matrix, $\exp[- n\mvec_s\Wmat\muvec_t]$ can be pre-processed offline, before runtime, because it is not dependent on $\rvec_j$. Do note that the matrix is dependent on $n$ and such preprocessing would have to be done for every required value of $n$.
+
+
+\subsection{Discrete speaker and channel variables}
+Let the hidden speaker identity variable, $z$, be discrete with $K$ states: $z\in\{1,\ldots,K\}$. Let the observed data be a continuous vector, $\rvec_j\in\R^D$. The likelihood for $z$ (meta-embedding) is a simple Gaussian mixture:
+\begin{align}
+P(\rvec_j\mid z) &= \sum_{\ell=1}^L w_\ell \ND(\rvec_j\mid\mvec_z + \muvec_\ell,\Wmat^{-1})
+\end{align}
+which is parametrized by state dependent means, $\mvec_1,\ldots\mvec_K\in\R^D$ and a common, $D$-by-$D$ precision matrix, $\Wmat$. The meta-embedding, extracted from $r_j$ is:
+\begin{align}
+f_j(z) &\propto \exp[\rvec_j'\Wmat\mvec_z - \frac12 \mvec_z'\Wmat\mvec_z]
+\end{align}
+
+
+
+
 
 \chapter{Objective functions for discriminative training}
 \label{chap:discrim}
