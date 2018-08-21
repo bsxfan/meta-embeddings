@@ -3,7 +3,7 @@ function model = SPLDA_equip_with_extractor(model)
 
     V = model.V;
     mu = model.mu;
-    W = moddel.W;
+    W = model.W;
     
     VW = V.'*W;
     VWV = VW*V;

@@ -16,10 +16,12 @@ function [model,X] = init_SPLDA(X,Labels,zdim)
     model.mu = mu;
 
 
-    counts = sum(Labels);    % k-by-1
+    [k,n] = size(Labels);
+    
+    counts = sum(Labels,2);    % k-by-1
     assert(all(counts),'empty speaker not allowed'); 
     
-    Means = bsxfun(@rdiv,X*Labels.',counts.');     % m-by-k speaker means
+    Means = bsxfun(@rdivide,X*Labels.',counts.');     % m-by-k speaker means
 
     Cb = (Means*Means.')/k;   % between-speaker cov
     
