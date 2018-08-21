@@ -18,7 +18,7 @@ function VB4HTPLDA_demo
 
 
     % Assemble model to generate data
-    big = true;
+    big = false;
     if ~big
         zdim = 2;       %speaker identity variable size 
         rdim = 20;      %i-vector size. required: rdim > zdim

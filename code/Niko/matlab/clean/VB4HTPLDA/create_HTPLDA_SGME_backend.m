@@ -77,6 +77,7 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
     be.log_inner_products = @inner_products;
     be.score_trials = @score_trials;
     be.enroll  = @enroll;
+    be.log_inner_products_direct = @log_inner_products_direct;
 
     
     
@@ -276,6 +277,19 @@ function be = create_HTPLDA_SGME_backend(nu,F,W)
         logLRs = log_inner_products(Left,Right);
     end
 
+    function logLRs = log_inner_products_direct(Left,Right)
+    % Convenience method to score bianry trials
+    % Inputs:
+    %   Left: D-by-N matrix of enrollment i-vectors (N of them)
+    %   Right: D-by-N matrix of test i-vectors (N of them)
+    %   Output: logLRs: 1-by-N vector of log LR scores.
+
+    
+        Both.A = Left.A + Right.A;
+        Both.b = Left.b + Right.b;
+        Both.logscal = Left.logscal + Right.logscal;
+        logLRs = log_expectations(Both);
+    end
     
 end
 

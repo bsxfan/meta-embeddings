@@ -1,4 +1,4 @@
-function [A,b,B0,back] = SGME_extr_full(T,F,nu,R)
+function [A,b,B0,back] = SGME_extr_full_slightly_slower(T,F,nu,R)
 
     if nargin==0
         test_this();
@@ -16,15 +16,7 @@ function [A,b,B0,back] = SGME_extr_full(T,F,nu,R)
     A0 = F.'*TR;
     B0 = F.'*F;
     
-    
-    if isreal(F)
-        cholB0 = chol(B0);
-        solveB = @(A) cholB0\(cholB0.'\A);
-    else
-        solveB = @(A) B0\A;
-    end
-    S = solveB(A0);
-    
+    S = B0\A0;
     den = nu + sum(TR.^2,1) - sum(A0.*S,1);
     b = nuprime ./ den;
     A = bsxfun(@times,b,A0);
@@ -50,7 +42,7 @@ function [A,b,B0,back] = SGME_extr_full(T,F,nu,R)
         
         
         %S = B0\A0
-        dA0_2 = solveB(dS);
+        dA0_2 = B0\dS;                             
         dA0 = dA0 + dA0_2;                         
         dB0 = dB0 - dA0_2*S.';
         
@@ -86,7 +78,7 @@ function test_this()
     nu = pi;
     R = randn(rdim,n);
     
-    f = @(T,F) SGME_extr_full(T,F,nu,R);
+    f = @(T,F) SGME_extr_full_slightly_slower(T,F,nu,R);
     
     testBackprop_multi(f,3,{T,F},{1,1});
 

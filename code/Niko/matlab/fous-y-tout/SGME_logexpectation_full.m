@@ -3,14 +3,14 @@ function [y,back] = SGME_logexpectation_full(A,b,B)
 % Inputs:
 %    A: dim-by-n, natural parameters (precision *mean) for n SGMEs    
 %    b: 1-by-n, precision scale factors for these SGMEs
-%    B: dim-by-dim, common diagonal precision 
+%    B: dim-by-dim, common precision (full) matrix factor 
 %
 % Note:
-%    bsxfun(@times,b,d) is dim-by-n precision diagonals for the n SGMEs 
+%    A(:,j) , b(j)*B forms the meta-embedding for case j
 %
 % Outputs:
 %   y: 1-by-n, log expectations
-%   back: backpropagation handle, [dA,db,dd] = back(dy)
+%   back: backpropagation handle, [dA,db,dB] = back(dy)
 
 
     if nargin==0

@@ -1,0 +1,286 @@
+%% Based on a TeXnicCenter-Template by Gyorgy SZEIDL.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------
+%
+%\documentclass{amsart}
+\documentclass[a4paper,oneside,12pt,english]{article}
+\usepackage{url}
+\usepackage[pdftex]{color,graphicx}
+\usepackage[backref=false]{hyperref}
+\hypersetup{plainpages = false,
+              breaklinks=true,
+              %a4paper=true,
+              linktocpage,
+              colorlinks   = true, %Colours links instead of ugly boxes
+              urlcolor     = blue, %Colour for external hyperlinks
+              linkcolor    = blue, %Colour of internal links
+              citecolor   = red, %Colour of citations              pdfauthor={Niko Brummer},
+              pdfauthor={Niko Brummer},
+              %pdfpagemode=None,
+              pdfstartpage=1, 
+              pdfstartview=FitH,  
+              pdfkeywords={}}
+
+%
+%----------------------------------------------------------
+% This is a sample document for the AMS LaTeX Article Class
+% Class options
+%        -- Point size:  8pt, 9pt, 10pt (default), 11pt, 12pt
+%        -- Paper size:  letterpaper(default), a4paper
+%        -- Orientation: portrait(default), landscape
+%        -- Print size:  oneside, twoside(default)
+%        -- Quality:     final(default), draft
+%        -- Title page:  notitlepage, titlepage(default)
+%        -- Start chapter on left:
+%                        openright(default), openany
+%        -- Columns:     onecolumn(default), twocolumn
+%        -- Omit extra math features:
+%                        nomath
+%        -- AMSfonts:    noamsfonts
+%        -- PSAMSFonts  (fewer AMSfonts sizes):
+%                        psamsfonts
+%        -- Equation numbering:
+%                        leqno(default), reqno (equation numbers are on the right side)
+%        -- Equation centering:
+%                        centertags(default), tbtags
+%        -- Displayed equations (centered is the default):
+%                        fleqn (equations start at the same distance from the right side)
+%        -- Electronic journal:
+%                        e-only
+%------------------------------------------------------------
+% For instance the command
+%  \documentclass[a4paper,12pt,reqno]{amsart}
+% ensures that the paper size is a4, fonts are typeset at the size 12p
+% and the equation numbers are on the right side
+%
+\usepackage{amsmath}%
+\usepackage{amsfonts}%
+\usepackage{amssymb}%
+\usepackage{graphicx}
+
+
+\usepackage{tikz}
+\usetikzlibrary{bayesnet}
+\renewcommand{\edge}[3][]{ %
+  % Connect all nodes #2 to all nodes #3.
+  \foreach \x in {#2} { %
+    \foreach \y in {#3} { %
+      \path (\x) edge [->,#1] (\y) ;%
+      %\draw[->,#1] (\x) -- (\y) ;%
+    } ;
+  } ;
+}
+\newcommand{\uedge}[3][]{ %
+  % Connect all nodes #2 to all nodes #3.
+  \foreach \x in {#2} { %
+    \foreach \y in {#3} { %
+      \path (\x) edge [-,#1] (\y) ;%
+      %\draw[->,#1] (\x) -- (\y) ;%
+    } ;
+  } ;
+}
+
+\usetikzlibrary{arrows,shapes,backgrounds,positioning,fit}
+
+\usepackage{enumerate}
+
+%------------------------------------------------------------
+%\numberwithin{equation}{section}
+
+\def\alphavec{\boldsymbol{\alpha}}
+\def\betavec{\boldsymbol{\beta}}
+\def\lambdavec{\boldsymbol{\lambda}}
+\def\gammavec{\boldsymbol{\gamma}}
+\def\Lambdamat{\boldsymbol{\Lambda}}
+\def\pivec{\boldsymbol{\Pi}}
+\def\nuvec{\boldsymbol{\nu}}
+
+\def\zvec{\mathbf{z}}
+\def\hvec{\mathbf{h}}
+\def\vvec{\mathbf{v}}
+\def\wvec{\mathbf{w}}
+
+\def\ND{\mathcal{N}}
+
+\DeclareMathOperator{\detnt}{det}
+\DeclareMathOperator{\chol}{chol}
+\DeclareMathOperator{\trace}{tr}
+\DeclareMathOperator{\vecf}{vec}
+\DeclareMathOperator{\abs}{abs}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+
+\DeclareMathOperator{\logit}{logit}
+
+\def\expv#1#2{\left\langle#1\right\rangle_{#2}}
+\def\KL#1#2{D_{KL}\bigl[#1\|#2\bigr]}
+
+\def\LR{\text{LR}}
+\def\R{\mathbb{R}}
+\def\detm#1{\lvert#1\rvert}
+
+\def\Xset{\mathcal{X}}
+\def\Lset{\mathcal{L}}
+\def\Zset{\mathcal{Z}}
+\def\Yset{\mathcal{Y}}
+\def\model{\mathcal{M}}
+
+
+\def\Lmat{\mathbf{L}}
+\def\Amat{\mathbf{A}}
+\def\Bmat{\mathbf{B}}
+\def\Wmat{\mathbf{W}}
+\def\Cmat{\mathbf{C}}
+\def\Dmat{\mathbf{D}}
+\def\Fmat{\mathbf{F}}
+\def\Gmat{\mathbf{G}}
+\def\Hmat{\mathbf{H}}
+\def\Smat{\mathbf{S}}
+\def\Emat{\mathbf{E}}
+\def\Imat{\mathbf{I}}
+\def\Ymat{\mathbf{Y}}
+\def\Xmat{\mathbf{X}}
+\def\Rmat{\mathbf{R}}
+\def\Tmat{\mathbf{T}}
+\def\Mmat{\mathbf{M}}
+\def\Nmat{\mathbf{N}}
+\def\Kmat{\mathbf{K}}
+\def\Gmat{\mathbf{G}}
+\def\Zmat{\mathbf{Z}}
+\def\Qmat{\mathbf{Q}}
+\def\Vmat{\mathbf{V}}
+
+
+\def\yvec{\mathbf{y}}
+\def\svec{\mathbf{s}}
+\def\nvec{\mathbf{n}}
+\def\xvec{\mathbf{x}}
+\def\mvec{\mathbf{m}}
+\def\fvec{\mathbf{f}}
+\def\gvec{\mathbf{g}}
+\def\rvec{\mathbf{r}}
+\def\muvec{\boldsymbol{\mu}}
+\def\phivec{\boldsymbol{\phi}}
+
+
+\def\avec{\mathbf{a}}
+\def\bvec{\mathbf{b}}
+
+
+\def\yhat{\hat{\mathbf{y}}}
+\def\nulvec{\boldsymbol{0}}
+\def\logdet#1{\log\detm{#1}}
+\def\const{\text{const}}
+
+
+%symmetric matrix inversion lemma
+\newcommand{\inv}[1]{%  
+\ifx{#1}{\Imat}           %this test fails
+  #1
+\else
+  {#1}^{-1}
+\fi
+}
+%\newcommand{\SMILP}[3][\Imat]{{#1}^{-1}+{#3}'{#2}^{-1}{#3}}
+\newcommand{\SMILP}[3][\Imat]{\inv{#1}+{#3}'{#2}^{-1}{#3}}
+\newcommand{\SMIL}[3]{{#2}^{-1}-{#2}^{-1}{#3}{#1}^{-1}{#3}'{#2}^{-1}}
+
+
+\def\Isetg#1#2#3{\{#1\}_{#2}^{#3}}
+\def\Iset#1#2#3{\{#1_{#2}\}_{#2=1}^{#3}}
+
+\def\funcdef#1#2#3{#1:#2\mapsto#3}
+\def\Fset{\mathcal{F}}
+\def\Eset{\mathcal{E}}
+\def\Tset{\mathcal{T}}
+\def\Dset{\mathcal{D}}
+\def\Mset{\mathcal{M}}
+\def\Cset{\mathcal{C}}
+\def\Pset{\mathcal{P}}
+\def\Oset{\mathcal{O}}
+
+
+\def\C{\mathbb{C}}
+
+%\def\FT#1{\Fset\{#1\}}
+%\def\IFT#1{\Fset^{-1}\{#1\}}
+\newcommand\FT[2][]{\Fset_{#1}\{#2\}}
+\def\IFT#1{\Fset^{-1}\{#1\}}
+
+\def\conj#1{\overline{#1}}
+
+
+
+\def\bmat#1{\begin{bmatrix}#1\end{bmatrix}}
+\def\smat#1{\bigl[\begin{smallmatrix}#1\end{smallmatrix}\bigr]}
+
+
+\begin{document}
+
+\tikzstyle{every picture}+=[remember picture]
+
+
+\tikzstyle{cbox} = [rectangle,draw=blue!100,thick,align=center,rounded corners = 3pt]
+\tikzstyle{lbox} = [rectangle,draw=blue!100,thick,align=left,rounded corners = 3pt]
+\tikzstyle{ccircle} = [circle,draw=blue!100,thick,align=center,inner sep = 0]
+\tikzstyle{ctext} = [rectangle,align=center,inner sep = 4pt]
+\tikzstyle{ltext} = [rectangle,align=left,inner sep = 4pt]
+\tikzstyle{solder} = [circle,draw,fill,inner sep = 0, minimum size = 3pt]
+
+\def\Rset{\mathcal{R}}
+\def\Pn{\Pset_n}
+\def\Rn{\Rset_{[n]}}
+\def\PP{\mathbb{P}}
+
+
+\title{Composite likelihood: a family of proper scoring rules for probabilistic clustering}
+\author{Niko Br\"ummer}
+\date{July 2018}
+\maketitle
+
+
+\section{Introduction}
+
+\subsection{Notation for partitions}
+Let $\Rn=\{R_1,\ldots,R_n\}$ denote a set of $n$ elements. Let $[n]=\{1,\ldots,n\}$ denote the set of integer indices that identify the members of $\Rn$. Let $\Pset_n$ denote the set of all possible ways to partition $[n]$. If $L\in\Pset_n$, we say that $L$ is a \emph{partition} of $[n]$ and by association also of $\Rn$. A partition, $L$, can be specified as a collection of one or more mutually exclusive and exhaustive subsets of $[n]$. We shall refer to the subsets as \emph{clusters}. The cardinality of $\Pset_n$, is the \emph{Bell number}, $B_n$.
+
+Let $\PP_n$ denote the probability simplex, with $B_n$ vertices, in which probability distributions over $\Pn$ live.
+
+
+
+
+\subsection{Notation for probability distributions}
+We shall concern ourselves with probability distributions over sets of partitions, of the form:
+\begin{align}
+P(L\mid\Pset) \equiv P(L\mid L\in\Pset), 
+\end{align}
+where the LHS is a more compact form for the RHS and where $\Pset\subseteq\Pn$. In cases where it is implicit that we condition on the full set, $\Pn$, we shall write simply $P(L)$.
+
+We shall refer to $P(L\mid\Pset)$ as \emph{prior} probability distributions, while distributions conditioned also on (subsets of) $\Rn$, will be referred to as \emph{posteriors}. Such prior distributions can be defined for example by a Chinese restaurant process (CRP) and as such would be conditioned on one or two parameters. If those parameters are not of immediate interest, we don't show them in the notation.
+
+We are also very interested in \emph{partition likelihoods}, of the form:
+\begin{align}
+\Lset(L\mid\Rset,\theta) &\propto P(\Rset\mid L,\theta)
+\end{align}
+where $\Rset\subseteq\Rn$ and where $\theta$ is a set of parameters for a model that computes the likelihoods. Our interest will be in formulating tractable criteria for the evaluation of the goodness of the likelihood model and its parametrization. Such criteria can be used as optimization objective in training $\theta$ and also to compare the goodness of different likelihood models.
+
+Given priors and likelihoods, \emph{posteriors} are of course defined via Bayes' rule as:
+\begin{align}
+P(L\mid\Pset,\Rset,\theta) = \frac{P(L\mid\Pset) \Lset(L\mid\Rset,\theta)}{\sum_{L'\in\Pset} P(L'\mid\Pset) \Lset(L'\mid\Rset,\theta)}
+\end{align} 
+We shall assume that the posterior can be computed if the cardinality of $\Pset$ is small enough. In cases where $\Pset=\Pn$, the cardinality is $B_n$, which is intractable, except for very small $n$.
+
+
+
+
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{wami_nd}
+
+
+
+\end{document}
+
+
+
