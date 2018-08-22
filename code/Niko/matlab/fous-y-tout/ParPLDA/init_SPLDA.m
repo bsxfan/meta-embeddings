@@ -7,7 +7,12 @@ function [model,X] = init_SPLDA(X,Labels,zdim)
 %   zdim: speaker space dimensionality
 %
 %   Outputs:
-%     model
+%
+%     model: 
+%       model.W:  m-by-m, positive definite within speaker precision
+%       model.V:  m-by-zdim, speaker factor loading matrix
+%       model.mu: m-by-1, data mean
+%
 %     X: [optional] training data with mean removed
 
 

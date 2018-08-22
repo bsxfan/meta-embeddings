@@ -8,15 +8,8 @@ function model = SPLDA_equip_with_extractor(model)
     VW = V.'*W;
     VWV = VW*V;
     
-    zdim = size(V,2);
-    I = speye(zdim);
-    
     
     model.extractME = @extractME;
-    model.poolME = @poolME;
-    model.logExpectation = @logExpectation;
-    model.scoreMatrix = @scoreMatrix;
-    model.scoreTrials = @scoreTrials;
     
     
     
