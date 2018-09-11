@@ -2,6 +2,8 @@ function test_parPLDA()
 % Uses synthetic data to test and demo `paralell PLDA', which can switch 
 % between say i-vectors and x-vectors from enroll to test.
 %
+% Dependency: Bosaris toolkit for EER and CLLR computation.
+%
 % See train_parPLDA for full documentation.
 
     xdim = 10;      % i-vector dimension

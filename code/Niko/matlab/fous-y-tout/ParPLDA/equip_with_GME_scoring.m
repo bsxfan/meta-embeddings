@@ -3,8 +3,8 @@ function model = equip_with_GME_scoring(model,zdim)
 % functionality for Gaussian meta-embeddings (GMEs).
 %
 %   Inputs:
-%     model: any struct. The struct member are not referenced in this code.
-%            a number of mnethod handles (described below) are added to the 
+%     model: any struct. The struct members are not referenced in this code.
+%            A number of method handles (described below) are added to the 
 %            struct on output.
 %     zdim: the speaker space dimensionality 
 %
@@ -46,6 +46,7 @@ function model = equip_with_GME_scoring(model,zdim)
     model.logExpectation = @logExpectation;
     model.scoreMatrix = @scoreMatrix;
     model.scoreTrials = @scoreTrials;
+    model.estimateZ = @estimateZ;
     
 
     function me = poolME(me1,me2)
@@ -60,6 +61,11 @@ function model = equip_with_GME_scoring(model,zdim)
         y = ( sum(Z.*me.F,1) - logdet )/2;
     end
      
+    function Z = estimateZ(me)
+        cholIP = chol(I+me.P);
+        Z = cholIP\(cholIP'\me.F);
+    end
+
     function LLR = scoreMatrix(left,right)
         sleft = logExpectation(left);
         sright = logExpectation(right);

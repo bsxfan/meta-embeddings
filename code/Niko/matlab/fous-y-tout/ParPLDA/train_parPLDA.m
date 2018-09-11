@@ -1,7 +1,7 @@
 function model = train_parPLDA(X,Y,Labels,zdim)
 % Inputs:
 %   X: m-by-n, training data: n i-vectors of dimension m
-%   X: d-by-n, training data: n ?-vectors of dimension d
+%   Y: d-by-n, training data: n ?-vectors of dimension d
 %   Labels: k-by-n, sparse, logical, speaker label matrix, with one-hot
 %           columns. (There are k speakers.)
 %   zdim: speaker space dimensionality
@@ -24,7 +24,7 @@ function model = train_parPLDA(X,Y,Labels,zdim)
 %         me.P: zdim-by-zdim positive semi-definite precision, common to all 
 %               the meta-embeddings in this struct.
 %         me.F: zdim-by-n1, first-order natural parameters for each the n1 
-%               meta-embeddings '
+%               meta-embeddings 
 %
 %      Meta-embeddings from the same speaker can be pooled, to form 
 %      `speaker models', when multiple enrollment sessions are available.
@@ -45,7 +45,7 @@ function model = train_parPLDA(X,Y,Labels,zdim)
 %        me = model.poolME(model.extractME(X1,[]),model.extractME([],Y2)).
 %
 %
-%      For scoring, there are two functions for effiently scoring sets of trials:
+%      For scoring, there are two functions for efficiently scoring sets of trials:
 %        - model.scoreTrails(enroll,test): scores n enrollment meta-embeddings
 %                             against the corresponding n test meta-embeddings.
 %                             This returns a vector of n scores.

@@ -3229,6 +3229,16 @@ As before, the RHS expectation can be approximated by sampling and the CD recipe
 %\end{align}
 %where $\Lset_0\in\Pset_n$ is any conveniently chosen partition. This curious formula, (really just the rearranged product rule), where an inconvenient marginal is expressed in terms of joint and posterior is an example of the \emph{candidate's formula}~\cite{cf_besag}. 
 
+
+\chapter{Generalizations}
+In this chapter, we examine the effect of generalizing the independence assumptions on which we have based our meta-embedding tools. These generalizations are inspired by the success of the recently published joint PLDA (JPLDA) model for speaker recognition~\cite{JPLDA}. 
+
+The generalizations will take two forms:
+\begin{itemize}
+	\item So far we have used: \emph{Recordings are conditionally independent, given the speaker identity variable}. This is generalized to: \emph{Recordings of the same speaker are exchangeable}.
+	\item So far we have used: \emph{Recordings from different speakers are independent.} This is also generalized to be exchangeable, rather than independent.
+\end{itemize}
+
 \appendix
 
 %\chapter{Jan se ellipse}
