@@ -33,7 +33,8 @@ function model = train_JPLDA(X,Spkrs,Cond,sdim,cdim)
     X = X - W*C*Cond;        
     
     spldaS = init_SPLDA(X,Spkrs,sdim);
-    
+    model.V = spldaS.V;
+    model.D
       
 
 end

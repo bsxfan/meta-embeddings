@@ -3231,13 +3231,177 @@ As before, the RHS expectation can be approximated by sampling and the CD recipe
 
 
 \chapter{Generalizations}
-In this chapter, we examine the effect of generalizing the independence assumptions on which we have based our meta-embedding tools. These generalizations are inspired by the success of the recently published joint PLDA (JPLDA) model for speaker recognition~\cite{JPLDA}. 
+\def\ellvec{\boldsymbol{\ell}}
+\def\Amat{\mathbf{A}}
+\def\Qmat{\mathbf{Q}}
+In this chapter, we examine the effect of generalizing the independence assumptions on which we have based our meta-embedding tools. These generalizations are inspired by the success of the recently published \emph{joint} PLDA (JPLDA) model for speaker recognition~\cite{JPLDA}. We start by introducing the JPLDA model and then analyze how this generalizes things.
 
-The generalizations will take two forms:
-\begin{itemize}
-	\item So far we have used: \emph{Recordings are conditionally independent, given the speaker identity variable}. This is generalized to: \emph{Recordings of the same speaker are exchangeable}.
-	\item So far we have used: \emph{Recordings from different speakers are independent.} This is also generalized to be exchangeable, rather than independent.
-\end{itemize}
+According to JPLDA, the observed vector (e.g.\ i-vector) is dependent on two hidden factors, one of which is the speaker identity variable. The other factor plays a similar role for some discrete \emph{condition} under which the recording was made. In the above referenced JPLDA paper the condition is the language spoken during the recording. Similar to the hidden speaker identity variable, JPLDA supposes there is a hidden \emph{language factor} associated with every language. 
+
+Consider now a number of recordings, all from the same speaker, but with languages that can vary. If we were given the language labels, the recordings would not be exchangeable. But if the language labels are not given, then the recordings remain exchangeable. Now consider the same set of recordings from one speaker, where the language labels are not given, but the speaker identity variable is given. Now the given speaker identity variable does \emph{not} render the recordings independent as we have assumed in all previous chapters---they are tied via the unobserved language factors and they are merely exchangeable. 
+
+Introduction of the language factors leaves the recordings of a speaker exchangeable, but it has nevertheless considerably complicated the concept of \emph{within-speaker} variability. Allowing unobserved language factors---that may be shared between speakers---also complicates \emph{between-speaker} variability: Recordings of different speakers are now no longer independent, but still remain exchangeable.
+
+\section{JPLDA}
+Let us be more specific. Associated with every speaker $i$, there is a hidden speaker identity variable $\zvec_i\in\R^d$. Associated with every language $j$, there is a hidden language variable, $\ellvec_j\in\R^c$. Let $\rvec_k\in\R^D$ be an observed vector (e.g.\ i-vector) for a recording known to be of speaker $i$ and speaking in language $j$, then we have:
+\begin{align}
+P(\rvec_k\mid\zvec_i,\ellvec_j) &= \ND(\rvec_k\mid \Vmat\zvec_i + \Lmat\ellvec_j,\Wmat^{-1})
+\end{align} 
+where the model parameters are the factor loading matrices $\Vmat,\Lmat$ and the $D$-by-$D$ precision, $\Wmat$. (Note that $\Wmat$ can no longer be referred to as the within-speaker precision.)
+
+\subsection{Bivariate likelihood function}
+The analogue of our meta-embedding is a \emph{bivariate} likelihood function of the form:
+\begin{align}
+f_k(\zvec,\ellvec) &= \exp\Bigl(
+\bmat{\zvec'& \ellvec'}\bmat{\Vmat' \\ \Lmat'}\Wmat\rvec_k - \frac12\bmat{\zvec'& \ellvec'}
+\bmat{\Vmat'\Wmat\Vmat & \Vmat'\Wmat\Lmat \\ \Lmat'\Wmat\Vmat & \Lmat'\Wmat\Lmat}
+\bmat{\zvec\\ \ellvec} 
+\Bigr)
+\end{align}
+
+\subsection{Marginalization}
+In the special case where the language factors for a given speaker are \emph{independently} sampled from a prior $P(\ellvec\mid\zvec)$, our existing meta-embedding recipe applies and we can recover the usual meta-embedding---the marginal likelihood for $\zvec$---as follows:
+\begin{align}
+\begin{split}
+P(\rvec_k\mid\zvec) &= \frac{P(\zvec,\rvec_k)}{P(\zvec)} \\
+&= \int \frac{P(\zvec,\ellvec,\rvec_k)}{P(\zvec)} \,d\ellvec \\
+&= \int \frac{P(\zvec,\ellvec)P(\rvec_k\mid\zvec,\ellvec)}{P(\zvec)} \,d\ellvec \\
+&= \int P(\ellvec\mid\zvec)P(\rvec_k\mid\zvec,\ellvec) \,d\ellvec \\
+&\propto \int P(\ellvec\mid\zvec)f_k(\zvec,\ellvec) \,d\ellvec \\
+\end{split}
+\end{align} 
+For the simple prior, $P(\ellvec\mid\zvec)=\ND(\ellvec\mid\nulvec,\Imat)$, this gives:
+\begin{align}
+\begin{split}
+P(\rvec_k\mid\zvec) 
+&\propto \int \exp\Bigl(
+\bmat{\zvec'& \ellvec'}\bmat{\Vmat' \\ \Lmat'}\Wmat\rvec_k - \frac12\bmat{\zvec'& \ellvec'}
+\bmat{\Vmat'\Wmat\Vmat & \Vmat'\Wmat\Lmat \\ \Lmat'\Wmat\Vmat & \Imat+\Lmat'\Wmat\Lmat}
+\bmat{\zvec\\ \ellvec} 
+\Bigr) \,d\ellvec \\
+%
+&= \int \exp\Bigl(
+\bmat{\zvec'& \ellvec'}\bmat{\avec \\ \bvec} - \frac12\bmat{\zvec'& \ellvec'}
+\bmat{\Amat & \Bmat \\ \Bmat' & \Dmat}
+\bmat{\zvec\\ \ellvec} 
+\Bigr) \,d\ellvec \\
+%
+&= \int \exp\Bigl(
+\bmat{\zvec'& \ellvec'}\bmat{\avec \\ \bvec} - \frac12\bmat{\zvec'& \ellvec'}
+\bmat{\Qmat & \Rmat \\ \Rmat' & \Smat}^{-1}
+\bmat{\zvec\\ \ellvec} 
+\Bigr) \,d\ellvec \\
+%
+%
+&\propto \int \ND\Bigl(\bmat{\zvec \\ \ellvec}\mid \bmat{\Qmat\avec+\Rmat\bvec\\\Rmat'\avec+\Smat\bvec}, \bmat{\Qmat & \Rmat \\ \Rmat' & \Smat}\Bigr)
+ \,d\ellvec \\
+&=\ND(\zvec\mid \Qmat\avec+\Rmat\bvec, \Qmat)
+\end{split}
+\end{align} 
+where
+\begin{align}
+\begin{split}
+\Qmat^{-1} &= \Amat-\Bmat\Dmat^{-1}\Bmat' \\
+&= \Vmat'\Wmat\Vmat - \Vmat'\Wmat\Lmat(\Imat+\Lmat'\Wmat\Lmat)^{-1}\Lmat'\Wmat\Vmat 
+\end{split}
+\end{align}
+and
+\begin{align}
+\Rmat &= -\Qmat\Bmat\Dmat^{-1}
+\end{align}
+so that
+\begin{align}
+P(\rvec_k\mid\zvec)  &\propto g_k(\zvec) = \exp\Bigl(
+\zvec'(\avec-\Bmat\Dmat^{-1}\bvec) -\frac12\zvec'(\Amat-\Bmat\Dmat^{-1}\Bmat')\zvec
+\Bigr)
+\end{align}
+By symmetry, we can also marginalize the other way round, for which we define
+\begin{align}
+h_k(\ellvec) &\propto P(\rvec_k\mid\ellvec)
+\end{align}
+
+\subsection{Binary trial}
+Consider a binary trial, where we are given two observed vectors, $\rvec_i$ and $\rvec_j$. There are four hypotheses about how these observations were produced: 
+\begin{enumerate}
+	\item[$H_{11}$:] they share both speaker and language factors (there is $1$ one of each), 
+	\item[$H_{12}$:] they share only the speaker factor and there are two independently sampled language factors ($1$ speaker factor, $2$ language factors), 
+	\item[$H_{21}$:] they share only the language factor and there are two independently sampled speaker factors, 
+	\item[$H_{22}$:] they share nothing and there are two of each kind of factor, all independent.
+\end{enumerate}
+If we make the hidden variable prior completely factorial in all cases, we have the following graphical model representations of the four hypotheses:
+\begin{align*}
+H_{11}&\begin{tikzpicture}
+\node[obs] (ri) {$\rvec_{i}$};
+\node[latent, below right = of ri] (z) {$\zvec$};
+\node[obs, above right=of z] (rj) {$\rvec_{j}$};
+\node[latent, above right = of ri] (ell) {$\ellvec$};
+\edge {z}{ri,rj};
+\edge {ell}{ri,rj};
+\end{tikzpicture}
+%
+&H_{12}&\begin{tikzpicture}
+\node[obs] (ri) {$\rvec_{i}$};
+\node[latent, below right = of ri] (z) {$\zvec$};
+\node[obs, above right=of z] (rj) {$\rvec_{j}$};
+\node[latent, above = of ri] (elli) {$\ellvec_i$};
+\node[latent, above = of rj] (ellj) {$\ellvec_j$};
+\edge {z}{ri,rj};
+\edge {elli}{ri};
+\edge {ellj}{rj};
+\end{tikzpicture} 
+\end{align*}
+\begin{align*}
+H_{21}\;\;\;\;&\begin{tikzpicture}
+\node[obs] (ri) {$\rvec_{i}$};
+\node[latent, above right = of ri] (ell) {$\ellvec$};
+\node[obs, below right=of ell] (rj) {$\rvec_{j}$};
+\node[latent, below = of ri] (zi) {$\zvec_i$};
+\node[latent, below = of rj] (zj) {$\zvec_j$};
+\edge {ell}{ri,rj};
+\edge {zi}{ri};
+\edge {zj}{rj};
+\end{tikzpicture}
+&H_{22}\;\;\;&\begin{tikzpicture}
+\node[obs] (ri) {$\rvec_{i}$};
+\node[obs, right=of ri] (rj) {$\rvec_{j}$};
+\node[latent, above = of ri] (elli) {$\ellvec_i$};
+\node[latent, above = of rj] (ellj) {$\ellvec_j$};
+\node[latent, below = of ri] (zi) {$\zvec_i$};
+\node[latent, below = of rj] (zj) {$\zvec_j$};
+\edge {elli}{ri};
+\edge {ellj}{rj};
+\edge {zi}{ri};
+\edge {zj}{rj};
+\end{tikzpicture}
+\end{align*}
+Irrespective of which hypothesis is true, if we compute $P(\rvec_i)$, when $\rvec_j$ is not given, we find:
+\begin{align}
+P(\rvec_i) &= \int\int P(\ellvec)P(\zvec)P(\rvec_i\mid\ellvec,\zvec)\,d\ellvec\,d\zvec
+\end{align}
+The same applies to $P(\rvec_j)$. The likelihoods for the four hypotheses are:
+\begin{align}
+P(\rvec_i,\rvec_j\mid H_{22}) &= P(\rvec_i)P(\rvec_j) 
+\intertext{and}
+P(\rvec_i,\rvec_j\mid H_{11}) &= \int\int P(\zvec)P(\ellvec)P(\rvec_i\mid\zvec,\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \,d\ellvec 
+\intertext{and}
+P(\rvec_i,\rvec_j\mid H_{12}) &= \int P(\zvec) \left[\int P(\ellvec)P(\rvec_i\mid\zvec,\ellvec) \,d\ellvec \times
+\int P(\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\ellvec \right]\,d\zvec  
+\intertext{and}
+P(\rvec_i,\rvec_j\mid H_{21}) &= \int P(\ellvec) \left[\int P(\zvec)P(\rvec_i\mid\zvec,\ellvec) \,d\zvec \times
+\int P(\zvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \right]\,d\ellvec  
+\end{align}
+As before, it is convenient to form likelihood-ratios to cancel $P(\rvec_i)P(\rvec_j)$. In the easy case, this gives:
+\begin{align}
+\frac{P(\rvec_i,\rvec_j\mid H_{11})}{P(\rvec_i,\rvec_j\mid H_{22})} &=
+\int\int P(\zvec)P(\ellvec) \frac{P(\zvec,\ellvec\mid \rvec_i)}{P(\zvec)P(\ellvec)}\times\frac{P(\zvec,\ellvec\mid \rvec_j)}{P(\zvec)P(\ellvec)} \,d\zvec\, d\ellvec
+\end{align}
+This LR is in the same form as we found before, it is the (bivariate) expectation of a product of two normalized (bivariate) meta-embeddings. These \emph{normalized bivariate meta-embeddings} are of the form:
+\begin{align}
+\normal{f_k}(\zvec,\ellvec) &= \frac{f_k(\zvec,\ellvec)}{\int\int f_k(\zvec',\ellvec')P(\zvec')P(\ellvec')\,d\zvec'\,d\ellvec'} = \frac{P(\zvec,\ellvec\mid \rvec_k)}{P(\zvec)P(\ellvec)}
+\end{align}
+
+
+
 
 \appendix
 
