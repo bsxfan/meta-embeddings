@@ -3249,31 +3249,80 @@ P(\rvec_k\mid\zvec_i,\ellvec_j) &= \ND(\rvec_k\mid \Vmat\zvec_i + \Lmat\ellvec_j
 \end{align} 
 where the model parameters are the factor loading matrices $\Vmat,\Lmat$ and the $D$-by-$D$ precision, $\Wmat$. (Note that $\Wmat$ can no longer be referred to as the within-speaker precision.)
 
-\subsection{Bivariate likelihood function}
-The analogue of our meta-embedding is a \emph{bivariate} likelihood function of the form:
+JPLDA uses a factorial hidden variable prior, where all speaker and language factors (the $\zvec_i$ and the $\ellvec_j$) are all independent. 
+
+\subsection{Note on notation}
+In JPLDA, we shall be working with model configurations where every observation, $\rvec_k$, is dependent on exactly one hidden speaker factor and exactly one hidden language factor. The converse is not true---multiple observations may depend on a given hidden factor. In graphical model notation, each $\rvec_k$ has exactly one $\zvec$ parent and exactly one $\ellvec$ parent. Conversely, hidden factors may have multiple children. If we consider a single observation at a time, there is no ambiguity about which hidden factors are its parents, so that in the notation for marginal and joint likelihoods and posteriors of the forms, $P(\zvec,\ellvec\mid\rvec_k)$, $P(\zvec\mid\rvec_k)$, $P(\rvec_k\mid\zvec,\ellvec)$, $P(\rvec_k\mid\ellvec)$, etc., it is clear which $\zvec$  and $\ellvec$ variables are being referred to. Indeed, notice that when no other observations are given, then dependency is blocked between $\rvec_k$ and all other hidden variables, except its parents.
+
+Finally, irrespective of the model configuration, $P(\rvec_k)$, for any single observation is unambiguously defined as:
 \begin{align}
-f_k(\zvec,\ellvec) &= \exp\Bigl(
+P(\rvec_k) &= \int\int P(\zvec)P(\ellvec) P(\rvec\mid\zvec,\ellvec)\,d\zvec\,d\ellvec
+\end{align}
+
+
+\subsection{Bivariate Gaussian meta-embedding}
+For JPLDA, the \emph{bivariate} analogue of our meta-embedding is a Gaussian likelihood function of the form:
+\begin{align}
+\label{eq:jplda_lh}
+\begin{split}
+f_k(\zvec,\ellvec) &\propto P(\rvec_k\mid\zvec,\ellvec) \\
+&\propto \exp\Bigl(
 \bmat{\zvec'& \ellvec'}\bmat{\Vmat' \\ \Lmat'}\Wmat\rvec_k - \frac12\bmat{\zvec'& \ellvec'}
 \bmat{\Vmat'\Wmat\Vmat & \Vmat'\Wmat\Lmat \\ \Lmat'\Wmat\Vmat & \Lmat'\Wmat\Lmat}
 \bmat{\zvec\\ \ellvec} 
 \Bigr)
+\end{split}
 \end{align}
 
-\subsection{Marginalization}
-In the special case where the language factors for a given speaker are \emph{independently} sampled from a prior $P(\ellvec\mid\zvec)$, our existing meta-embedding recipe applies and we can recover the usual meta-embedding---the marginal likelihood for $\zvec$---as follows:
+
+
+
+\subsection{Normalization and marginalization}
+Normalization of univariate and multivariate meta-embeddings will play an important role in what follows. With two kinds of hidden variables, the discrete hypothesis space (which observables are dependent on which hidden variables) is more complex---and joint normalization of all hypotheses of interest requires keeping careful track of normalization constants.
+
+Having clarified that in likelihoods and posteriors conditioned on a single observation, the relevant hidden variables are its two parents, we express Bayes' rule as:
+\begin{align}
+P(\zvec,\ellvec\mid\rvec_k) &= \frac{P(\ellvec)P(\zvec)P(\rvec_k\mid\zvec,\ellvec)}{\expv{P(\rvec_k\mid\zvec',\ellvec')}{\zvec',\ellvec'}}
+\end{align}
+where it is understood that the expectation in the denominator is w.r.t. the factorial prior, $P(\ellvec)P(\zvec)$. In a bivariate generalization of our previous definition, we can now define the \emph{normalized bivariate meta-embedding} as:
+\begin{align}
+\label{eq:norm_fk}
+\normal{f_k}(\zvec,\ellvec) &= \frac{P(\zvec,\ellvec\mid\rvec_k)}{P(\ellvec)P(\zvec)} 
+= \frac{P(\rvec_k\mid\zvec,\ellvec)}{P(\rvec_k)}
+= \frac{f_k(\zvec,\ellvec)}{\expv{f_k(\zvec',\ellvec')}{\zvec',\ellvec'}}
+\end{align}
+Below, we shall also need \emph{marginal meta-embeddings}:
+\begin{align}
+g_k(\zvec) &\propto P(\rvec_k\mid\zvec) &&\text{and} &
+h_k(\ellvec) &\propto P(\rvec_k\mid\ellvec)
+\end{align}
+The normalized versions are:
+\begin{align}
+\label{eq:norm_gk}
+\normal{g_k}(\zvec) &= \frac{P(\zvec\mid\rvec_k)}{P(\zvec)} 
+= \frac{P(\rvec_k\mid\zvec)}{P(\rvec_k)}
+= \frac{g_k(\zvec)}{\expv{g_k(\zvec')}{\zvec'}}
+\intertext{and}
+\label{eq:norm_hk}
+\normal{h_k}(\ellvec) &= \frac{P(\ellvec\mid\rvec_k)}{P(\ellvec)} 
+= \frac{P(\rvec_k\mid\ellvec)}{P(\rvec_k)}
+= \frac{h_k(\ellvec)}{\expv{h_k(\ellvec')}{\ellvec'}}
+\end{align}
+It follows immediately from these definitions that the normalized marginals can be recovered via partial expectations of the normalized bivariate meta-embedding:
+\begin{align}
+\normal{g_k}(\zvec) &= \expv{\normal{f_k}(\zvec,\ellvec)}{\ellvec}
+&&\text{and} &
+\normal{h_k}(\ellvec) &= \expv{\normal{f_k}(\zvec,\ellvec)}{\zvec}
+\end{align}
+where the expectations are w.r.t. $P(\ellvec)$ and $P(\zvec)$, respectively.
+
+
+
+\subsection{Gaussian marginalization}
+For Gaussian JPLDA, with likelihoods of the form~\eqref{eq:jplda_lh} and independent standard normal priors on the hidden variables, we can work out the details of the meta-embedding marginalization in closed form. To avoid clutter, we do the marginalization in un-normalized form and then recover the normalization constant afterwards:
 \begin{align}
 \begin{split}
-P(\rvec_k\mid\zvec) &= \frac{P(\zvec,\rvec_k)}{P(\zvec)} \\
-&= \int \frac{P(\zvec,\ellvec,\rvec_k)}{P(\zvec)} \,d\ellvec \\
-&= \int \frac{P(\zvec,\ellvec)P(\rvec_k\mid\zvec,\ellvec)}{P(\zvec)} \,d\ellvec \\
-&= \int P(\ellvec\mid\zvec)P(\rvec_k\mid\zvec,\ellvec) \,d\ellvec \\
-&\propto \int P(\ellvec\mid\zvec)f_k(\zvec,\ellvec) \,d\ellvec \\
-\end{split}
-\end{align} 
-For the simple prior, $P(\ellvec\mid\zvec)=\ND(\ellvec\mid\nulvec,\Imat)$, this gives:
-\begin{align}
-\begin{split}
-P(\rvec_k\mid\zvec) 
+g_k(\zvec) &\propto \int f_k(\zvec,\ellvec) \ND(\ellvec\mid\nulvec,\Imat)\,d\ellvec \\
 &\propto \int \exp\Bigl(
 \bmat{\zvec'& \ellvec'}\bmat{\Vmat' \\ \Lmat'}\Wmat\rvec_k - \frac12\bmat{\zvec'& \ellvec'}
 \bmat{\Vmat'\Wmat\Vmat & \Vmat'\Wmat\Lmat \\ \Lmat'\Wmat\Vmat & \Imat+\Lmat'\Wmat\Lmat}
@@ -3298,37 +3347,28 @@ P(\rvec_k\mid\zvec)
 &=\ND(\zvec\mid \Qmat\avec+\Rmat\bvec, \Qmat)
 \end{split}
 \end{align} 
-where
+where the above equations implicitly define natural means $\avec,\bvec$, precision blocks $\Amat,\Bmat,\Dmat$ and covariance blocks $\Qmat,\Rmat,\Smat$. Block matrix inversion gives:
 \begin{align}
-\begin{split}
-\Qmat^{-1} &= \Amat-\Bmat\Dmat^{-1}\Bmat' \\
-&= \Vmat'\Wmat\Vmat - \Vmat'\Wmat\Lmat(\Imat+\Lmat'\Wmat\Lmat)^{-1}\Lmat'\Wmat\Vmat 
-\end{split}
-\end{align}
-and
-\begin{align}
+\Qmat^{-1} &= \Amat-\Bmat\Dmat^{-1}\Bmat' &&\text{and}&
 \Rmat &= -\Qmat\Bmat\Dmat^{-1}
 \end{align}
 so that
 \begin{align}
-P(\rvec_k\mid\zvec)  &\propto g_k(\zvec) = \exp\Bigl(
+g_k(\zvec) &\propto \exp\Bigl(
 \zvec'(\avec-\Bmat\Dmat^{-1}\bvec) -\frac12\zvec'(\Amat-\Bmat\Dmat^{-1}\Bmat')\zvec
 \Bigr)
 \end{align}
-By symmetry, we can also marginalize the other way round, for which we define
-\begin{align}
-h_k(\ellvec) &\propto P(\rvec_k\mid\ellvec)
-\end{align}
+By symmetry, the other marginal, $h_k(\ellvec)$, can be found using the same formula, but exchanging the roles of $\Vmat$ and $\Lmat$. The normalization constants can be recovered using~\eqref{eq:GMElogex}.
 
 \subsection{Binary trial}
 Consider a binary trial, where we are given two observed vectors, $\rvec_i$ and $\rvec_j$. There are four hypotheses about how these observations were produced: 
 \begin{enumerate}
-	\item[$H_{11}$:] they share both speaker and language factors (there is $1$ one of each), 
-	\item[$H_{12}$:] they share only the speaker factor and there are two independently sampled language factors ($1$ speaker factor, $2$ language factors), 
-	\item[$H_{21}$:] they share only the language factor and there are two independently sampled speaker factors, 
-	\item[$H_{22}$:] they share nothing and there are two of each kind of factor, all independent.
+	\item[$H_{11}$:] they share both speaker and language factors (there is $1$ one of each); 
+	\item[$H_{12}$:] they share $1$ speaker factor and there are $2$ independently sampled language factors; 
+	\item[$H_{21}$:] there are $2$ independently sampled speaker factors and they they share $1$ language factor;
+	\item[$H_{22}$:] they share nothing and there are $2$ of each kind of factor, all independent.
 \end{enumerate}
-If we make the hidden variable prior completely factorial in all cases, we have the following graphical model representations of the four hypotheses:
+These hypotheses have the following graphical model representations:
 \begin{align*}
 H_{11}&\begin{tikzpicture}
 \node[obs] (ri) {$\rvec_{i}$};
@@ -3374,32 +3414,25 @@ H_{21}\;\;\;\;&\begin{tikzpicture}
 \edge {zj}{rj};
 \end{tikzpicture}
 \end{align*}
-Irrespective of which hypothesis is true, if we compute $P(\rvec_i)$, when $\rvec_j$ is not given, we find:
-\begin{align}
-P(\rvec_i) &= \int\int P(\ellvec)P(\zvec)P(\rvec_i\mid\ellvec,\zvec)\,d\ellvec\,d\zvec
-\end{align}
-The same applies to $P(\rvec_j)$. The likelihoods for the four hypotheses are:
-\begin{align}
-P(\rvec_i,\rvec_j\mid H_{22}) &= P(\rvec_i)P(\rvec_j) 
-\intertext{and}
-P(\rvec_i,\rvec_j\mid H_{11}) &= \int\int P(\zvec)P(\ellvec)P(\rvec_i\mid\zvec,\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \,d\ellvec 
-\intertext{and}
+The likelihoods for the four hypotheses are:
+\begin{align*}
+P(\rvec_i,\rvec_j\mid H_{11}) &= \int\int P(\zvec)P(\ellvec)P(\rvec_i\mid\zvec,\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \,d\ellvec \\
 P(\rvec_i,\rvec_j\mid H_{12}) &= \int P(\zvec) \left[\int P(\ellvec)P(\rvec_i\mid\zvec,\ellvec) \,d\ellvec \times
-\int P(\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\ellvec \right]\,d\zvec  
-\intertext{and}
+\int P(\ellvec)P(\rvec_j\mid\zvec,\ellvec) \,d\ellvec \right]\,d\zvec  \\
 P(\rvec_i,\rvec_j\mid H_{21}) &= \int P(\ellvec) \left[\int P(\zvec)P(\rvec_i\mid\zvec,\ellvec) \,d\zvec \times
-\int P(\zvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \right]\,d\ellvec  
-\end{align}
-As before, it is convenient to form likelihood-ratios to cancel $P(\rvec_i)P(\rvec_j)$. In the easy case, this gives:
+\int P(\zvec)P(\rvec_j\mid\zvec,\ellvec) \,d\zvec \right]\,d\ellvec  \\
+P(\rvec_i,\rvec_j\mid H_{22}) &= P(\rvec_i)P(\rvec_j) 
+\end{align*}
+Finally, we can express all of these likelihoods in terms of normalized meta-embeddings, by conveniently dividing all likelihoods by $P(\rvec_i)P(\rvec_j)$. Using the penultimate right-hand sides of~\eqref{eq:norm_fk}, \eqref{eq:norm_gk} and~\eqref{eq:norm_hk}, this gives the mutually compatible hypothesis likelihoods:
 \begin{align}
-\frac{P(\rvec_i,\rvec_j\mid H_{11})}{P(\rvec_i,\rvec_j\mid H_{22})} &=
-\int\int P(\zvec)P(\ellvec) \frac{P(\zvec,\ellvec\mid \rvec_i)}{P(\zvec)P(\ellvec)}\times\frac{P(\zvec,\ellvec\mid \rvec_j)}{P(\zvec)P(\ellvec)} \,d\zvec\, d\ellvec
+\begin{split}
+P(\rvec_i,\rvec_j\mid H_{11}) &\propto \expv{\normal{f_i}(\zvec,\ellvec)\times \normal{f_j}(\zvec,\ellvec)}{\zvec,\ellvec}\\
+P(\rvec_i,\rvec_j\mid H_{12}) &\propto \expv{\normal{h_i}(\ellvec)\times \normal{h_j}(\ellvec)}{\ellvec}\\
+P(\rvec_i,\rvec_j\mid H_{21}) &\propto \expv{\normal{g_i}(\zvec)\times \normal{g_j}(\zvec)}{\zvec}\\
+P(\rvec_i,\rvec_j\mid H_{22}) &\propto 1
+\end{split}
 \end{align}
-This LR is in the same form as we found before, it is the (bivariate) expectation of a product of two normalized (bivariate) meta-embeddings. These \emph{normalized bivariate meta-embeddings} are of the form:
-\begin{align}
-\normal{f_k}(\zvec,\ellvec) &= \frac{f_k(\zvec,\ellvec)}{\int\int f_k(\zvec',\ellvec')P(\zvec')P(\ellvec')\,d\zvec'\,d\ellvec'} = \frac{P(\zvec,\ellvec\mid \rvec_k)}{P(\zvec)P(\ellvec)}
-\end{align}
-
+all of which are in the familiar form of inner products between normalized meta-embeddings.
 
 
 
