@@ -3252,7 +3252,7 @@ where the model parameters are the factor loading matrices $\Vmat,\Lmat$ and the
 JPLDA uses a factorial hidden variable prior, where all speaker and language factors (the $\zvec_i$ and the $\ellvec_j$) are all independent. 
 
 \subsection{Note on notation}
-In JPLDA, we shall be working with model configurations where every observation, $\rvec_k$, is dependent on exactly one hidden speaker factor and exactly one hidden language factor. The converse is not true---multiple observations may depend on a given hidden factor. In graphical model notation, each $\rvec_k$ has exactly one $\zvec$ parent and exactly one $\ellvec$ parent. Conversely, hidden factors may have multiple children. If we consider a single observation at a time, there is no ambiguity about which hidden factors are its parents, so that in the notation for marginal and joint likelihoods and posteriors of the forms, $P(\zvec,\ellvec\mid\rvec_k)$, $P(\zvec\mid\rvec_k)$, $P(\rvec_k\mid\zvec,\ellvec)$, $P(\rvec_k\mid\ellvec)$, etc., it is clear which $\zvec$  and $\ellvec$ variables are being referred to. Indeed, notice that when no other observations are given, then dependency is blocked between $\rvec_k$ and all other hidden variables, except its parents.
+In JPLDA, we shall be working with model configurations where every observation, $\rvec_k$, is dependent on exactly one hidden speaker factor and exactly one hidden language factor. (The converse is not true---multiple observations may depend on a given hidden factor.) In graphical model notation, each $\rvec_k$ has exactly one $\zvec$ parent and exactly one $\ellvec$ parent. (Conversely, hidden factors may have multiple children.) If we consider a single observation at a time, there is no ambiguity about which hidden factors are its parents, so that in the notation for marginal and joint likelihoods and posteriors of the forms, $P(\zvec,\ellvec\mid\rvec_k)$, $P(\zvec\mid\rvec_k)$, $P(\rvec_k\mid\zvec,\ellvec)$, $P(\rvec_k\mid\ellvec)$, etc., it is clear which $\zvec$  and $\ellvec$ variables are being referred to. Indeed, notice that when no other observations are given, then dependency is blocked between $\rvec_k$ and all other hidden variables, except its parents.
 
 Finally, irrespective of the model configuration, $P(\rvec_k)$, for any single observation is unambiguously defined as:
 \begin{align}
@@ -3347,7 +3347,7 @@ g_k(\zvec) &\propto \int f_k(\zvec,\ellvec) \ND(\ellvec\mid\nulvec,\Imat)\,d\ell
 &=\ND(\zvec\mid \Qmat\avec+\Rmat\bvec, \Qmat)
 \end{split}
 \end{align} 
-where the above equations implicitly define natural means $\avec,\bvec$, precision blocks $\Amat,\Bmat,\Dmat$ and covariance blocks $\Qmat,\Rmat,\Smat$. Block matrix inversion gives:
+where the above equations implicitly define natural parameters $\avec,\bvec$, precision blocks $\Amat,\Bmat,\Dmat$ and covariance blocks $\Qmat,\Rmat,\Smat$. Block matrix inversion gives:
 \begin{align}
 \Qmat^{-1} &= \Amat-\Bmat\Dmat^{-1}\Bmat' &&\text{and}&
 \Rmat &= -\Qmat\Bmat\Dmat^{-1}
@@ -3355,10 +3355,50 @@ where the above equations implicitly define natural means $\avec,\bvec$, precisi
 so that
 \begin{align}
 g_k(\zvec) &\propto \exp\Bigl(
-\zvec'(\avec-\Bmat\Dmat^{-1}\bvec) -\frac12\zvec'(\Amat-\Bmat\Dmat^{-1}\Bmat')\zvec
+\zvec'(\avec-\Bmat\Dmat^{-1}\bvec) -\frac12\zvec'\Qmat^{-1}\zvec
 \Bigr)
 \end{align}
-By symmetry, the other marginal, $h_k(\ellvec)$, can be found using the same formula, but exchanging the roles of $\Vmat$ and $\Lmat$. The normalization constants can be recovered using~\eqref{eq:GMElogex}.
+The normalization constant can be recovered using~\eqref{eq:GMElogex}.
+
+By symmetry, the other marginal, $h_k(\ellvec)$, can be found using the same formula, but exchanging the roles of $\Vmat$ and $\Lmat$. 
+\begin{align}
+\begin{split}
+h_k(\zvec) &\propto \int f_k(\zvec,\ellvec) \ND(\zvec\mid\nulvec,\Imat)\,d\zvec \\
+&\propto \int \exp\Bigl(
+\bmat{\ellvec'& \zvec'}\bmat{\Lmat' \\ \Vmat'}\Wmat\rvec_k - \frac12\bmat{\ellvec'& \zvec'}
+\bmat{\Lmat'\Wmat\Lmat & \Lmat'\Wmat\Vmat \\ \Vmat'\Wmat\Lmat & \Imat+\Vmat'\Wmat\Vmat}
+\bmat{\ellvec\\ \zvec} 
+\Bigr) \,d\zvec \\
+%
+&= \int \exp\Bigl(
+\bmat{\ellvec'& \zvec'}\bmat{\bvec \\ \avec} - \frac12\bmat{\ellvec'& \zvec'}
+\bmat{\tilde\Amat & \Bmat' \\ \Bmat & \tilde\Dmat}
+\bmat{\ellvec\\ \zvec} 
+\Bigr) \,d\zvec \\
+%
+&= \int \exp\Bigl(
+\bmat{\ellvec'& \zvec'}\bmat{\bvec \\ \avec} - \frac12\bmat{\ellvec'& \zvec'}
+\bmat{\tilde\Qmat & \tilde\Rmat \\ \tilde\Rmat' & \tilde\Smat}^{-1}
+\bmat{\ellvec\\ \zvec} 
+\Bigr) \,d\zvec \\
+%
+%
+&\propto \int \ND\Bigl(\bmat{\ellvec \\ \zvec}\mid \bmat{\tilde\Qmat\bvec+\tilde\Rmat\avec\\\tilde\Rmat'\bvec+\tilde\Smat\avec}, \bmat{\tilde\Qmat & \tilde\Rmat \\ \tilde\Rmat' & \tilde\Smat}\Bigr)
+ \,d\zvec \\
+&=\ND(\ellvec\mid \tilde\Qmat\bvec+\tilde\Rmat\avec, \tilde\Qmat)
+\end{split}
+\end{align} 
+Block matrix inversion gives:
+\begin{align}
+\tilde\Qmat^{-1} &= \tilde\Amat-\Bmat'\tilde\Dmat^{-1}\Bmat &&\text{and}&
+\tilde\Rmat &= -\tilde\Qmat\Bmat'\tilde\Dmat^{-1}
+\end{align}
+so that
+\begin{align}
+h_k(\zvec) &\propto \exp\Bigl(
+\ellvec'(\bvec-\Bmat'\tilde\Dmat^{-1}\avec) -\frac12\ellvec'\tilde\Qmat^{-1}\ellvec
+\Bigr)
+\end{align}
 
 \subsection{Binary trial}
 Consider a binary trial, where we are given two observed vectors, $\rvec_i$ and $\rvec_j$. There are four hypotheses about how these observations were produced: 
