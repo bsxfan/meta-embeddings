@@ -2577,6 +2577,29 @@ f_j(z) &\propto \exp[\rvec_j'\Wmat\mvec_z - \frac12 \mvec_z'\Wmat\mvec_z]
 \end{align}
 
 
+\section{Non-linear PLDA}
+For a speaker with identity variable, $\zvec\in\R^d$, let recording $r_j\in\R^D$ be generated as follows:
+\begin{align}
+P(\xvec_j\mid\zvec) &= \ND(\xvec_j\mid\Fmat\zvec,\Wmat^{-1}), &
+\rvec_j &= f(\xvec_i)
+\end{align}
+where $f$ is an invertible non-linearity, i.e.\ a bijection from $\R^D$ to $\R^D$. The model parameters are the usual SPLDA parameters, $\Fmat,\Wmat$, as well as some parameters (not shown here) that make the non-linearity trainable. Let $J(\xvec)$ denote the absolute value of the Jacobian determinant of $f$, where the Jacobian is the matrix of derivatives of $\rvec$ w.r.t.\ $\xvec$. Then we have:
+\begin{align}
+P(\rvec_j\mid\zvec) &= \frac{P(\xvec_j\mid\zvec)}{J(\xvec_j)}, &
+\xvec_j &= f^{-1}(\rvec_j)
+\end{align}
+Since $J(\xvec)$ is independent of $\zvec$, we don't need it to extract meta-embeddings. The meta-embedding, $P(\rvec_j\mid\zvec) \propto P(\xvec_j\mid\zvec)$ is Gaussian and identical in form to that extracted by ordinary SPLDA. At scoring time, $f^{-1}$ functions as a feature extractor, which can be followed by the ordinary SPLDA scoring recipe.
+
+\subsection{Discriminative training}
+Discriminative training criteria that depend on the model parameters only through scoring, need to use neither $f$, nor $J$. We only need to use $f^{-1}$ at training time. We can therefore directly train some feature extractor, $\rvec_j\to\yvec_j$, jointly with the PLDA parameters.
+
+\subsection{Direct generative training}
+For an observed data set, $\Yset$, with labels, $\Lset$, the SPLDA model evidence $P(\Yset\mid,\Fmat,\Wmat,\Lset)$ can 
+
+
+
+ 
+
 
 
 
@@ -3252,13 +3275,15 @@ where the model parameters are the factor loading matrices $\Vmat,\Lmat$ and the
 JPLDA uses a factorial hidden variable prior, where all speaker and language factors (the $\zvec_i$ and the $\ellvec_j$) are all independent. 
 
 \subsection{Note on notation}
-In JPLDA, we shall be working with model configurations where every observation, $\rvec_k$, is dependent on exactly one hidden speaker factor and exactly one hidden language factor. (The converse is not true---multiple observations may depend on a given hidden factor.) In graphical model notation, each $\rvec_k$ has exactly one $\zvec$ parent and exactly one $\ellvec$ parent. (Conversely, hidden factors may have multiple children.) If we consider a single observation at a time, there is no ambiguity about which hidden factors are its parents, so that in the notation for marginal and joint likelihoods and posteriors of the forms, $P(\zvec,\ellvec\mid\rvec_k)$, $P(\zvec\mid\rvec_k)$, $P(\rvec_k\mid\zvec,\ellvec)$, $P(\rvec_k\mid\ellvec)$, etc., it is clear which $\zvec$  and $\ellvec$ variables are being referred to. Indeed, notice that when no other observations are given, then dependency is blocked between $\rvec_k$ and all other hidden variables, except its parents.
+In JPLDA, we shall be working with model configurations where every observation, $\rvec_k$, is dependent on exactly one hidden speaker factor and exactly one hidden language factor. (The converse is not true---multiple observations may depend on a given hidden factor.) In graphical model notation, each $\rvec_k$ has exactly one $\zvec$ parent and exactly one $\ellvec$ parent. (Conversely, hidden factors may have multiple children.) 
+
+In hidden-variable likelihoods and posteriors, conditioned on a single observation, of the forms $P(\zvec,\ellvec\mid\rvec_k)$, $P(\zvec\mid\rvec_k)$, $P(\rvec_k\mid\zvec,\ellvec)$, $P(\rvec_k\mid\ellvec)$, etc., it is clear which $\zvec$  and $\ellvec$ variables are being referred to, namely the parents of $\rvec_k$. Indeed, notice that when no other observations are given, then dependency is blocked between $\rvec_k$ and all other hidden variables, except its parents.
 
 Finally, irrespective of the model configuration, $P(\rvec_k)$, for any single observation is unambiguously defined as:
 \begin{align}
 P(\rvec_k) &= \int\int P(\zvec)P(\ellvec) P(\rvec\mid\zvec,\ellvec)\,d\zvec\,d\ellvec
 \end{align}
-
+where we have used the factorial prior, $P(\ellvec)P(\zvec)$.
 
 \subsection{Bivariate Gaussian meta-embedding}
 For JPLDA, the \emph{bivariate} analogue of our meta-embedding is a Gaussian likelihood function of the form:
@@ -3280,11 +3305,11 @@ f_k(\zvec,\ellvec) &\propto P(\rvec_k\mid\zvec,\ellvec) \\
 \subsection{Normalization and marginalization}
 Normalization of univariate and multivariate meta-embeddings will play an important role in what follows. With two kinds of hidden variables, the discrete hypothesis space (which observables are dependent on which hidden variables) is more complex---and joint normalization of all hypotheses of interest requires keeping careful track of normalization constants.
 
-Having clarified that in likelihoods and posteriors conditioned on a single observation, the relevant hidden variables are its two parents, we express Bayes' rule as:
+Having clarified that when conditioning on a single observation, the relevant hidden variables are its two parents, we can express Bayes' rule as:
 \begin{align}
-P(\zvec,\ellvec\mid\rvec_k) &= \frac{P(\ellvec)P(\zvec)P(\rvec_k\mid\zvec,\ellvec)}{\expv{P(\rvec_k\mid\zvec',\ellvec')}{\zvec',\ellvec'}}
+P(\zvec,\ellvec\mid\rvec_k) &= \frac{P(\ellvec)P(\zvec)P(\rvec_k\mid\zvec,\ellvec)}{P(\rvec_k)}
 \end{align}
-where it is understood that the expectation in the denominator is w.r.t. the factorial prior, $P(\ellvec)P(\zvec)$. In a bivariate generalization of our previous definition, we can now define the \emph{normalized bivariate meta-embedding} as:
+In a bivariate generalization of our previous definition of normalization, we can now define the \emph{normalized bivariate meta-embedding} as:
 \begin{align}
 \label{eq:norm_fk}
 \normal{f_k}(\zvec,\ellvec) &= \frac{P(\zvec,\ellvec\mid\rvec_k)}{P(\ellvec)P(\zvec)} 
@@ -3395,7 +3420,7 @@ Block matrix inversion gives:
 \end{align}
 so that
 \begin{align}
-h_k(\zvec) &\propto \exp\Bigl(
+h_k(\ellvec) &\propto \exp\Bigl(
 \ellvec'(\bvec-\Bmat'\tilde\Dmat^{-1}\avec) -\frac12\ellvec'\tilde\Qmat^{-1}\ellvec
 \Bigr)
 \end{align}
