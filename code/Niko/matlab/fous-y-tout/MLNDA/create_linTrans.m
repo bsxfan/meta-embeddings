@@ -1,4 +1,4 @@
-function [f,fi,paramsz] = create_affineTrans(dim)
+function [f,fi,paramsz] = create_linTrans(dim)
 
     if nargout==0
         test_this();
@@ -10,21 +10,21 @@ function [f,fi,paramsz] = create_affineTrans(dim)
     
     fi = @fi_this;
     
-    paramsz = dim*(dim+1);
+    paramsz = dim^2;
     
     function T = f_this(P,R)
-        [offset,M] = unpack(P);
-        T = bsxfun(@plus,offset,M*R);
+        M = unpack(P);
+        T = M*R;
     end
     
     
     function [R,logdetJ,back] = fi_this(P,T)
-        [offset,M] = unpack(P);
+        M = unpack(P);
         
         [L,U] = lu(M);
         n = size(T,2);
         logdetJ = n*sum(log(diag(U).^2))/2;
-        Delta = bsxfun(@minus,T,offset);
+        Delta = T;
         R = U\(L\Delta);
         back = @back_this;
     
@@ -33,18 +33,15 @@ function [f,fi,paramsz] = create_affineTrans(dim)
             dM = (n*dlogdetJ)*(U\inv(L)).';
             dDelta = L.'\(U.'\dR);
             dM = dM - dDelta*R.';
-            doffset = -sum(dDelta,2);
-            dP = [dM(:);doffset];
+            dP = dM(:);
             dT = dDelta;
         end
     
     end
 
 
-    function [offset,P] = unpack(P)
-        P = reshape(P,dim,dim+1);
-        offset = P(:,end);
-        P(:,end) = [];
+    function P = unpack(P)
+        P = reshape(P,dim,dim);
     end
 
 end
@@ -52,17 +49,13 @@ end
 function test_this()
 
     dim = 3;
-    [f,fi,sz] = create_affineTrans(dim);
+    [f,fi,sz] = create_linTrans(dim);
     R = randn(dim,5);
-    offset = randn(dim,1);
-    M = randn(dim);
     P = randn(sz,1);
-    
     T = f(P,R);
-    Ri = fi(P,T);
-    test_inverse = max(abs(R(:)-Ri(:))),
+    ff = @(P,T) fi(P,T);
 
-    testBackprop_multi(fi,2,{P,T});
+    testBackprop_multi(ff,2,{P,T});
     
     
 end

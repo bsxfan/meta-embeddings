@@ -1,4 +1,4 @@
-function [y,back] = testMLNDAobj(T,labels,F,W,fi,params)
+function [y,back] = MLNDAobj(T,labels,F,W,fi,params)
 
     [R,logdetJ,back2] = fi(params,T);
     [llh,back1] = splda_llh(R,labels,F,W);

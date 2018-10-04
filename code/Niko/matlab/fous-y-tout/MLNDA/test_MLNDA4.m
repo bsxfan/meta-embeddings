@@ -1,7 +1,7 @@
-function test_MLNDA()
+function test_MLNDA4()
 
     % Assemble model to generate data
-    big = false;
+    big = true;
     nu = inf;           %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
     if ~big
         zdim = 2;       %speaker identity variable size 
@@ -21,7 +21,7 @@ function test_MLNDA()
     
     
     %Generate synthetic labels
-    nspeakers = 100;
+    nspeakers = 1000;
     recordings_per_speaker = 10;
     N = nspeakers*recordings_per_speaker;
     ilabels = repmat(1:nspeakers,recordings_per_speaker,1);
@@ -32,20 +32,40 @@ function test_MLNDA()
     Z = randn(zdim,nspeakers);
     R = F*Z*hlabels + sample_HTnoise(nu,rdim,N,W);
     
+    rank = 3;
+    [f,fi,paramsz] = create_nice_Trans(rdim,rank);
+    oracle = randn(paramsz,1);
+    oracle(1) = pi;
     
-    [f,fi] = create_scalTrans();
-    scal = pi;
-    T = f(scal,R);
+    r = randn(rdim,1);
+    t = f(oracle,r);
+    rr = fi(oracle,t);
+    [r,t,rr]
     
-    ss = scal*exp(-1:0.1:1);
-    y = zeros(size(ss));
-    for i=1:length(ss)
-        y(i) = MLNDAobj(T,hlabels,F,W,fi,ss(i));
-    end
-    ystar = MLNDAobj(T,hlabels,F,W,fi,scal);
-    close all;
-    semilogx(ss,y);hold;
-    semilogx(scal,ystar,'*r');
+    
+    
+    
+    T = f(oracle,R);
+
+    Rtrace = trace(F*F.'+W);
+    Ttrace = sum(T(:).^2)/size(T,2);
+    offset = mean(T,2);
+    params0 = [sqrt(Rtrace/Ttrace);randn(rdim*rank,1)/100;ones(rank,1);offset];
+    
+    
+    
+    obj = @(params) MLNDAobj(T,hlabels,F,W,fi,params);    
+    obj_oracle = obj(oracle),
+    obj_init = obj(params0),
+    
+    
+    maxiters = 1000;
+    timeout = 5*60;
+    [trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
+
+    obj_oracle = obj(oracle),
+    obj_init = obj(params0),
+    obj_final = obj(params),
     
 end
 
