@@ -19,14 +19,14 @@ function demo_MLNDA()
     
     
     % Initialize to be learnt parameters
-    XCovtrace = trace(F*F.'+W);   % In practice, we have only T, not X. So we
-                                  % crudely approximate the covariance of
-                                  % X, using the model parameters.
+    XCovtrace = trace(F*F.'+ inv(W));   % In practice, we have only T, not X. So we
+                                        % crudely approximate the covariance of
+                                        % X, using the model parameters.
                                   
     TCovtrace = trace(cov(T.',1));
     offset = mean(T,2);
     sigma0 = sqrt(XCovtrace/TCovtrace);
-    params0 = [sqrt(sigma0);randn(dim*rank,1)/100;ones(rank,1);offset];
+    params0 = [sqrt(sigma0);randn(dim*rank,1)/10;ones(rank,1);offset];
     
     
     
@@ -35,7 +35,7 @@ function demo_MLNDA()
     obj_init = obj(params0),
     
     
-    maxiters = 1000;
+    maxiters = 100;
     timeout = 20*60;
     [trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
     
