@@ -1,4 +1,8 @@
 function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
+% Creates affine transform, having a matrix: M = sigma I + L*D*L.', where
+% L is of low rank and D is diagonal. The forward transform is:
+%   f(X) = M \ X + offset 
+
 
     if nargin==0
         test_this();
