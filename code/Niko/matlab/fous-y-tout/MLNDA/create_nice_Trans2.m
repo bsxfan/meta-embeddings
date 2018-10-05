@@ -1,4 +1,4 @@
-function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
+function [f,fi,paramsz,fe] = create_nice_Trans2(dim,rank)
 
     if nargin==0
         test_this();
@@ -14,22 +14,22 @@ function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
     
 
     function T = f_this(P,R)
-        [sigma,L,d,offset] = expand(P);
-        M = sigma*eye(dim) + L*diag(d)*L.';
+        [sigma,L,D,offset] = expand(P);
+        M = sigma*eye(dim) + L*D*L.';
         T = bsxfun(@plus,offset,M\R);
     end
     
 
     function [R,logdetJ,back] = fi_this(P,T)
-        [sigma,L,d,offset,back0] = expand(P);
+        [sigma,L,D,offset,back0] = expand(P);
         
         Delta = bsxfun(@minus,T,offset);
         
-        DL = bsxfun(@times,d,L.');
+        DL = D*L.';
         DLDelta = DL*Delta;
         R = sigma*Delta + L*DLDelta;
         
-        [logdet,back1] = logdetNice(sigma,L,d);
+        [logdet,back1] = logdetNice2(sigma,L,D);
         n = size(T,2);
         logdetJ = -n*logdet;
         
@@ -38,7 +38,7 @@ function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
         function [dP,dT] = back_that(dR,dlogdetJ)
             
             %[logdetJ,back1] = logdetNice(sigma,L,d)
-            [dsigma,dL,dd] = back1(-n*dlogdetJ);
+            [dsigma,dL,dD] = back1(-n*dlogdetJ);
             
             % R = sigma*Delta + L*DLDelta
             dsigma = dsigma + dR(:).'*Delta(:);
@@ -50,21 +50,21 @@ function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
             dDL = dDLDelta*Delta.';
             dDelta = dDelta + DL.'*dDLDelta;
             
-            % DL = bsxfun(@times,d,L.')
-            dd = dd + sum(dDL.*L.',2);
-            dL = dL + bsxfun(@times,dDL.',d');
+            % DL = D*L.'
+            dD = dD + dDL.*L;
+            dL = dL + dDL*D;
             
             % Delta = bsxfun(@minus,T,offset)
             dT = dDelta;
             doffset = -sum(dDelta,2);
             
-            dP = back0(dsigma,dL,dd,doffset);
+            dP = back0(dsigma,dL,dD,doffset);
         end
     end
 
 
 
-    function [sigma,L,d,offset,back] = expand(P)
+    function [sigma,L,D,offset,back] = expand(P)
         at = 1;
         
         sz = 1;
@@ -82,8 +82,8 @@ function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
         L = reshape(P(at:at+sz-1),dim,rank);
         at = at + sz;
         
-        sz = rank;
-        d = P(at:at+sz-1);
+        sz = rank*rank;
+        D = reshape(P(at:at+sz-1),dim,dim);
         at = at + sz;
         
         sz = dim;
@@ -95,14 +95,14 @@ function [f,fi,paramsz,fe] = create_nice_Trans(dim,rank)
         
         back = @back_this;
         
-        function dP = back_this(dsigma,dL,dd,doffset)
+        function dP = back_this(dsigma,dL,dD,doffset)
             %dlogsigma = sigma*dsigma;
             %dP = [dlogsigma;dL(:);dd;doffset];
             
             %dP = [dsigma;dL(:);dd;doffset];
 
             dsqrtsigma = 2*dsigma*sqrtsigma;
-            dP = [dsqrtsigma;dL(:);dd;doffset];
+            dP = [dsqrtsigma;dL(:);dD;doffset];
         
         
         end

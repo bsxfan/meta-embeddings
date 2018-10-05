@@ -1,7 +1,15 @@
-function test_MLNDA4()
+function [X,hlabels,F,W] = simulateSPLDA(big)
+% Inputs:
+%   big: flag to make low or high-dimensional data, each with realistic,
+%   single-digit EERs
+%
+% Outputs:
+%   X: i-vectors, dim-by-N
+%   hlabels: sparse label matrix, with one hot columns
+%   F,W: SPLDA parameters
+
 
     % Assemble model to generate data
-    big = true;
     nu = inf;           %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
     if ~big
         zdim = 2;       %speaker identity variable size 
@@ -30,43 +38,7 @@ function test_MLNDA4()
     
     %and some training data
     Z = randn(zdim,nspeakers);
-    R = F*Z*hlabels + sample_HTnoise(nu,rdim,N,W);
-    
-    rank = 3;
-    [f,fi,paramsz] = create_nice_Trans(rdim,rank);
-    oracle = randn(paramsz,1);
-    oracle(1) = sqrt(pi);
-    
-    r = randn(rdim,1);
-    t = f(oracle,r);
-    rr = fi(oracle,t);
-    [r,t,rr]
-    
-    
-    
-    
-    T = f(oracle,R);
-
-    Rtrace = trace(F*F.'+W);
-    Ttrace = sum(T(:).^2)/size(T,2);
-    offset = mean(T,2);
-    %params0 = [log(sqrt(Rtrace/Ttrace));randn(rdim*rank,1)/100;ones(rank,1);offset];
-    params0 = [sqrt(sqrt(Rtrace/Ttrace));randn(rdim*rank,1)/100;ones(rank,1);offset];
-    
-    
-    
-    obj = @(params) MLNDAobj(T,hlabels,F,W,fi,params);    
-    obj_oracle = obj(oracle),
-    obj_init = obj(params0),
-    
-    
-    maxiters = 1000;
-    timeout = 5*60;
-    [trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
-
-    obj_oracle = obj(oracle),
-    obj_init = obj(params0),
-    obj_final = obj(params),
+    X = F*Z*hlabels + sample_HTnoise(nu,rdim,N,W);
     
 end
 
@@ -91,6 +63,3 @@ function X = sample_HTnoise(nu,dim,n,W)
     X = cholW\bsxfun(@times,std,randn(dim,n));
 end
 
-
-
-    
