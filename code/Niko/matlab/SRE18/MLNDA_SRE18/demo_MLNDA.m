@@ -2,7 +2,7 @@ function demo_MLNDA()
 
     % Syntesize SPLDA model and generate data from it
     big = true;
-    [X,hlabels,F,W] = simulateSPLDA(big);
+    [F,W,X,hlabels] = simulateSPLDA(big,1000,10);
 
     
     % Assemble transformation
