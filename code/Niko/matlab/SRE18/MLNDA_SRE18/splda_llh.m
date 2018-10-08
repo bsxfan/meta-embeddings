@@ -19,7 +19,8 @@ function [llh,back] = splda_llh(R,labels,F,W)
     E = diag(E);
     
     nE = bsxfun(@times,n,E);
-    Mu = V*bsxfun(@ldivide,1+nE,V'*S);  %posterior means
+%    Mu = V*bsxfun(@ldivide,1+nE,V'*S);  %posterior means
+    Mu = V*( (1+nE).\(V'*S) );  %posterior means
     
 
     RR = R*R.';

@@ -20,7 +20,8 @@ function [llh,back] = htplda_llh(R,labels,F,W,nu)
     FWF = FW*F;
 
     G = W - FW.'*(FWF\FW);
-    q = sum(R,G*R,1);
+    GR = G*R;
+    q = sum(R.*(GR),1);
     b = (nu + D - d)./(nu + q);
     
     n = b*labels.';
@@ -31,33 +32,34 @@ function [llh,back] = htplda_llh(R,labels,F,W,nu)
     
     nE = bsxfun(@times,n,E);
     VS = V'*S;
-    nEVS = bsxfun(@ldivide,1+nE,VS);
+    nEVS = (1+nE).\VS;
     Mu = V*nEVS;  %posterior means
     
-    RWR = sum(R.*(W*R),1);
+    WR = W*R;
+    RWR = sum(R.*(WR),1);
     
-    llh = ( Mu(:).'*S(:) - (nu+D)*log1p(RWR/nu) ) / 2;
+    llh = ( Mu(:).'*S(:) - sum((nu+D)*log1p(RWR/nu),2) ) / 2;
     
     back = @back_this;
     
     function dR = back_this(dllh)
         
-        % llh = ( Mu(:).'*S(:) - (nu+D)*log1p(RWR/nu) ) / 2
+        % llh = ( Mu(:).'*S(:) - sum((nu+D)*log1p(RWR/nu),1) ) / 2
         dMu = (dllh/2)*S;
         dS = (dllh/2)*Mu;
         dRWR = (-dllh*(nu+D)/(2*nu))./(1+RWR/nu); 
         
         % RWR = sum(R.*(W*R),1)
-        dR = bsxfun(@times,2*dRWR,R);
+        dR = bsxfun(@times,2*dRWR,WR);
         
         
         
         % Mu = V*nEVS
-        dNEVS = V.'*dMu;
+        dnEVS = V.'*dMu;
         
-        % nEVS = bsxfun(@ldivide,1+nE,VS)
-        dVS = bsxfun(@ldivide,1+nE,dNEVS);
-        dnE = -dVS*nEVS.';
+        % nEVS = (1+nE).\VS
+        dVS = (1+nE).\dnEVS;
+        dnE = -dVS.*nEVS;
 
         % VS = V'*S
         dS = dS + V*dVS;
@@ -71,8 +73,8 @@ function [llh,back] = htplda_llh(R,labels,F,W,nu)
         % b = (nu + D - d)./(nu + q)
         dq = (-db.*b)./(nu+q);
         
-        % q = sum(R,G*R,1)
-        dR = dR + bsxfun(@times,2*dq,R);
+        % q = sum(R.*(G*R),1)
+        dR = dR + bsxfun(@times,2*dq,GR);
         
         % S = FWR*labels.'
         dFWR = dS*labels;
@@ -97,7 +99,8 @@ function test_this()
     labels = sparse(randi(K,1,N),1:N,true,K,N);
     F = randn(D,d);
     W = randn(D,D+1);W=W*W.';
-    f = @(R) splda_llh(R,labels,F,W);
+    nu = 2;
+    f = @(R) htplda_llh(R,labels,F,W,nu);
 
     testBackprop(f,{R});
 
