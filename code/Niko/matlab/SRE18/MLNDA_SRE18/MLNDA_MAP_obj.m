@@ -1,4 +1,4 @@
-function [y,back] = MLNDA_MAP_obj(newData,newLabels,oldData,oldLabels,oldWeight,F,W,fi,params)
+function [y,back] = MLNDA_MAP_obj(newData,newLabels,oldData,oldLabels,oldWeight,F,W,fi,params,nu)
 
 
     if nargin==0
@@ -6,11 +6,18 @@ function [y,back] = MLNDA_MAP_obj(newData,newLabels,oldData,oldLabels,oldWeight,
         return;
     end
 
+    ht = exist('nu','var') && ~isempty(nu) && ~isinf(nu);
+    
     [newR,logdetJnew,back1] = fi(params,newData);
-    [newllh,back2] = splda_llh(newR,newLabels,F,W);
-
     [oldR,logdetJold,back3] = fi(params,oldData);
-    [oldllh,back4] = splda_llh(oldR,oldLabels,F,W);
+
+    if ht
+        [newllh,back2] = htplda_llh(newR,newLabels,F,W,nu);
+        [oldllh,back4] = htplda_llh(oldR,oldLabels,F,W,nu);
+    else
+        [newllh,back2] = splda_llh(newR,newLabels,F,W);
+        [oldllh,back4] = splda_llh(oldR,oldLabels,F,W);
+    end
     
     
     y = (logdetJnew - newllh) + oldWeight*(logdetJold - oldllh);
@@ -40,9 +47,13 @@ function test_this()
     
     oldWeight = 1/pi;
     
+    fprintf('test Gaussian PLDA:\n');
     obj = @(params) MLNDA_MAP_obj(newData,newLabels,oldData,oldLabels,oldWeight,F,W,fi,params);
-    
     testBackprop(obj,params);
     
+    fprintf('test HT PLDA:\n');
+    nu = 2;
+    obj = @(params) MLNDA_MAP_obj(newData,newLabels,oldData,oldLabels,oldWeight,F,W,fi,params,nu);
+    testBackprop(obj,params);
     
 end

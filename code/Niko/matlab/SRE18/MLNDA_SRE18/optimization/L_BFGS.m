@@ -28,8 +28,8 @@ function [w,y,mem,logs] = L_BFGS(obj,w,maxiters,timeout,mem,stpsz0,callback)
     quiet = false;
 
     %termination parameters
-    %stopTol = 1e-5;  %same as Poblano
-    relFuncTol = 1e-6; %same as Poblano
+    % relFuncTol = 1e-6; %same as Poblano
+    relFuncTol = 1e-8; 
     
     if ~exist('stpsz0','var') || isempty(stpsz0)
         stpsz0 = 1;

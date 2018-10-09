@@ -1,7 +1,17 @@
-function [y,back] = MLNDAobj(T,labels,F,W,fi,params)
+function [y,back] = MLNDAobj(T,labels,F,W,fi,params,nu)
+
+    ht = exist('nu','var') && ~isempty(nu) && ~isinf(nu);
 
     [R,logdetJ,back2] = fi(params,T);
-    [llh,back1] = splda_llh(R,labels,F,W);
+    
+    
+    if ht
+        [llh,back1] = htplda_llh(R,labels,F,W,nu);
+    else
+        [llh,back1] = splda_llh(R,labels,F,W);
+    end
+    
+    
     y = logdetJ - llh;
     
     back = @back_this;

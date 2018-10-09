@@ -1,4 +1,4 @@
-function [F,W,X,hlabels] = simulateSPLDA(big,nspeakers,recordings_per_speaker)
+function [F,W,X,hlabels] = simulateSPLDA(big,nspeakers,recordings_per_speaker,nu)
 % Inputs:
 %   big: flag to make low or high-dimensional data, each with realistic,
 %   single-digit EERs
@@ -10,7 +10,12 @@ function [F,W,X,hlabels] = simulateSPLDA(big,nspeakers,recordings_per_speaker)
 
 
     % Assemble model to generate data
-    nu = inf;           %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+    if ~exist('nu','var') || isempty(nu)
+        nu = inf;           
+    else
+        assert(nu>=1)
+        %required: nu >= 1, integer, degrees of freedom for heavy-tailed channel noise
+    end
     if ~big
         zdim = 2;       %speaker identity variable size 
         rdim = 20;      %i-vector size. required: rdim > zdim

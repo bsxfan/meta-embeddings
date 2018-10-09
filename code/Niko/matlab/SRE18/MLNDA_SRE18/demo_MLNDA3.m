@@ -2,6 +2,7 @@ function demo_MLNDA3()
 
     % Syntesize SPLDA model and generate data from it
     big = true;
+    nu = 3;
     [F,W,X,hlabels] = simulateSPLDA(big,1000,10);
 
     
@@ -35,7 +36,7 @@ function demo_MLNDA3()
     obj_init = obj(params0),
     
     
-    maxiters = 100;
+    maxiters = 2000;
     timeout = 20*60;
     [trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
     
