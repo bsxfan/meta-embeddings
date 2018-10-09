@@ -28,9 +28,11 @@ function [trans,params,obj_final] = train_MAP_trans(F,W,newData,newLabels,...
 %    newData: dim-by-N training data matrix hypothesized to be transformed SPLDA data.
 %    newLabels: sparse, logical, K-by-N, label matrix, with one hot columns,
 %            for K speakers.
-%    oldData,oldLabels: supervised data from the source domain 
-%    oldWeight: scalar, less than one, to downweight the effect of the old
-%               data log-likelihood
+%    oldData,oldLabels: [optional, use [],[] to omit] supervised data from the source domain 
+%    oldWeight: scalar, less than one. To downweight the effect of the old
+%                                      data log-likelihood.
+%               oldWeight = 0 wil default to ML adaptation and will ignore
+%                           oldData,oldLabels.
 %    fi: inverse of the hypothesized transform f. This will be the
 %        transform that `adapts' transformed data so that the SPLDA model
 %        with parameters, F,W can be applied for scoring. fi is a function
