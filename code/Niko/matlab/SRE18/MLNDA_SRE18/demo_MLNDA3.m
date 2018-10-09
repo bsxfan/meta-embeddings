@@ -38,7 +38,9 @@ function demo_MLNDA3()
     
     maxiters = 2000;
     timeout = 20*60;
-    [trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
+    %[trans,params] = train_ML_trans(F,W,T,hlabels,fi,params0,maxiters,timeout);
+    train_MAP_trans(F,W,T,hlabels,[],[],0,fi,params0,maxiters,timeout);
+    
     
     % approximately recover X
     % Xhat = trans(T)
