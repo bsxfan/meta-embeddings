@@ -1,4 +1,4 @@
-function model = create_truncGMM(W,F,alpha,m)
+function model = create_GibbsGMM(W,F,alphaPrior,m)
 % This is a truncated version of DP micture model, with a specified maximum number of
 % components. The observations are realted to the hidden cluster variables
 % like in an SPLDA model. The hidden variable for cluster i is z_i in R^d.
@@ -279,7 +279,7 @@ function test_this()
     
     small = false;
     
-    alpha0 = 10;      %increase to get more clusters  
+    alpha0 = 50;      %increase to get more clusters  
     
     if small
         n = 8;

@@ -279,7 +279,7 @@ function test_this()
     
     small = false;
     
-    alpha0 = 10;      %increase to get more clusters  
+    alpha0 = 50;      %increase to get more clusters  
     
     if small
         n = 8;
