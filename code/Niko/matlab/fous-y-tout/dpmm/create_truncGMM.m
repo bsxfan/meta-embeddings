@@ -239,9 +239,9 @@ function model = create_truncGMM(W,F,alpha,m)
 
 
     function [X,Means,Z,weights,hlabels] = sampleData(n)
-        
+        d = size(F,2);
         weights = randDirichlet(alpha,m,1);
-        Z = randn(dim,m);
+        Z = randn(d,m);
         Means = F*Z; 
         [~,labels] = max(bsxfun(@minus,log(weights(:)),log(-log(rand(m,n)))),[],1);
         hlabels = sparse(labels,1:n,true,m,n);
@@ -275,11 +275,11 @@ function test_this()
 
     dim = 2;
     tame = 10;
-    sep = 500;        %increase to move clusters further apart in smulated data
+    sep = 2;        %increase to move clusters further apart in simulated data
     
     small = false;
     
-    alpha0 = 50;      %increase to get more clusters  
+    alpha0 = 60;      %increase to get more clusters  
     
     if small
         n = 8;
@@ -295,6 +295,10 @@ function test_this()
     W = sep*sampleP(dim,tame);
     B = sampleP(dim,tame);
     F = inv(chol(B));
+    
+    EER = testEER(W,F,1000)
+    pause(4)    
+    
     
     
     model = create_truncGMM(W,F,alpha,m);

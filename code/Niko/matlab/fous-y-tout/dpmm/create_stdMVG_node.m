@@ -9,6 +9,8 @@ function node = create_stdMVG_node(m,n)
     node.get = @get;
     node.sample = @sample;
     node.condition_on_child = @condition_on_child;
+    node.logPosterior_at_mode = @logPosterior_at_mode;
+    node.logPosterior_at_default = @logPosterior_at_zero;
 
     function val = get()
         val = Z;
@@ -20,9 +22,9 @@ function node = create_stdMVG_node(m,n)
     end
 
 
-    function condition_on_child(newA,newB)
-        B = newB;
-        Zhat = newA./(B+1);
+    function condition_on_child(msg)
+        B = msg.B;
+        Zhat = msg.A ./ (B+1);
     end
 
 

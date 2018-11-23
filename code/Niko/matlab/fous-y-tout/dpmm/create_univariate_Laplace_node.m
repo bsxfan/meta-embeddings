@@ -16,6 +16,7 @@ function node = create_univariate_Laplace_node(prior)
     node.get = @get;
     node.sample = @sample;
     node.condition_on_child = @condition_on_child;
+    node.logPosterior_at_mode = @logPosterior_at_mode;
     
     function val = get()
         val = value;
@@ -36,6 +37,16 @@ function node = create_univariate_Laplace_node(prior)
         end
         if nargin==0
             value = val;
+        end
+    end
+
+
+    function [logPost,mode] = logPosterior_at_mode()
+        if isempty(post_mu)
+            [logPost,mode] = prior.logPosterior_at_mode();
+        else
+            mode = post_mu;
+            logPost = log(-post_h)/2;
         end
     end
 

@@ -39,7 +39,16 @@ function node = create_symmetricDirichlet_node(logalpha,sz)
     node.condition_on_child = @condition_on_child;
     node.condition_on_parent = @condition_on_parent;
     node.inferParent = @inferParent;
-
+    node.logPosterior_at_default = @logPosterior_at_default;
+    
+    
+    function logP = logPosterior_at_default()
+        % default: w = 1/sz
+        alpha_c = alpha + counts;
+        total = sum(alpha_c);
+        logP = (sz-total)*log(sz) + gammaln(total) - sum(gammaln(alpha_c)); 
+    end
+    
     
     function val = get()
         val = logw;
@@ -74,11 +83,11 @@ function node = create_symmetricDirichlet_node(logalpha,sz)
     % Outputs:
     %   ncm: non-conjugate-message (likelihood function) sent to hyper-prior for alpha
     function ncm = inferParent(givenChild)     
-        if ~givenChild
+        if nargin==0 || ~givenChild   %infer parent given the current value of this node
             sumlogw = sum(logw);
             ncm.llh = @(logalpha) llh_this(logalpha,sz,sumlogw);
             ncm.Hessian = @(logalpha) llh_Hessian(logalpha,sz,sumlogw);
-        else
+        else %infer parent after collapsing this node
             ncm.llh = @(logalpha) llh_collapsed(logalpha,counts);
             ncm.Hessian = @(logalpha) collapsed_Hessian(logalpha,counts);
         end
@@ -93,11 +102,12 @@ end
 function [y,y1] = llh_collapsed(logalpha,counts)
     alpha = exp(logalpha);
     sz = length(counts);
-    sumC = sum(counts);
-    logw = -log(sz);
-    y = logw*(sz*(alpha-1)+sumC) + gammaln(sz*alpha+sumC) - sum(gammaln(alpha+counts)); 
+    sumC = full(sum(counts));
+    y = gammaln(sz*alpha) - gammaln(sz*alpha+sumC) + ...
+        sum(gammaln(bsxfun(@plus,alpha,counts)),1) - sz*gammaln(alpha); 
     if nargout>1
-        y1 = alpha.*(logw*sz + sz*psi(sz*alpha+sumC) - sum(psi(alpha+counts)) );
+        y1 = alpha.*( sz*psi(sz*alpha) - sz*psi(sz*alpha+sumC) + ...
+                      sum(psi(bsxfun(@plus,alpha,counts)),1) - sz*psi(alpha) );
     end
 end
 
@@ -105,10 +115,11 @@ end
 function h = collapsed_Hessian(logalpha,counts)
     alpha = exp(logalpha);
     sz = length(counts);
-    sumC = sum(counts);
-    logw = -log(sz);
-    y1 = alpha.*(logw*sz + sz*psi(sz*alpha+sumC) - sum(psi(alpha+counts)) );
-    h = y1 + alpha.*(sz^2*alpha.*psi(1,sz*alpha+sumC) - alpha.*sum(psi(1,alpha+counts)) );
+    sumC = full(sum(counts));
+    y1 = alpha.*( sz*psi(sz*alpha) - sz*psi(sz*alpha+sumC) + ...
+                  sum(psi(bsxfun(@plus,alpha,counts)),1) - sz*psi(alpha) );
+    h = y1 + alpha.^2.*( sz^2*psi(1,sz*alpha) - sz^2*psi(1,sz*alpha+sumC) + ...
+                         sum(psi(1,bsxfun(@plus,alpha,counts)),1) - sz*psi(1,alpha) );
 end
 
 
@@ -137,13 +148,18 @@ function test_this()
     close all;
     
     sz = 100;
-    logalpha = 3;
+    n = 1000;
+    logalpha0 = 3;
     
-    node = create_symmetricDirichlet_node(logalpha,sz);
-    %logw = node.get();
+    wnode = create_symmetricDirichlet_node(logalpha0,sz);
+    logw0 = wnode.get();
+    labelnode = create_Label_node(logw0,n);
+    counts = labelnode.inferParent();
+    wnode.condition_on_child(counts);
+    wnode.sample();
     
-    ncm = node.inferParent();
-    logalpha = -5:0.001:5;
+    ncm = wnode.inferParent();
+    logalpha = -5:0.01:5;
     [y,y1] = ncm.llh(logalpha);
     delta = 1e-3;
     [yplus,y1plus] = ncm.llh(logalpha+delta);
@@ -151,12 +167,30 @@ function test_this()
     rstep1 = (yplus-ymin)/(2*delta);
     rstep2 = (y1plus-y1min)/(2*delta);
     h = ncm.Hessian(logalpha);
-    subplot(2,1,1);plot(logalpha,y,logalpha,y1,logalpha,rstep1,'--',...
+    subplot(2,2,1);plot(logalpha,y,logalpha,y1,logalpha,rstep1,'--',...
                         logalpha,h,logalpha,rstep2,'--');legend('y','y1','rstep1','hess','rstep2');grid;
-    subplot(2,1,2);plot(logalpha,exp(y-max(y)));grid;
+    subplot(2,2,3);plot(logalpha,exp(y-max(y)),logalpha0,0,'g*');grid;
     
+    
+    ncm = wnode.inferParent(true);
+    logalpha = -5:0.01:10;
+    [y,y1] = ncm.llh(logalpha);
+    delta = 1e-3;
+    [yplus,y1plus] = ncm.llh(logalpha+delta);
+    [ymin,y1min] = ncm.llh(logalpha-delta);
+    rstep1 = (yplus-ymin)/(2*delta);
+    rstep2 = (y1plus-y1min)/(2*delta);
+    h = ncm.Hessian(logalpha);
+    subplot(2,2,2);plot(logalpha,y,logalpha,y1,logalpha,rstep1,'--',...
+                        logalpha,h,logalpha,rstep2,'--');legend('y','y1','rstep1','hess','rstep2');grid;
+    subplot(2,2,4);plot(logalpha,exp(y-max(y)),logalpha0,0,'g*');grid;
     
 
+    
+    
+    
+    
+    
 end
 
 
